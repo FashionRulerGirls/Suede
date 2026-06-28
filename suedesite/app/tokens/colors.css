@@ -1,0 +1,74 @@
+/* ============================================================
+   SUEDE — Color tokens
+   Warm paper neutrals, pure-ink black, two whispered accents.
+   The palette is deliberately quiet: black ink on warm linen,
+   with denim-blue and antique-gold used sparingly as signals.
+   ============================================================ */
+
+:root {
+  /* ---- Ink (warm-to-pure black neutrals) ---- */
+  --ink-900: #000000;   /* pure black — primary ink, buttons, rules */
+  --ink-800: #0a0a0a;   /* near-black headings */
+  --ink-700: #1a1a1a;   /* dense body on light */
+  --ink-600: #2c2c2c;   /* secondary headings */
+  --ink-500: #626367;   /* slate — secondary text */
+  --ink-400: #8a8a82;   /* warm taupe-gray — muted/meta text (signature) */
+  --ink-300: #b1b1b1;   /* disabled text, faint marks */
+  --ink-200: #d1d5dc;   /* cool hairline borders (inputs) */
+  --ink-150: #e2e1de;   /* warm hairline borders (cards) */
+  --ink-100: #ece9e4;   /* faint dividers on paper */
+
+  /* ---- Paper (warm off-white surfaces) ---- */
+  --paper:    #f8f6f3;  /* canonical page background */
+  --paper-2:  #fafaf8;  /* lifted panels */
+  --paper-3:  #fffdf9;  /* warmest raised surface */
+  --linen:    #f5f5f0;  /* inset / quiet fill */
+  --white:    #ffffff;  /* cards, sheets */
+
+  /* ---- Accents (used as signals, never decoration) ---- */
+  --denim:    #718ebf;  /* muted cornflower — links, member match */
+  --denim-ink:#4a5565;  /* denim text on light */
+  --gold:     #c9a96e;  /* antique gold — vetted/premium marks */
+  --gold-deep:#a8854a;  /* gold text on light */
+
+  /* ---- Rating semantics (Brand Portal) ---- */
+  --rating-positive: #3f7d52;  /* high scores, "recommended" */
+  --rating-critical: #c0463a;  /* low scores, alerts */
+  --rating-star:     #000000;  /* filled stars are ink, not gold */
+
+  /* ============================================================
+     Semantic aliases — reference these in components
+     ============================================================ */
+
+  /* Text */
+  --text-primary:   var(--ink-900);
+  --text-heading:   var(--ink-800);
+  --text-secondary: var(--ink-500);
+  --text-muted:     var(--ink-400);
+  --text-disabled:  var(--ink-300);
+  --text-inverse:   var(--white);
+  --text-link:      var(--ink-900);
+
+  /* Surfaces */
+  --surface-page:    var(--paper);
+  --surface-card:    var(--white);
+  --surface-raised:  var(--paper-3);
+  --surface-inset:   var(--linen);
+  --surface-inverse: var(--ink-900);
+
+  /* Borders */
+  --border-subtle:  var(--ink-150);
+  --border-default: var(--ink-200);
+  --border-strong:  var(--ink-900);
+
+  /* Interactive ink */
+  --action-primary:       var(--ink-900);
+  --action-primary-hover: var(--ink-700);
+  --action-on-primary:    var(--white);
+
+  /* Accent semantics */
+  --accent:        var(--denim);
+  --accent-text:   var(--denim-ink);
+  --premium:       var(--gold);
+  --premium-text:  var(--gold-deep);
+}

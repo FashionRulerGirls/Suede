@@ -1,0 +1,16 @@
+/* ============================================================
+   SUEDE — Fonts
+   ------------------------------------------------------------
+   Suede's type system uses three families from the Figma source:
+     • Cormorant Garamond  — editorial serif (display, wordmarks)   → Google Fonts (exact)
+     • Glacial Indifference — geometric sans (body, UI, labels)      → SUBSTITUTED with Jost*
+     • Darker Grotesque     — condensed accent (micro-labels, specs) → Google Fonts (exact)
+
+   * SUBSTITUTION FLAG: "Glacial Indifference" is not served by Google Fonts.
+     Jost (a geometric, Futura-adjacent sans) is the closest free match for its
+     even strokes and circular bowls. If you have the licensed Glacial Indifference
+     web fonts, drop the .woff2 files in assets/fonts/, add @font-face rules here,
+     and swap the --font-sans stack in typography.css.
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Darker+Grotesque:wght@400;500;600;700&family=Jost:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap');

@@ -1,0 +1,56 @@
+/* ============================================================
+   SUEDE — Spacing, radii, shadows, layout
+   Suede's surfaces are crisp and gallery-like: near-square
+   corners, hairline borders, and shadows used only to float
+   review cards a few millimetres off the paper.
+   ============================================================ */
+
+:root {
+  /* ---- Spacing scale (4px base) ---- */
+  --space-0:  0;
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  20px;
+  --space-6:  24px;
+  --space-8:  32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+  --space-24: 96px;
+  --space-32: 128px;
+
+  /* ---- Radii (Suede stays sharp — fashion gallery, not app) ---- */
+  --radius-none: 0;
+  --radius-xs:   2px;   /* inputs, image frames */
+  --radius-sm:   4px;   /* cards, tiles */
+  --radius-md:   8px;   /* portal panels */
+  --radius-lg:   12px;  /* dashboard widgets */
+  --radius-pill: 999px; /* nav auth toggle, CTA pills, avatars */
+
+  /* ---- Borders ---- */
+  --border-hairline: 1px solid var(--border-subtle);
+  --border-line:     1px solid var(--border-default);
+  --border-ink:      1px solid var(--border-strong);
+
+  /* ---- Shadows (whisper-soft, warm-neutral) ---- */
+  --shadow-none: none;
+  --shadow-xs:  0 1px 2px rgba(0,0,0,0.04);
+  --shadow-sm:  0 2px 8px rgba(0,0,0,0.05);
+  --shadow-card:0 8px 28px rgba(20,18,15,0.07);   /* floating review card */
+  --shadow-lg:  0 18px 48px rgba(20,18,15,0.10);  /* dialogs, popovers */
+
+  /* ---- Layout ---- */
+  --container-max: 1240px;   /* site content column */
+  --container-pad: 100px;    /* desktop gutter (Figma uses 100px) */
+  --portal-rail:   280px;    /* Brand Portal sidebar width */
+
+  /* ---- Motion ---- */
+  --ease-out:   cubic-bezier(0.22, 1, 0.36, 1); /* @kind other */
+  --ease-inout: cubic-bezier(0.65, 0, 0.35, 1); /* @kind other */
+  --dur-fast:   140ms; /* @kind other */
+  --dur-base:   240ms; /* @kind other */
+  --dur-slow:   420ms; /* @kind other */
+}

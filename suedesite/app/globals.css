@@ -1,0 +1,24 @@
+/* ============================================================
+   SUEDE — global CSS entry (ported from project/styles.css)
+   Reuses the design-system token CSS as-is.
+   ============================================================ */
+
+@import './tokens/fonts.css';
+@import './tokens/colors.css';
+@import './tokens/typography.css';
+@import './tokens/spacing.css';
+@import './tokens/base.css';
+
+/* Page canvas (from ui_kits/suede/index.html <style>) */
+body { margin: 0; background: var(--surface-page); }
+
+/* Ambient attention pulse — always running, draws the eye to key destinations. */
+@keyframes suedePulse {
+  0%, 100% { transform: scale(1); opacity: 0.78; }
+  50% { transform: scale(1.04); opacity: 1; }
+}
+#root .hero-dest { animation: suedePulse 2.4s var(--ease-inout) infinite; }
+#root .hero-dest:hover { animation: none; }
+@media (prefers-reduced-motion: reduce) {
+  #root .hero-dest { animation: none; }
+}

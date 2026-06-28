@@ -1,0 +1,60 @@
+'use client';
+import React from 'react';
+/* Suede — Notifications page (signed-in members).
+   Activity feed: new reviews on followed brands, follows, inquiry responses,
+   match alerts. Reached from the avatar dropdown. */
+import { Avatar, Icon, Button } from '@/components/ds';
+import { SUEDE_NOTIFICATIONS } from '@/lib/data';
+import { SignInGate } from '@/components/screens/SignInGate';
+
+function NotificationRow({ n, onRoute }: any) {
+  return (
+    <button onClick={() => onRoute(n.route)} style={{
+      width: '100%', textAlign: 'left', cursor: 'pointer', display: 'flex', gap: 16, alignItems: 'flex-start',
+      padding: '20px 22px', background: n.unread ? 'var(--surface-inset)' : 'transparent',
+      border: 'none', borderBottom: '1px solid var(--border-subtle)', transition: 'background var(--dur-fast) var(--ease-out)',
+    }}>
+      <span style={{ position: 'relative', flex: 'none' }}>
+        {n.actor
+          ? <Avatar src={n.actor.avatar} name={n.actor.name} size={44} />
+          : <span style={{ width: 44, height: 44, borderRadius: '50%', background: 'var(--linen)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: 'var(--ink-900)' }}><Icon name={n.icon} size={19} /></span>}
+        {n.actor && <span style={{ position: 'absolute', right: -2, bottom: -2, width: 22, height: 22, borderRadius: '50%', background: 'var(--ink-900)', color: 'var(--white)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', border: '2px solid var(--surface-card)' }}><Icon name={n.icon} size={11} color="var(--white)" /></span>}
+      </span>
+      <span style={{ flex: 1, minWidth: 0 }}>
+        <span style={{ display: 'block', fontFamily: 'var(--font-body)', fontSize: 14.5, lineHeight: 1.5, color: 'var(--text-primary)' }}>
+          {n.actor && <b style={{ fontWeight: 600 }}>{n.actor.name} </b>}
+          <span style={{ color: 'var(--text-secondary)' }}>{n.text} </span>
+          {n.target && <b style={{ fontWeight: 600 }}>{n.target}</b>}
+        </span>
+        {n.detail && <span style={{ display: 'block', fontFamily: 'var(--font-body)', fontSize: 13.5, lineHeight: 1.55, color: 'var(--text-muted)', marginTop: 5, fontStyle: n.detail.startsWith('“') ? 'italic' : 'normal' }}>{n.detail}</span>}
+        <span style={{ display: 'block', fontFamily: 'var(--font-body)', fontSize: 12, letterSpacing: '0.04em', color: 'var(--text-muted)', marginTop: 7 }}>{n.time}</span>
+      </span>
+      {n.unread && <span style={{ flex: 'none', width: 7, height: 7, borderRadius: '50%', background: 'var(--rating-positive)', marginTop: 7 }} />}
+    </button>
+  );
+}
+
+export function NotificationsScreen({ onRoute, authed }: any) {
+  const [items, setItems] = React.useState(SUEDE_NOTIFICATIONS);
+  if (!authed && SignInGate) return <SignInGate onRoute={onRoute} title="Notifications" message="Sign in to see your Suede activity." />;
+  const markAll = () => setItems((prev) => prev.map((n) => ({ ...n, unread: false })));
+
+  return (
+    <div style={{ maxWidth: 720, margin: '0 auto', padding: '48px 24px 80px' }}>
+      <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 20, marginBottom: 8 }}>
+        <div>
+          <span style={{ fontFamily: 'var(--font-body)', fontSize: 12, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--text-muted)' }}>Your activity</span>
+          <h1 style={{ fontFamily: 'var(--font-serif)', fontWeight: 400, fontSize: 36, color: 'var(--text-heading)', margin: '10px 0 0' }}>Notifications</h1>
+        </div>
+        <button onClick={markAll} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-secondary)', textDecoration: 'underline', textUnderlineOffset: 3, whiteSpace: 'nowrap' }}>Mark all as read</button>
+      </div>
+
+      <div style={{ marginTop: 28, background: 'var(--surface-card)', border: '1px solid var(--border-subtle)' }}>
+        {items.map((n) => <NotificationRow key={n.id} n={n} onRoute={onRoute} />)}
+        <div style={{ padding: '22px', textAlign: 'center' }}>
+          <span style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-muted)' }}>You're all caught up.</span>
+        </div>
+      </div>
+    </div>
+  );
+}

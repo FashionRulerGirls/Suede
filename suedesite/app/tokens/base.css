@@ -1,0 +1,39 @@
+/* ============================================================
+   SUEDE — Base / reset
+   Sets the warm paper canvas and the geometric-sans default
+   voice. Headings default to the editorial serif.
+   ============================================================ */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--surface-page);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: var(--fs-md);
+  line-height: var(--lh-body);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  font-weight: var(--fw-medium);
+  color: var(--text-heading);
+  margin: 0;
+  letter-spacing: var(--ls-tight);
+  line-height: var(--lh-snug);
+}
+
+p { margin: 0; }
+
+a { color: var(--text-link); text-decoration: none; }
+
+img { display: block; max-width: 100%; }
+
+button { font-family: inherit; }
+
+::selection { background: var(--ink-900); color: var(--white); }

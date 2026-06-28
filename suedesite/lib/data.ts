@@ -1,0 +1,103 @@
+/* Shared sample content for the Suede UI kit (fictional brands & reviews). */
+export const SUEDE_BRANDS = [
+  { name: 'Kai Collective', image: '/assets/models/kai-collective.png', rating: 4.5, reviews: '234', followers: '12.2k', tagline: 'London-based contemporary brand intentionally crafted to make women feel their most confident.', founder: 'Founded by Fisayo Longe, sharp tailoring with gold-hardware drama.', founded: '2016', category: 'Womenswear', location: 'London, UK', social: '@kaicollective' },
+  { name: 'Nadi', image: '/assets/models/nadi.png', rating: 5, reviews: '3', followers: '1K', tagline: 'Designed for women who value quality, presence, and self-expression, NADI is not about fast fashion or fleeting trends.', founder: 'Founded by Aya Okonkwo, blending West African textiles with modern silhouettes.', founded: '2019', category: 'Womenswear', location: 'Brooklyn, NY', social: '@nadibydani' },
+  { name: 'Meji Meji', image: '/assets/models/meji-meji.png', rating: 4.5, reviews: '212', followers: '11.1k', tagline: 'Creating a world where every narrative is not only acknowledged but celebrated, interwoven into the very fabric of our collective journey.', founder: 'Founded by Meji Alabi, fluid jersey draping and asymmetry.', founded: '2018', category: 'Womenswear', location: 'Lagos, NG', social: '@mejimeji' },
+  { name: 'Kairos', image: '/assets/models/kairos.png', rating: 4, reviews: '156', followers: '7.8k', tagline: 'Drawing inspiration from kairos—the perfect, opportune moment—our creations are designed for those who seize life’s most meaningful occasions with confidence and style.', founder: 'Founded by Tunde Bakare, suede separates in earthen tones.', founded: '2020', category: 'Womenswear', location: 'Accra, GH', social: '@kairos' },
+  { name: 'Bupbes', image: '/assets/models/bupbes.png', rating: 4.5, reviews: '201', followers: '10.3k', tagline: 'From the Vietnamese “búp bê” (dolls) — created to make each girl’s world her own doll house, where she is the main character.', founder: 'Founded by Bupe Mwamba, sculptural corsetry and peplum tailoring.', founded: '2017', category: 'Womenswear', location: 'Lusaka, ZM', social: '@bupbes' },
+  { name: 'Nysama', image: '/assets/models/nysama.png', rating: 4, reviews: '143', followers: '6.9k', tagline: 'Elevated resort wear for wherever the day takes you, sunrise to sunset, cocktails to midnight.', founder: 'Founded by Nysa Mensah, elevated resort wear sunrise to sunset.', founded: '2021', category: 'Womenswear', location: 'Paris, FR', social: '@nysama' },
+  { name: 'Starfish Mrkt', image: '/assets/models/starfish.png', rating: 0, reviews: '0', followers: '0', tagline: 'This is placeholder text for Starfish Mrkt — outreach pending. We would love Starfish featured in our first drop.', founder: 'Outreach pending.', founded: '—', category: 'Womenswear', location: '—', social: '@starfishmrkt' },
+  { name: 'Bubon', image: '/assets/models/bubon.png', rating: 4, reviews: '128', followers: '5.7k', tagline: 'Offering a range of unique, original and innovative pieces, Bubon’s designs are inspired by nurturing the art of dressing.', founder: 'Founded by Bubon Atelier, deconstructed knit and denim.', founded: '2019', category: 'Unisex', location: 'Berlin, DE', social: '@bubon' },
+  { name: 'Tofe', image: '/assets/models/tofe.png', rating: 4.5, reviews: '174', followers: '8.1k', tagline: 'Bridging timeless elegance and fearless edge, with each piece crafted to inspire confidence, strength, and a sense of daring.', founder: 'Founded by Tofe Adeyemi, bias-cut column dresses in saturated colour.', founded: '2018', category: 'Womenswear', location: 'New York, NY', social: '@tofe' },
+  { name: 'Lanje', image: '/assets/models/lanje.png', rating: 0, reviews: '0', followers: '0', tagline: 'Brand profile coming soon — we’d love Lanje featured in an upcoming drop.', founder: 'Outreach pending.', founded: '—', category: 'Womenswear', location: '—', social: '@lanje' },
+  { name: 'Muse Brnd', image: '/assets/models/musebrnd.png', rating: 0, reviews: '0', followers: '0', tagline: 'MUSE BRND creates a harmonious composition on fabric that intertwines streetwear and lux.', founder: 'Outreach pending.', founded: '—', category: 'Womenswear', location: '—', social: '@musebrnd' },
+  { name: 'Coucoo', image: '/assets/models/coucoo.png', rating: 0, reviews: '0', followers: '0', tagline: 'The Coucoo experience aims to help every woman feel like the most empowered, confident version of themselves.', founder: 'Outreach pending.', founded: '—', category: 'Womenswear', location: '—', social: '@coucoo' },
+  { name: 'Local European', image: '/assets/models/localeuropean.png', rating: 0, reviews: '0', followers: '0', tagline: 'We’re building a world of elegance and practicality created for those who value ease, repeat wear, and intentional dressing.', founder: 'Outreach pending.', founded: '—', category: 'Womenswear', location: '—', social: '@localeuropean' },
+  { name: 'Akino', image: '/assets/models/akino.png', rating: 0, reviews: '0', followers: '0', tagline: 'Akino is an evolving capsule of statement day-to-night pieces for our city girl.', founder: 'Outreach pending.', founded: '—', category: 'Womenswear', location: '—', social: '@akino' },
+  { name: 'The Ekhator Label', image: '/assets/models/ekhator.png', rating: 0, reviews: '0', followers: '0', tagline: 'We wanted to touch on this piece to pay homage to our African roots, inspired by the working class back home who used baskets for their day-to-day work.', founder: 'Outreach pending.', founded: '—', category: 'Womenswear', location: '—', social: '@theekhatorlabel' },
+  { name: 'Constructed for Women', image: '/assets/models/constructedforwomen.png', rating: 0, reviews: '0', followers: '0', tagline: 'Bringing fresh perspectives and bold expressions in the world of fashion is our foundation.', founder: 'Outreach pending.', founded: '—', category: 'Womenswear', location: '—', social: '@constructedforwomen' },
+];
+
+export const SUEDE_REVIEWS = [
+  { reviewer: { name: 'Asaya Smith', handle: '@AsayaS', avatar: '/assets/avatars/avatar-asaya.jpg' },
+    measurements: { height: "5'5\"", bust: '33"', waist: '29"', hips: '40"' },
+    product: 'Two Piece Motor Set', size: '6', brand: 'Future By Dionne', rating: 4.5, likes: 48, comments: 48, extraCount: 2,
+    image: '/assets/imagery/fit-asaya.jpeg',
+    excerpt: 'Incredible quality and the fit is perfect — I wish the jacket was slightly more cropped to sit directly above the skirt, but nothing my tailor can’t fix! Highly recommend if you’re looking for a standout item.' },
+  { reviewer: { name: 'Tofe Bello', handle: '@tofewears', avatar: '/assets/avatars/avatar-blue.jpg' },
+    measurements: { height: "5'9\"", bust: '34"', waist: '26"', hips: '38"' },
+    product: 'Bomber Jacket', size: 'M', brand: 'Kairos', rating: 4, likes: 31, comments: 12, extraCount: 1,
+    image: '/assets/imagery/fit-bomber.png',
+    excerpt: 'Runs true to size with room to layer. The suede hand-feel is gorgeous and the lining is well finished.' },
+  { reviewer: { name: 'Amara Cole', handle: '@amaracole', avatar: '/assets/avatars/avatar-rose.jpg' },
+    measurements: { height: "5'4\"", bust: '32"', waist: '27"', hips: '37"' },
+    product: 'The Nyomi Maxi', size: '4', brand: 'Tofe', rating: 5, likes: 64, comments: 22, extraCount: 3,
+    image: '/assets/imagery/fit-street.jpg',
+    excerpt: 'My measurement match was spot on. The bias cut skims rather than clings — exactly what I hoped for.' },
+  { reviewer: { name: 'Lena Diallo', handle: '@lenad', avatar: '/assets/avatars/avatar-blue.jpg' },
+    measurements: { height: "5'7\"", bust: '36"', waist: '30"', hips: '42"' },
+    product: 'Corset Top', size: '8', brand: 'Bupbes', rating: 4.5, likes: 39, comments: 18, extraCount: 2,
+    image: '/assets/imagery/fit-bomber.png',
+    excerpt: 'Structured but breathable. Sizing notes from other reviewers with my hips were accurate — I sized up one and it was perfect.' },
+];
+
+export const SUEDE_MEMBERS = [
+  { name: 'Kikiola Akanbi', handle: '@kikiolaakanbi', m: { height: "5'5\"", bust: '33"', waist: '29"', hips: '40"' }, reviews: 1, inquiries: 0, brands: 1 },
+  { name: 'Amara Johnson', handle: '@amaraj', m: { height: "5'7\"", bust: '35"', waist: '27"', hips: '38"' }, reviews: 12, inquiries: 3, brands: 5 },
+  { name: 'Sarah Chen', handle: '@sarahc', m: { height: "5'4\"", bust: '34"', waist: '28"', hips: '36"' }, reviews: 8, inquiries: 1, brands: 2 },
+  { name: 'Zoe Williams', handle: '@zoew', m: { height: "5'9\"", bust: '36"', waist: '30"', hips: '42"' }, reviews: 24, inquiries: 7, brands: 8 },
+  { name: 'Priya Patel', handle: '@priyap', m: { height: "5'2\"", bust: '32"', waist: '26"', hips: '35"' }, reviews: 15, inquiries: 4, brands: 3 },
+  { name: 'Emma Rodriguez', handle: '@emmar', m: { height: "5'6\"", bust: '38"', waist: '32"', hips: '44"' }, reviews: 6, inquiries: 2, brands: 1 },
+];
+
+export const SUEDE_INQUIRIES = [
+  { asker: { name: 'Asaya Smith', handle: '@AsayaS', avatar: '/assets/avatars/avatar-asaya.jpg' },
+    measurements: { height: "5'5\"", bust: '33"', waist: '29"', hips: '40"' },
+    product: 'Two Piece Motor Set', size: '6', brand: 'Future By Dionne', image: '/assets/imagery/fit-asaya.jpeg', status: 'Answered', replies: 2,
+    question: 'Does the set run true to size on the waist, or should I size up for the skirt?',
+    responses: [
+      { name: 'Lena', meas: "5'6\"/33\"/40\"", text: 'True to size — the skirt sits right at the waist.', likes: 48, avatar: '/assets/avatars/avatar-blue.jpg' },
+      { name: 'Amara', meas: "5'4\"/29\"/40\"", text: 'I sized up one and loved the drape.', likes: 31, avatar: '/assets/avatars/avatar-rose.jpg' },
+    ] },
+  { asker: { name: 'Lena Diallo', handle: '@lenad', avatar: '/assets/avatars/avatar-blue.jpg' },
+    measurements: { height: "5'7\"", bust: '36"', waist: '30"', hips: '42"' },
+    product: 'Corset Top', size: '8', brand: 'Bupbes', image: '/assets/imagery/fit-street.jpg', status: 'Awaiting response', replies: 0,
+    question: 'Is the boning flexible enough to sit through dinner for an hourglass shape?',
+    responses: [] },
+  { asker: { name: 'Amara Cole', handle: '@amaracole', avatar: '/assets/avatars/avatar-rose.jpg' },
+    measurements: { height: "5'4\"", bust: '32"', waist: '27"', hips: '37"' },
+    product: 'The Nyomi Maxi', size: '4', brand: 'Tofe', image: '/assets/imagery/oumou.jpg', status: 'Answered', replies: 2,
+    question: 'How is the length on a petite frame? Worried the bias cut will pool at the floor.',
+    responses: [
+      { name: 'Zoe', meas: "5'9\"/30\"/42\"", text: 'Runs long — I hemmed mine two inches.', likes: 22, avatar: '/assets/avatars/avatar-blue.jpg' },
+      { name: 'Priya', meas: "5'2\"/26\"/35\"", text: 'Pooled slightly on me but heels fixed it.', likes: 14, avatar: '/assets/avatars/avatar-rose.jpg' },
+    ] },
+  { asker: { name: 'Tofe Bello', handle: '@tofewears', avatar: '/assets/avatars/avatar-blue.jpg' },
+    measurements: { height: "5'9\"", bust: '34"', waist: '26"', hips: '38"' },
+    product: 'Bomber Jacket', size: 'M', brand: 'Kairos', image: '/assets/imagery/fit-bomber.png', status: 'Awaiting response', replies: 0,
+    question: 'Is the suede lined? Wondering about layering a knit underneath for autumn.',
+    responses: [] },
+];
+
+export const SUEDE_NOTIFICATIONS = [
+  { id: 1, type: 'review', icon: 'reviews', unread: true, time: '2h ago',
+    actor: { name: 'Amara Johnson', avatar: '/assets/avatars/avatar-rose.jpg' },
+    text: 'left a review on', target: 'Kai Collective', detail: '“True to size with a clean drape — a standout.”', route: 'lookbook' },
+  { id: 2, type: 'match', icon: 'ruler', unread: true, time: '5h ago',
+    actor: null,
+    text: 'A new high-confidence Suede Match reviewed', target: 'Two Piece Motor Set', detail: 'Asaya Smith shares your measurements — see how it fit her.', route: 'lookbook' },
+  { id: 3, type: 'follow', icon: 'user-plus', unread: true, time: 'Yesterday',
+    actor: { name: 'Zoe Williams', avatar: '/assets/avatars/avatar-blue.jpg' },
+    text: 'started following you', target: '', detail: '', route: 'yourprofile' },
+  { id: 4, type: 'inquiry', icon: 'message', unread: false, time: '2 days ago',
+    actor: { name: 'Sarah Chen', avatar: '/assets/avatars/avatar-rose.jpg' },
+    text: 'responded to your inquiry on', target: 'Corset Top', detail: '“I sized up one — loved the structure through the waist.”', route: 'lookbook' },
+  { id: 5, type: 'review', icon: 'heart', unread: false, time: '3 days ago',
+    actor: { name: 'Priya Patel', avatar: '/assets/avatars/avatar-blue.jpg' },
+    text: 'found your review helpful on', target: 'The Nyomi Maxi', detail: '', route: 'lookbook' },
+  { id: 6, type: 'brand', icon: 'shirt', unread: false, time: '5 days ago',
+    actor: null,
+    text: 'A brand you follow just joined The Capsule', target: 'Akino', detail: 'Akino is an evolving capsule of statement day-to-night pieces.', route: 'capsule' },
+];
+
+export const SUEDE_NOTIF_COUNT = SUEDE_NOTIFICATIONS.filter((n) => n.unread).length;
