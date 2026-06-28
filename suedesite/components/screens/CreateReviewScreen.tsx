@@ -106,6 +106,12 @@ export function CreateReviewScreen({ onRoute, authed = false }: any) {
   const [brandOpen, setBrandOpen] = React.useState(false);
   const [brandQuery, setBrandQuery] = React.useState('');
   const [productSel, setProductSel] = React.useState('');
+  const [photos, setPhotos] = React.useState<string[]>([]);
+  const onPhotos = (e: any) => {
+    const files = Array.from(e.target.files || []) as any[];
+    if (!files.length) return;
+    setPhotos(p => [...p, ...files.slice(0, Math.max(0, 5 - p.length)).map((f) => URL.createObjectURL(f))]);
+  };
 
   const setRating = (k: any, v: any) => {
     setRatings(r => ({ ...r, [k]: v }));
@@ -274,10 +280,26 @@ export function CreateReviewScreen({ onRoute, authed = false }: any) {
 
         <SectionCard title="Add Photos & Videos">
           <div style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-muted)', marginBottom: 14, marginTop: -8 }}>Up to 5 photos • Up to 2 videos • Video max length 60 seconds</div>
-          <div style={{ border: '1px dashed var(--border-default)', padding: '44px 0', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
-            <Icon name="plus" size={22} color="var(--text-muted)" />
-            <span style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-secondary)' }}>Drag and drop or <span style={{ color: 'var(--text-primary)', textDecoration: 'underline', textUnderlineOffset: 3 }}>browse files</span></span>
-          </div>
+          {photos.length > 0 && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginBottom: 14 }}>
+              {photos.map((src, i) => (
+                <span key={i} style={{ position: 'relative', width: 84, height: 104, background: 'var(--linen)', overflow: 'hidden' }}>
+                  <img src={src} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  <button type="button" onClick={() => setPhotos(p => p.filter((_, j) => j !== i))} aria-label="Remove photo"
+                    style={{ position: 'absolute', top: 4, right: 4, width: 22, height: 22, borderRadius: '50%', border: 'none', background: 'rgba(20,18,15,0.7)', color: 'var(--white)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Icon name="close" size={13} color="var(--white)" />
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
+          {photos.length < 5 && (
+            <label style={{ border: '1px dashed var(--border-default)', padding: '44px 0', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+              <input type="file" accept="image/*,video/*" multiple onChange={onPhotos} style={{ display: 'none' }} />
+              <Icon name="plus" size={22} color="var(--text-muted)" />
+              <span style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-secondary)' }}>Drag and drop or <span style={{ color: 'var(--text-primary)', textDecoration: 'underline', textUnderlineOffset: 3 }}>browse files</span></span>
+            </label>
+          )}
         </SectionCard>
 
         <SectionCard title="Add Link to Existing Content (Optional)">

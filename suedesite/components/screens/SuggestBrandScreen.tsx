@@ -25,7 +25,7 @@ export function SuggestBrandScreen({ onRoute }: any) {
         </span>
         <h1 style={{ fontFamily: 'var(--font-serif)', fontWeight: 500, fontSize: 40, color: 'var(--text-heading)', margin: 0 }}>Suggestion received</h1>
         <p style={{ fontFamily: 'var(--font-body)', fontSize: 16, color: 'var(--text-secondary)', margin: 0, maxWidth: 480, lineHeight: 1.6 }}>
-          Thank you for suggesting{name.trim() ? ` ${name.trim()}` : ' a brand'}. Our team reviews every submission as we grow The Capsule.
+          Thanks for your suggestion. Our team reviews every submission as we grow The Capsule.
         </p>
         <div style={{ display: 'flex', gap: 14, marginTop: 8 }}>
           <Button variant="secondary" onClick={() => { setName(''); setUrl(''); setWhy(''); setSubmitted(false); }}>Suggest another</Button>
