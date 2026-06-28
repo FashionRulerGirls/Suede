@@ -80,7 +80,7 @@ function MeasurementsStep({ sizes, setSize }: any) {
   return (
     <div>
       <h2 style={{ fontFamily: 'var(--font-serif)', fontWeight: 400, fontSize: 26, color: 'var(--text-heading)', margin: 0 }}>Measurement Profile</h2>
-      <p style={{ fontFamily: 'var(--font-body)', fontSize: 15, color: 'var(--text-muted)', margin: '8px 0 0', maxWidth: 620, lineHeight: 1.6 }}>Your measurements are used to calculate Match Scores with members of the Collective. They are kept private and only shared as aggregate match.</p>
+      <p style={{ fontFamily: 'var(--font-body)', fontSize: 15, color: 'var(--text-muted)', margin: '8px 0 0', maxWidth: 620, lineHeight: 1.6 }}>Your measurements are used to calculate Suede Match scores with members of the Collective. If you would like for your measurements to remain private, please update your preference in Account Settings.</p>
       <div style={{ height: 1, background: 'var(--border-subtle)', margin: '28px 0' }} />
 
       <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start', background: 'var(--surface-inset)', border: '1px solid var(--border-subtle)', padding: '16px 18px', marginBottom: 32 }}>
@@ -141,6 +141,12 @@ function SocialStep() {
 }
 
 function AccountStep({ onRoute }: any) {
+  const [prefs, setPrefs] = React.useState<Record<string, boolean>>({
+    'Private measurements': true,
+    'Email notifications': true,
+    'Show profile in The Collective': true,
+  });
+  const togglePref = (k: string) => setPrefs(p => ({ ...p, [k]: !p[k] }));
   const deleteAccount = () => {
     if (typeof window !== 'undefined' && window.confirm('Permanently delete your Suede account? This cannot be undone.')) {
       onRoute('__signout');
@@ -156,19 +162,22 @@ function AccountStep({ onRoute }: any) {
         <EPInput label="Password" type="password" defaultValue="password" />
       </div>
       <div style={{ marginTop: 28, display: 'flex', flexDirection: 'column', gap: 14 }}>
-        {[['Private measurements', 'Only share aggregate match percentages — never raw numbers.', true],
-          ['Email notifications', 'Get notified when someone reviews an item in your size.', true],
-          ['Show profile in The Collective', 'Appear in member discovery and search.', true]].map(([t, d, on]: any) => (
+        {[['Private measurements', 'Only share aggregate match percentages — never raw numbers.'],
+          ['Email notifications', 'Get notified when someone reviews an item in your size.'],
+          ['Show profile in The Collective', 'Appear in member discovery and search.']].map(([t, d]: any) => {
+          const on = prefs[t];
+          return (
           <div key={t} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 20, border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-xs)', padding: '16px 18px' }}>
             <div>
               <div style={{ fontFamily: 'var(--font-body)', fontSize: 15, color: 'var(--text-primary)' }}>{t}</div>
               <div style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-muted)', marginTop: 3 }}>{d}</div>
             </div>
-            <span style={{ width: 44, height: 26, borderRadius: 999, background: on ? 'var(--ink-900)' : 'var(--ink-200)', position: 'relative', flex: 'none' }}>
+            <button type="button" role="switch" aria-checked={on} aria-label={t} onClick={() => togglePref(t)} style={{ width: 44, height: 26, borderRadius: 999, background: on ? 'var(--ink-900)' : 'var(--ink-200)', position: 'relative', flex: 'none', border: 'none', padding: 0, cursor: 'pointer', transition: 'background var(--dur-base) var(--ease-out)' }}>
               <span style={{ position: 'absolute', top: 3, left: on ? 21 : 3, width: 20, height: 20, borderRadius: '50%', background: 'var(--white)', transition: 'left var(--dur-base) var(--ease-out)' }} />
-            </span>
+            </button>
           </div>
-        ))}
+          );
+        })}
         <button type="button" onClick={deleteAccount} style={{ alignSelf: 'flex-start', marginTop: 8, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--rating-critical)', textDecoration: 'underline', textUnderlineOffset: 3, padding: 0 }}>Delete account</button>
       </div>
     </div>
