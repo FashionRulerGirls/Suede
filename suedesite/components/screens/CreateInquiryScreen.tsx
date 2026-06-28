@@ -4,6 +4,7 @@ import React from 'react';
 import { Button, Field, Input, Icon, Select } from '@/components/ds';
 import { appState } from '@/lib/appState';
 import { SignInGate } from '@/components/screens/SignInGate';
+import { ProductFetch } from '@/components/screens/ProductFetch';
 
 function CISectionCard({ title, children }: any) {
   return (
@@ -34,10 +35,7 @@ export function CreateInquiryScreen({ onRoute, authed = false }: any) {
       <div style={{ maxWidth: 1000, margin: '0 auto', padding: '0 40px 60px', display: 'flex', flexDirection: 'column', gap: 18 }}>
         <CISectionCard title="Product Information">
           <Field label="Paste the product link">
-            <div style={{ display: 'flex', gap: 12 }}>
-              <span style={{ flex: 1 }}><Input variant="outline" placeholder="https://example.com/product" /></span>
-              <Button variant="primary">Fetch</Button>
-            </div>
+            <ProductFetch placeholder="https://example.com/product" />
           </Field>
           <Field label="Category (Optional)"><Select variant="outline" defaultValue=""><option value="" disabled>Select a category</option>{['Tops', 'Bottoms', 'Dresses', 'Outerwear'].map(c => <option key={c}>{c}</option>)}</Select></Field>
         </CISectionCard>

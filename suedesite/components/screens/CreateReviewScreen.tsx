@@ -5,6 +5,7 @@ import React from 'react';
 import { Button, Field, Input, Select, Icon } from '@/components/ds';
 import { SUEDE_BRANDS } from '@/lib/data';
 import { SignInGate } from '@/components/screens/SignInGate';
+import { ProductFetch } from '@/components/screens/ProductFetch';
 
 function StarRow({ label, value, onChange }: any) {
   const [hover, setHover] = React.useState(0);
@@ -210,10 +211,7 @@ export function CreateReviewScreen({ onRoute, authed = false }: any) {
           )}
           {mode === 'url' && (
             <Field label="Product URL">
-              <div style={{ display: 'flex', gap: 12 }}>
-                <span style={{ flex: 1 }}><Input variant="outline" placeholder="https:// example.com/product" /></span>
-                <Button variant="primary">Fetch</Button>
-              </div>
+              <ProductFetch placeholder="https://example.com/product" />
             </Field>
           )}
           {mode === 'manual' && (
