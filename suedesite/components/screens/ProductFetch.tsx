@@ -16,12 +16,14 @@ export function ProductFetch({
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [product, setProduct] = React.useState<FetchedProduct | null>(null);
+  const [imgError, setImgError] = React.useState(false);
 
   const run = async () => {
     if (!url.trim() || loading) return;
     setLoading(true);
     setError(null);
     setProduct(null);
+    setImgError(false);
     try {
       const p = await fetchProduct(url.trim());
       setProduct(p);
@@ -64,8 +66,8 @@ export function ProductFetch({
       {product && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginTop: 16, padding: 14, border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-xs)', background: 'var(--linen)' }}>
           <span style={{ width: 56, height: 70, flex: 'none', background: 'var(--surface-card)', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            {product.image
-              ? <img src={product.image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            {product.image && !imgError
+              ? <img src={product.image} alt="" referrerPolicy="no-referrer" onError={() => setImgError(true)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               : <Icon name="image" size={18} color="var(--text-muted)" />}
           </span>
           <div style={{ minWidth: 0, flex: 1 }}>
