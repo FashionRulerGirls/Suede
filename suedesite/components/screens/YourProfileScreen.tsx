@@ -1,8 +1,8 @@
 'use client';
 import React from 'react';
 /* Suede — Your Profile (logged-in member's own profile). */
-import { Avatar, Button, Tabs, Icon, ReviewCard, MeasurementSpec } from '@/components/ds';
-import { SUEDE_REVIEWS, SUEDE_INQUIRIES } from '@/lib/data';
+import { Avatar, Button, Tabs, Icon, ReviewCard, MeasurementSpec, StarRating } from '@/components/ds';
+import { SUEDE_REVIEWS, SUEDE_INQUIRIES, SUEDE_BRANDS, SUEDE_MEMBERS } from '@/lib/data';
 import { appState } from '@/lib/appState';
 import { SuedeControls } from '@/lib/listControls';
 import { FullMeasureRow } from '@/components/screens/FullMeasureRow';
@@ -49,47 +49,81 @@ export function YourProfileScreen({ onRoute }: any) {
 
   if (view !== 'profile') {
     const isBrands = view === 'brands';
+    const ql = feedQuery.trim().toLowerCase();
+    const avatarPool = ['/assets/avatars/avatar-rose.jpg', '/assets/avatars/avatar-blue.jpg', '/assets/avatars/avatar-asaya.jpg'];
+    // The brands this member follows / the members who follow them.
+    const followedBrands = (SUEDE_BRANDS || []).slice(0, Number(m.brands) || 8).filter(b => b.name.toLowerCase().includes(ql));
+    const followers = (SUEDE_MEMBERS || []).filter(p => (p.name + ' ' + p.handle).toLowerCase().includes(ql));
+    const openBrand = (b: any) => { appState.brand = b; onRoute('brand'); };
+    const openMember = (p: any, avatar: string) => {
+      appState.member = { name: p.name, handle: p.handle, avatar, social: p.handle, bio: "I love to explore the brands and Fashion. It's my hobby.", measurements: p.m, followers: '30', reviews: String(p.reviews), inquiries: String(p.inquiries), brands: String(p.brands) };
+      onRoute('member');
+    };
     return (
-      <div style={{ maxWidth: 1460, margin: '0 auto', padding: '28px 52px 0' }}>
+      <div style={{ maxWidth: 1240, margin: '0 auto', padding: '28px 52px 0' }}>
         <button onClick={() => setView('profile')} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-secondary)', marginBottom: 24 }}>
           <Icon name="arrow-left" size={16} color="var(--text-secondary)" /> Back to your profile
         </button>
         <header style={{ display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'center', textAlign: 'center', marginBottom: 28 }}>
           <span style={{ fontFamily: 'var(--font-body)', fontSize: 12, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--text-muted)' }}>{isBrands ? 'Brands You Follow' : 'Your Followers'}</span>
           <h1 style={{ fontFamily: 'var(--font-serif)', fontWeight: 400, fontSize: 48, color: 'var(--text-heading)', margin: 0 }}>
-            {isBrands ? 'Capsule Feed' : 'Collective Feed'}
+            {isBrands ? `${m.brands} Brands` : `${m.followers} Followers`}
           </h1>
           <p style={{ fontFamily: 'var(--font-body)', fontSize: 15, color: 'var(--text-muted)', margin: 0, maxWidth: 560 }}>
-            {isBrands ? 'Discover the latest reviews and inquiries from your favorite brands.' : 'Discover the latest reviews and inquiries from your most trusted voices.'}
+            {isBrands ? 'Every Capsule brand you follow. Tap any brand to view its page.' : 'Everyone following your fit and reviews. Tap a member to view their profile.'}
           </p>
         </header>
 
         {(() => {
           const Controls: any = SuedeControls || {};
-          const SearchBar = Controls.SearchBar, Dropdown = Controls.Dropdown, CollapsibleToolbar = Controls.CollapsibleToolbar;
+          const SearchBar = Controls.SearchBar, CollapsibleToolbar = Controls.CollapsibleToolbar;
           if (!CollapsibleToolbar) return null;
           return (
-            <CollapsibleToolbar align="space-between">
-              <SearchBar value={feedQuery} onChange={setFeedQuery} placeholder="Search by brand" />
-              <Dropdown label="Sort" value={feedSort} onChange={setFeedSort} options={[{ value: 'date', label: 'Latest' }, { value: 'high', label: 'Rating: High → Low' }, { value: 'low', label: 'Rating: Low → High' }, { value: 'az', label: 'Brand A → Z' }]} />
+            <CollapsibleToolbar align="flex-end">
+              <SearchBar value={feedQuery} onChange={setFeedQuery} placeholder={isBrands ? 'Search brands' : 'Search followers'} />
             </CollapsibleToolbar>
           );
         })()}
 
-        <div style={{ maxWidth: 460, margin: '0 auto 32px' }}>
-          <Tabs items={[{ label: 'Reviews', value: 'reviews' }, { label: 'Inquiries', value: 'inquiries' }]} value={feedTab} onChange={setFeedTab} align="stretch" />
-        </div>
-
-        {feedTab === 'reviews' ? (
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 28, paddingBottom: 24 }}>
-            {[...reviews].slice(0, 4).filter(r => r.brand.toLowerCase().includes(feedQuery.trim().toLowerCase())).map((r, i) => <ReviewCard key={i} {...r} onSeeFull={() => openReview(r)} />)}
+        {isBrands ? (
+          followedBrands.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '54px 0', fontFamily: 'var(--font-serif)', fontSize: 22, color: 'var(--text-heading)' }}>No brands found.</div>
+          ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24, marginTop: 28, paddingBottom: 28 }}>
+            {followedBrands.map((b: any) => (
+              <button key={b.name} onClick={() => openBrand(b)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, background: 'var(--surface-card)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-sm)', padding: '24px 20px', cursor: 'pointer', textAlign: 'center', transition: 'border-color var(--dur-fast) var(--ease-out)' }}
+                onMouseEnter={(e) => e.currentTarget.style.borderColor = 'var(--ink-900)'} onMouseLeave={(e) => e.currentTarget.style.borderColor = 'var(--border-subtle)'}>
+                <span style={{ width: 96, height: 120, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+                  <img src={b.image} alt={b.name} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+                </span>
+                <span style={{ fontFamily: 'var(--font-serif)', fontSize: 19, letterSpacing: '0.02em', color: 'var(--text-heading)' }}>{b.name}</span>
+                <StarRating value={b.rating} size={14} />
+                <span style={{ fontFamily: 'var(--font-body)', fontSize: 12.5, color: 'var(--text-muted)' }}>{b.reviews} Reviews · {b.followers} Followers</span>
+              </button>
+            ))}
           </div>
+          )
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 28, paddingBottom: 24 }}>
-            {(SUEDE_INQUIRIES || []).filter(it => it.brand.toLowerCase().includes(feedQuery.trim().toLowerCase())).map((it, i) => {
-              return <InquiryCard key={i} {...it} onOpen={() => { appState.inquiry = it; onRoute('inquiry'); }} />;
+          followers.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '54px 0', fontFamily: 'var(--font-serif)', fontSize: 22, color: 'var(--text-heading)' }}>No followers found.</div>
+          ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 28, paddingBottom: 28 }}>
+            {followers.map((p: any, i: number) => {
+              const avatar = avatarPool[i % avatarPool.length];
+              return (
+                <button key={p.handle} onClick={() => openMember(p, avatar)} style={{ display: 'flex', alignItems: 'center', gap: 16, background: 'var(--surface-card)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-sm)', padding: '16px 20px', cursor: 'pointer', textAlign: 'left', transition: 'border-color var(--dur-fast) var(--ease-out)' }}
+                  onMouseEnter={(e) => e.currentTarget.style.borderColor = 'var(--ink-900)'} onMouseLeave={(e) => e.currentTarget.style.borderColor = 'var(--border-subtle)'}>
+                  <Avatar src={avatar} name={p.name} size="md" />
+                  <span style={{ display: 'flex', flexDirection: 'column', gap: 3, minWidth: 0, flex: 1 }}>
+                    <span style={{ fontFamily: 'var(--font-serif)', fontSize: 18, color: 'var(--text-primary)' }}>{p.name}</span>
+                    <span style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-muted)' }}>{p.handle} · {p.reviews} reviews</span>
+                  </span>
+                  <Icon name="chevron-right" size={16} color="var(--text-muted)" />
+                </button>
+              );
             })}
           </div>
+          )
         )}
       </div>
     );
@@ -137,8 +171,8 @@ export function YourProfileScreen({ onRoute }: any) {
             <div style={{ display: 'flex', justifyContent: 'center', gap: 64, paddingTop: 28, borderTop: '1px solid var(--border-subtle)', textAlign: 'center', width: '100%' }}>
               <YProfStat value={m.reviews} label="Reviews" />
               <YProfStat value={m.inquiries} label="Inquiries" />
-              <YProfStat value={m.brands} label="Brands Followed" feedLabel="See Capsule Feed" onFeed={() => setView('brands')} />
-              <YProfStat value={m.followers} label="Followers" feedLabel="See Collective Feed" onFeed={() => setView('followers')} />
+              <YProfStat value={m.brands} label="Brands Followed" feedLabel="See all brands" onFeed={() => setView('brands')} />
+              <YProfStat value={m.followers} label="Followers" feedLabel="See all followers" onFeed={() => setView('followers')} />
             </div>
           </div>
         </div>

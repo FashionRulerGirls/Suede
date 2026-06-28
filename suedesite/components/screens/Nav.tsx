@@ -327,7 +327,7 @@ export function Nav({ route, onRoute, authed = false }: any) {
           <div style={{ height: 1, background: 'var(--border-subtle)', marginBottom: 18 }} />
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {profItems.map(it => (
-              <button key={it.id} onClick={() => { setMeasure(false); onRoute(it.id === 'quiz' ? 'quiz' : it.id === 'consult' ? 'consult' : 'signin'); }}
+              <button key={it.id} onClick={() => { setMeasure(false); onRoute(it.id === 'quiz' ? 'quiz' : it.id === 'consult' ? 'consult' : (authed ? 'editprofile' : 'signin')); }}
                 style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 14, background: 'var(--surface-card)', border: '1px solid var(--border-default)', padding: '16px 18px', cursor: 'pointer', textAlign: 'left' }}
                 onMouseEnter={(e) => e.currentTarget.style.borderColor = 'var(--ink-900)'}
                 onMouseLeave={(e) => e.currentTarget.style.borderColor = 'var(--border-default)'}>

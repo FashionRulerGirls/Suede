@@ -4,6 +4,7 @@
 import React from 'react';
 import { Button, Field, Input, Select, Icon } from '@/components/ds';
 import { SUEDE_BRANDS } from '@/lib/data';
+import { appState } from '@/lib/appState';
 import { SignInGate } from '@/components/screens/SignInGate';
 import { ProductFetch } from '@/components/screens/ProductFetch';
 
@@ -90,7 +91,10 @@ function SectionCard({ title, action, children }: any) {
 
 export function CreateReviewScreen({ onRoute, authed = false }: any) {
   const brands = SUEDE_BRANDS || [];
-  const [mode, setMode] = React.useState('manual');
+  // When arriving from a brand page, that brand is pre-selected.
+  const presetBrand = appState.reviewBrand;
+  React.useEffect(() => { appState.reviewBrand = null; }, []);
+  const [mode, setMode] = React.useState('search');
   const [ratings, setRatings] = React.useState({ sizing: 0, material: 0, value: 0, photos: 0, service: 0 });
   const [scale, setScale] = React.useState('Letter');
   const [size, setSize] = React.useState('');
@@ -98,7 +102,7 @@ export function CreateReviewScreen({ onRoute, authed = false }: any) {
   const [modal, setModal] = React.useState(false);
   const [hideMeasure, setHideMeasure] = React.useState(false);
   const [brandType, setBrandType] = React.useState('Capsule Brand');
-  const [brandSel, setBrandSel] = React.useState('');
+  const [brandSel, setBrandSel] = React.useState(presetBrand?.name || '');
   const [brandOpen, setBrandOpen] = React.useState(false);
   const [brandQuery, setBrandQuery] = React.useState('');
   const [productSel, setProductSel] = React.useState('');

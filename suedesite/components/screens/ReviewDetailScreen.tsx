@@ -33,7 +33,7 @@ function CommentRow({ avatar, name, when, body, likes }: any) {
   );
 }
 
-export function ReviewDetailScreen({ onRoute }: any) {
+export function ReviewDetailScreen({ onRoute, authed = false }: any) {
   const r = appState.review || {};
   const reviewer = r.reviewer || { name: 'Kikiola Akanbi', handle: '@kikiolaakanbi', avatar: '/assets/avatars/avatar-asaya.jpg' };
   const m = r.measurements || { height: "5'5\"", bust: '33"', waist: '29"', hips: '40"' };
@@ -42,11 +42,18 @@ export function ReviewDetailScreen({ onRoute }: any) {
   const brand = r.brand || 'Nadi';
   const body = r.full || "These trousers are everything. The wide leg is flattering without being overwhelming, and they hit at just the right length for my height. True to size for my measurements—I ordered a medium and it fits perfectly at the waist and hips. The fabric has a beautiful drape with a subtle sheen that elevates any outfit. I've worn them to work with a silk blouse and also dressed them down with sneakers on the weekend. The tailoring is impeccable—you can tell these are made to last. The only minor note is that they do wrinkle easily, so steaming before wear is recommended. Overall, absolutely worth the investment for a versatile wardrobe staple.";
   const thumbs = [image, image, image, image];
-  const comments = [
+  const [comments, setComments] = React.useState([
     { avatar: '/assets/avatars/avatar-rose.jpg', name: 'Sophie L.', when: '2 days ago', likes: 3, body: "These look amazing! How do they compare to your usual size? I'm between sizes too." },
     { avatar: '/assets/avatars/avatar-blue.jpg', name: 'Maria T.', when: '1 day ago', likes: 1, body: 'The drape on these is beautiful. Do they stretch at all in the waist?' },
     { avatar: '/assets/avatars/avatar-asaya.jpg', name: 'Alex P.', when: '12 hours ago', likes: 5, body: "I have similar measurements and ordered these based on your review. Can't wait for them to arrive!" },
-  ];
+  ]);
+  const [draft, setDraft] = React.useState('');
+  const postComment = () => {
+    const body = draft.trim();
+    if (!body) return;
+    setComments(c => [{ avatar: '/assets/avatars/avatar-rose.jpg', name: 'Kikiola Akanbi', when: 'Just now', likes: 0, body }, ...c]);
+    setDraft('');
+  };
 
   return (
     <div style={{ maxWidth: 1240, margin: '0 auto', padding: '28px 40px 0' }}>
@@ -118,11 +125,24 @@ export function ReviewDetailScreen({ onRoute }: any) {
         {comments.map((c, i) => <CommentRow key={i} {...c} />)}
       </div>
 
-      {/* CTA */}
-      <div style={{ textAlign: 'center', padding: '56px 0 40px' }}>
-        <div style={{ fontFamily: 'var(--font-body)', fontSize: 13, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--text-secondary)', marginBottom: 20 }}>Sign in to join the community discussion</div>
-        <Button variant="primary" shape="pill" onClick={() => onRoute('signin')}>Sign In</Button>
-      </div>
+      {/* CTA / composer */}
+      {authed ? (
+        <div style={{ padding: '40px 0' }}>
+          <div style={{ background: 'var(--surface-card)', border: '1px solid var(--border-subtle)', padding: 22 }}>
+            <textarea rows={3} value={draft} onChange={(e) => setDraft(e.target.value)} placeholder="Join the community discussion — ask about fit, sizing, or styling."
+              style={{ width: '100%', boxSizing: 'border-box', resize: 'vertical', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-xs)', background: 'transparent', padding: '12px 13px', fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-primary)', outline: 'none' }} />
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 14 }}>
+              <span style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-muted)' }}>Be respectful and constructive</span>
+              <Button variant="primary" size="sm" disabled={!draft.trim()} onClick={postComment}>Post Comment</Button>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div style={{ textAlign: 'center', padding: '56px 0 40px' }}>
+          <div style={{ fontFamily: 'var(--font-body)', fontSize: 13, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--text-secondary)', marginBottom: 20 }}>Sign in to join the community discussion</div>
+          <Button variant="primary" shape="pill" onClick={() => onRoute('signin')}>Sign In</Button>
+        </div>
+      )}
     </div>
   );
 }

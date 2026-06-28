@@ -7,4 +7,5 @@ export const appState: Record<string, any> = {
   profileView: null,
   lookbookTab: null,
   capsuleDrop: null,
+  reviewBrand: null,
 };

@@ -30,7 +30,7 @@ function CapsuleBrandCell({ b, onExplore, onRoute }: any) {
   );
 }
 
-function ExploreModal({ brand, onClose, onRoute }: any) {
+function ExploreModal({ brand, onClose, onRoute, authed }: any) {
   if (!brand) return null;
   const row = (icon: any, title: any, sub: any) => (
     <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
@@ -41,10 +41,18 @@ function ExploreModal({ brand, onClose, onRoute }: any) {
       </div>
     </div>
   );
-  const lockBtn = (label: any) => (
-    <button onClick={() => onRoute('signin')} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, background: 'var(--surface-card)', border: '1px solid var(--border-default)', padding: '14px', cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-primary)' }}>
-      <Icon name="lock" size={15} color="var(--text-muted)" />{label}
-    </button>
+  // Signed in: an active button that carries the brand into the form.
+  // Signed out: a locked button that routes to sign-in.
+  const engageBtn = (label: any, onClick: any) => (
+    authed ? (
+      <button onClick={onClick} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, background: 'var(--ink-900)', border: '1px solid var(--ink-900)', padding: '14px', cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--white)' }}>
+        {label}
+      </button>
+    ) : (
+      <button onClick={() => onRoute('signin')} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, background: 'var(--surface-card)', border: '1px solid var(--border-default)', padding: '14px', cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-primary)' }}>
+        <Icon name="lock" size={15} color="var(--text-muted)" />Sign in to {label.split(' ').pop()}
+      </button>
+    )
   );
   return (
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 60, background: 'rgba(20,18,15,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
@@ -57,12 +65,12 @@ function ExploreModal({ brand, onClose, onRoute }: any) {
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           {row('star', 'Leave a Review', 'Give a review to the Brand')}
-          {lockBtn('Sign in to Review')}
+          {engageBtn('Leave a Review', () => { onClose(); appState.reviewBrand = brand; onRoute('createreview'); })}
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginTop: 28 }}>
           {row('mail', 'Leave an Inquiry', 'Inquire about something')}
-          {lockBtn('Sign in to Inquire')}
+          {engageBtn('Leave an Inquiry', () => { onClose(); onRoute('createinquiry'); })}
         </div>
       </div>
     </div>
@@ -136,7 +144,7 @@ export function CapsuleScreen({ onRoute, authed = false }: any) {
         )}
       </div>
 
-      <ExploreModal brand={explore} onClose={() => setExplore(null)} onRoute={onRoute} />
+      <ExploreModal brand={explore} authed={authed} onClose={() => setExplore(null)} onRoute={onRoute} />
 
       <div style={{ maxWidth: 1240, margin: '64px auto 0', padding: '40px', textAlign: 'center', borderTop: '1px solid var(--border-subtle)' }}>
         <p style={{ fontFamily: 'var(--font-serif)', fontSize: 22, color: 'var(--text-heading)', margin: 0 }}>Know a brand that deserves to be featured in the Capsule?</p>

@@ -28,7 +28,7 @@ function ResponseRow({ avatar, name, specs, when, body, likes }: any) {
   );
 }
 
-export function InquiryDetailScreen({ onRoute }: any) {
+export function InquiryDetailScreen({ onRoute, authed = false }: any) {
   const q = appState.inquiry || {};
   const asker = q.asker || { name: 'Kikiola Akanbi', handle: '@kikiolaakanbi', avatar: '/assets/avatars/avatar-asaya.jpg' };
   const m = q.measurements || { height: "5'5\"", bust: '33"', waist: '29"', hips: '40"' };
@@ -37,10 +37,18 @@ export function InquiryDetailScreen({ onRoute }: any) {
   const product = q.product || 'The Nyomi Maxi';
   const size = q.size || '6';
   const question = q.question || 'How much coverage does the dress offer?';
-  const responses = [
+  const [responses, setResponses] = React.useState([
     { avatar: '/assets/avatars/avatar-rose.jpg', name: 'Sophie L.', specs: '5\'6"/33"/39"/40"', when: '2 days ago', likes: 3, body: 'Good coverage — fully lined through the bodice and skirt, only the leg slit is high.' },
     { avatar: '/assets/avatars/avatar-blue.jpg', name: 'Maria T.', specs: '5\'6"/33"/39"/40"', when: '1 day ago', likes: 1, body: 'Pretty good coverage. The neckline sits high and the sleeves are full length.' },
-  ];
+  ]);
+  const [draft, setDraft] = React.useState('');
+  const submitResponse = () => {
+    if (!authed) { onRoute('signin'); return; }
+    const body = draft.trim();
+    if (!body) return;
+    setResponses(rs => [...rs, { avatar: '/assets/avatars/avatar-rose.jpg', name: 'Kikiola Akanbi', specs: '5\'5"/33"/29"/40"', when: 'Just now', likes: 0, body }]);
+    setDraft('');
+  };
 
   return (
     <div style={{ maxWidth: 1240, margin: '0 auto', padding: '28px 40px 0' }}>
@@ -81,11 +89,11 @@ export function InquiryDetailScreen({ onRoute }: any) {
 
           {/* Response composer */}
           <div style={{ background: 'var(--surface-card)', border: '1px solid var(--border-subtle)', padding: 22 }}>
-            <textarea rows={3} placeholder="Let's have community discussion across the page"
+            <textarea rows={3} value={draft} onChange={(e) => setDraft(e.target.value)} placeholder="Let's have community discussion across the page"
               style={{ width: '100%', boxSizing: 'border-box', resize: 'vertical', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-xs)', background: 'transparent', padding: '12px 13px', fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-primary)', outline: 'none' }} />
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 14 }}>
               <span style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-muted)' }}>Be respectful and constructive</span>
-              <Button variant="primary" size="sm" onClick={() => onRoute('signin')}>Submit Response</Button>
+              <Button variant="primary" size="sm" disabled={authed && !draft.trim()} onClick={submitResponse}>Submit Response</Button>
             </div>
           </div>
 

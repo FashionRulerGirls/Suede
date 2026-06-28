@@ -180,7 +180,7 @@ export function BrandScreen({ onRoute, authed = false }: any) {
           })}
         </div>
         <div style={{ textAlign: 'center', marginTop: 28 }}>
-          <button onClick={() => onRoute('signin')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: 15, color: 'var(--text-primary)', textDecoration: 'underline', textUnderlineOffset: 4 }}>{website}</button>
+          <button onClick={() => window.open('https://' + website, '_blank', 'noopener,noreferrer')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: 15, color: 'var(--text-primary)', textDecoration: 'underline', textUnderlineOffset: 4 }}>{website}</button>
         </div>
       </div>
 

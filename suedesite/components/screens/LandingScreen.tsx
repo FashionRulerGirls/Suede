@@ -258,7 +258,7 @@ function HowItWorks({ onRoute }: any) {
   );
 }
 
-export function LandingScreen({ onRoute, tweaks }: any) {
+export function LandingScreen({ onRoute, tweaks, authed = false }: any) {
   const HOME_HIDDEN = ['Akino', 'The Ekhator Label', 'Constructed for Women'];
   const brands = SUEDE_BRANDS.filter((b) => !HOME_HIDDEN.includes(b.name));
   return (
@@ -319,7 +319,7 @@ export function LandingScreen({ onRoute, tweaks }: any) {
 
           <div style={{ textAlign: 'center', marginTop: 4 }}>
             <span style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-muted)' }}>Already know your measurements? </span>
-            <button onClick={() => onRoute('signin')} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-primary)', textDecoration: 'underline', textUnderlineOffset: 3 }}>Add them to your Suede profile</button>
+            <button onClick={() => onRoute(authed ? 'editprofile' : 'signin')} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-primary)', textDecoration: 'underline', textUnderlineOffset: 3 }}>Add them to your Suede profile</button>
           </div>
         </div>
       </section>
