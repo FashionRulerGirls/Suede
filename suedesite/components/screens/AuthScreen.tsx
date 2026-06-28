@@ -34,8 +34,8 @@ export function AuthScreen({ onRoute }: any) {
             <span style={{ fontFamily: 'var(--font-body)', fontSize: 12, letterSpacing: '0.08em' }}>OR</span>
             <span style={{ flex: 1, height: 1, background: 'var(--border-subtle)' }} />
           </div>
-          <Button variant="secondary" fullWidth icon="google">Continue with Google</Button>
-          <Button variant="secondary" fullWidth icon="apple">Continue with Apple</Button>
+          <Button variant="secondary" fullWidth icon="google" onClick={() => onRoute('__signin')}>Continue with Google</Button>
+          <Button variant="secondary" fullWidth icon="apple" onClick={() => onRoute('__signin')}>Continue with Apple</Button>
         </div>
       </Card>
       <p style={{ textAlign: 'center', fontFamily: 'var(--font-body)', fontSize: 15, color: 'var(--text-muted)', margin: '30px 0' }}>

@@ -52,8 +52,8 @@ export function CreateAccountScreen({ onRoute }: any) {
           <Checkbox id="agree" checked={agree} onChange={setAgree} label="I agree to the Terms of Service and Privacy Policy" />
           <Button variant="primary" fullWidth onClick={() => onRoute('__signin')}>Create Account</Button>
           <OrDivider />
-          <Button variant="secondary" fullWidth icon="google">Continue with Google</Button>
-          <Button variant="secondary" fullWidth icon="apple">Continue with Apple</Button>
+          <Button variant="secondary" fullWidth icon="google" onClick={() => onRoute('__signin')}>Continue with Google</Button>
+          <Button variant="secondary" fullWidth icon="apple" onClick={() => onRoute('__signin')}>Continue with Apple</Button>
         </div>
       </Card>
       <p style={{ textAlign: 'center', fontFamily: 'var(--font-body)', fontSize: 15, color: 'var(--text-muted)', margin: '30px 0 0' }}>
@@ -87,6 +87,7 @@ export function ForgotPasswordScreen({ onRoute }: any) {
 /* ---------- Verification Code ---------- */
 export function VerificationCodeScreen({ onRoute }: any) {
   const [code, setCode] = React.useState(['6', '', '', '']);
+  const [resent, setResent] = React.useState(false);
   const refs = React.useRef<any[]>([]);
   const setDigit = (i: number, v: string) => {
     const d = v.replace(/\D/g, '').slice(-1);
@@ -110,7 +111,11 @@ export function VerificationCodeScreen({ onRoute }: any) {
         <Button variant="primary" fullWidth onClick={() => onRoute('reset')}>Verify</Button>
       </Card>
       <p style={{ textAlign: 'center', fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-muted)', margin: '24px 0 0' }}>
-        Didn't receive the code? <button style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 'inherit', color: 'var(--text-primary)' }}>Send again</button>
+        {resent ? (
+          <span style={{ color: 'var(--text-primary)' }}>A new code has been sent to your email.</span>
+        ) : (
+          <React.Fragment>Didn't receive the code? <button onClick={() => setResent(true)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 'inherit', color: 'var(--text-primary)' }}>Send again</button></React.Fragment>
+        )}
       </p>
     </AuthShell>
   );

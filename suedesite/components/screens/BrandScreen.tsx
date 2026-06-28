@@ -78,6 +78,7 @@ export function BrandScreen({ onRoute, authed = false }: any) {
   const feed = [...reviews, ...reviews].slice(0, 2).map(r => ({ ...r, brand: brand.name }));
   const inqFeed = [...inquiries, ...inquiries].slice(0, 2).map(r => ({ ...r, brand: brand.name }));
   const [flipped, setFlipped] = React.useState(false);
+  const [docNote, setDocNote] = React.useState<string | null>(null);
   const handle = brand.social || ('@' + brand.name.toLowerCase().replace(/\s+/g, ''));
   const website = 'www.' + brand.name.toLowerCase().replace(/[^a-z]/g, '') + '.com';
 
@@ -130,9 +131,11 @@ export function BrandScreen({ onRoute, authed = false }: any) {
             <div style={{ fontFamily: 'var(--font-body)', fontSize: 11, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 12 }}>Documents</div>
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               {['Size Guide', 'Return Policy', 'Shipping', 'Sustainability'].map((doc, i, a) => (
-                <button key={doc} className="measure-opt" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '14px 4px', background: 'none', border: 'none', borderBottom: i < a.length - 1 ? '1px solid var(--border-subtle)' : 'none', cursor: 'pointer', textAlign: 'left' }}>
+                <button key={doc} onClick={() => setDocNote(doc)} className="measure-opt" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '14px 4px', background: 'none', border: 'none', borderBottom: i < a.length - 1 ? '1px solid var(--border-subtle)' : 'none', cursor: 'pointer', textAlign: 'left' }}>
                   <span style={{ fontFamily: 'var(--font-body)', fontSize: 14.5, color: 'var(--text-primary)' }}>{doc}</span>
-                  <Icon name="arrow-right" size={16} color="var(--text-secondary)" className="measure-arrow" />
+                  {docNote === doc
+                    ? <span style={{ fontFamily: 'var(--font-body)', fontSize: 12, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--text-muted)' }}>Coming soon</span>
+                    : <Icon name="arrow-right" size={16} color="var(--text-secondary)" className="measure-arrow" />}
                 </button>
               ))}
             </div>

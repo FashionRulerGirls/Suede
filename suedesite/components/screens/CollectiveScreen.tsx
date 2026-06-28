@@ -7,6 +7,7 @@ import { appState } from '@/lib/appState';
 import { SuedeControls } from '@/lib/listControls';
 
 function CollectiveMemberCard({ name, handle, m, reviews, inquiries, brands, photo, confidence = 'high', onView }: any) {
+  const [following, setFollowing] = React.useState(false);
   const link = { background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-primary)', textDecoration: 'underline', textUnderlineOffset: 3, textAlign: 'right' } as any;
   const conf = ({ high: { tone: 'positive', dot: '#3f7d52', label: 'High Confidence' }, medium: { tone: 'premium', dot: '#c9a96e', label: 'Medium Confidence' }, low: { tone: 'critical', dot: '#c0463a', label: 'Low Confidence' } } as any)[confidence];
   return (
@@ -34,7 +35,7 @@ function CollectiveMemberCard({ name, handle, m, reviews, inquiries, brands, pho
         <span aria-hidden="true" />
         <img src={photo} alt={name} style={{ width: 168, height: 220, objectFit: 'cover', objectPosition: 'center 28%', justifySelf: 'center' }} />
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14, justifySelf: 'end', alignItems: 'flex-end' }}>
-          <button style={link}>Follow+</button>
+          <button style={{ ...link, color: following ? 'var(--text-muted)' : 'var(--text-primary)' }} onClick={() => setFollowing(f => !f)}>{following ? 'Following ✓' : 'Follow+'}</button>
           <button style={link} onClick={onView}>View Profile</button>
         </div>
       </div>

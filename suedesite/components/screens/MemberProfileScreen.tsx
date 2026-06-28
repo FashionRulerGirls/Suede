@@ -27,6 +27,7 @@ export function MemberProfileScreen({ onRoute }: any) {
   const [tab, setTab] = React.useState('reviews');
   const [mQuery, setMQuery] = React.useState('');
   const [mSort, setMSort] = React.useState('date');
+  const [following, setFollowing] = React.useState(false);
   const reviews = SUEDE_REVIEWS || [];
   const feed = [...reviews, ...reviews].slice(0, 2);
   const inqFeed = [...(SUEDE_INQUIRIES || [])].slice(0, 2);
@@ -54,7 +55,7 @@ export function MemberProfileScreen({ onRoute }: any) {
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-secondary)' }}><Icon name="tiktok" size={16} color="var(--text-secondary)" />{m.social}</span>
                   </div>
                 </div>
-                <Button variant="ghost" trailingIcon="user-plus">Follow</Button>
+                <Button variant="ghost" trailingIcon={following ? 'check' : 'user-plus'} onClick={() => setFollowing(f => !f)}>{following ? 'Following' : 'Follow'}</Button>
               </div>
               <p style={{ fontFamily: 'var(--font-body)', fontSize: 14.5, lineHeight: 1.6, color: 'var(--text-secondary)', margin: '20px 0 0', maxWidth: 560 }}>{m.bio}</p>
               <div style={{ marginTop: 16 }}>

@@ -140,7 +140,12 @@ function SocialStep() {
   );
 }
 
-function AccountStep() {
+function AccountStep({ onRoute }: any) {
+  const deleteAccount = () => {
+    if (typeof window !== 'undefined' && window.confirm('Permanently delete your Suede account? This cannot be undone.')) {
+      onRoute('__signout');
+    }
+  };
   return (
     <div>
       <h2 style={{ fontFamily: 'var(--font-serif)', fontWeight: 400, fontSize: 26, color: 'var(--text-heading)', margin: 0 }}>Account</h2>
@@ -164,7 +169,7 @@ function AccountStep() {
             </span>
           </div>
         ))}
-        <button type="button" style={{ alignSelf: 'flex-start', marginTop: 8, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--rating-critical)', textDecoration: 'underline', textUnderlineOffset: 3, padding: 0 }}>Delete account</button>
+        <button type="button" onClick={deleteAccount} style={{ alignSelf: 'flex-start', marginTop: 8, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--rating-critical)', textDecoration: 'underline', textUnderlineOffset: 3, padding: 0 }}>Delete account</button>
       </div>
     </div>
   );
@@ -172,6 +177,11 @@ function AccountStep() {
 
 export function EditProfileScreen({ onRoute, authed = false }: any) {
   const [step, setStep] = React.useState(0);
+  const [avatarSrc, setAvatarSrc] = React.useState('/assets/avatars/avatar-rose.jpg');
+  const onAvatarPick = (e: any) => {
+    const f = e.target.files?.[0];
+    if (f) setAvatarSrc(URL.createObjectURL(f));
+  };
   const [bio, setBio] = React.useState('Brooklyn-based, drawn to clean tailoring and considered eveningwear. Always hunting the perfect drape.');
   const [sizes, setSizes] = React.useState({ topsLetter: 'M', topsNum: '8', botLetter: 'M', botNum: '8', waist: '28', plus: '', build: 'Curvy' });
   const setSize = (k: any, v: any) => setSizes(s => ({ ...s, [k]: v }));
@@ -192,15 +202,16 @@ export function EditProfileScreen({ onRoute, authed = false }: any) {
         <div style={{ display: 'grid', gridTemplateColumns: '232px 1fr', gap: 0, alignItems: 'start' }}>
           {/* Left rail */}
           <aside style={{ paddingTop: 36 }}>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', marginBottom: 28 }}>
+            <label style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', marginBottom: 28, cursor: 'pointer' }}>
+              <input type="file" accept="image/*" onChange={onAvatarPick} style={{ display: 'none' }} />
               <div style={{ position: 'relative' }}>
-                <Avatar src="/assets/avatars/avatar-rose.jpg" name="Amara K." size={92} ring />
+                <Avatar src={avatarSrc} name="Amara K." size={92} ring />
                 <span style={{ position: 'absolute', right: 2, bottom: 2, width: 30, height: 30, borderRadius: '50%', background: 'var(--ink-900)', color: 'var(--white)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid var(--paper)' }}>
                   <Icon name="image" size={14} color="var(--white)" />
                 </span>
               </div>
               <span style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-secondary)', marginTop: 12 }}>Change photo</span>
-            </div>
+            </label>
             <nav style={{ display: 'flex', flexDirection: 'column' }}>
               {EP_STEPS.map((s, i) => {
                 const active = i === step;
@@ -219,7 +230,7 @@ export function EditProfileScreen({ onRoute, authed = false }: any) {
             {cur === 'personal' && <PersonalStep bio={bio} setBio={setBio} />}
             {cur === 'measurements' && <MeasurementsStep sizes={sizes} setSize={setSize} />}
             {cur === 'social' && <SocialStep />}
-            {cur === 'account' && <AccountStep />}
+            {cur === 'account' && <AccountStep onRoute={onRoute} />}
           </div>
         </div>
 
