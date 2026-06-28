@@ -168,7 +168,7 @@ export function Nav({ route, onRoute, authed = false }: any) {
               transform: acct ? 'translateY(0) scale(1)' : 'translateY(-8px) scale(0.98)',
               pointerEvents: acct ? 'auto' : 'none',
             }}>
-              {[{ ic: 'user', label: 'Your Profile', v: null }, { ic: 'bell', label: 'Notifications', v: '__notif' }, { ic: 'shirt', label: 'Capsule Feed', v: 'brands' }, { ic: 'user', label: 'Collective Feed', v: 'followers' }, { ic: 'logout', label: 'Sign Out', v: '__signout' }].map(it => (
+              {[{ ic: 'user', label: 'Your Profile', v: null }, { ic: 'bell', label: 'Notifications', v: '__notif' }, { ic: 'shirt', label: 'Capsule Feed', v: 'capsulefeed' }, { ic: 'user', label: 'Collective Feed', v: 'collectivefeed' }, { ic: 'logout', label: 'Sign Out', v: '__signout' }].map(it => (
                 <button key={it.label} onClick={() => { setAcct(false); if (it.v === '__signout') { onRoute('__signout'); } else if (it.v === '__notif') { onRoute('notifications'); } else { appState.profileView = it.v; onRoute('yourprofile'); window.dispatchEvent(new CustomEvent('suede-profile-view', { detail: it.v })); } }} style={{
                   width: '100%', display: 'flex', alignItems: 'center', gap: 12,
                   padding: '12px 14px', borderRadius: 'var(--radius-sm)', border: 'none',

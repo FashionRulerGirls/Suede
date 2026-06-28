@@ -8,14 +8,18 @@ import { SuedeControls } from '@/lib/listControls';
 import { FullMeasureRow } from '@/components/screens/FullMeasureRow';
 import { InquiryCard } from '@/components/screens/LookbookScreen';
 
-function YProfStat({ value, label, feedLabel, onFeed }: any) {
+function YProfStat({ value, label, links }: any) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, minWidth: 130 }}>
       <span style={{ fontFamily: 'var(--font-meta)', fontWeight: 500, fontSize: 30, lineHeight: 1, color: 'var(--text-heading)' }}>{value}</span>
       <span style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-secondary)' }}>{label}</span>
-      {feedLabel && (
-        <button onClick={onFeed} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: 11.5, color: 'var(--text-muted)', textDecoration: 'underline', textUnderlineOffset: 3, transition: 'color var(--dur-fast) var(--ease-out)' }}
-          onMouseEnter={(e) => e.currentTarget.style.color = 'var(--text-primary)'} onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-muted)'}>{feedLabel}</button>
+      {links && links.length > 0 && (
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5, marginTop: 2 }}>
+          {links.map((l: any) => (
+            <button key={l.label} onClick={l.onClick} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: 11.5, color: 'var(--text-muted)', textDecoration: 'underline', textUnderlineOffset: 3, transition: 'color var(--dur-fast) var(--ease-out)' }}
+              onMouseEnter={(e) => e.currentTarget.style.color = 'var(--text-primary)'} onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-muted)'}>{l.label}</button>
+          ))}
+        </div>
       )}
     </div>
   );
@@ -48,7 +52,8 @@ export function YourProfileScreen({ onRoute }: any) {
   const openReview = (r: any) => { appState.review = r; onRoute('review'); };
 
   if (view !== 'profile') {
-    const isBrands = view === 'brands';
+    const isFeed = view === 'capsulefeed' || view === 'collectivefeed';
+    const isBrandSide = view === 'capsulefeed' || view === 'brands';
     const ql = feedQuery.trim().toLowerCase();
     const avatarPool = ['/assets/avatars/avatar-rose.jpg', '/assets/avatars/avatar-blue.jpg', '/assets/avatars/avatar-asaya.jpg'];
     // The brands this member follows / the members who follow them.
@@ -60,32 +65,50 @@ export function YourProfileScreen({ onRoute }: any) {
       onRoute('member');
     };
     return (
-      <div style={{ maxWidth: 1240, margin: '0 auto', padding: '28px 52px 0' }}>
+      <div style={{ maxWidth: 1460, margin: '0 auto', padding: '28px 52px 0' }}>
         <button onClick={() => setView('profile')} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-secondary)', marginBottom: 24 }}>
           <Icon name="arrow-left" size={16} color="var(--text-secondary)" /> Back to your profile
         </button>
         <header style={{ display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'center', textAlign: 'center', marginBottom: 28 }}>
-          <span style={{ fontFamily: 'var(--font-body)', fontSize: 12, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--text-muted)' }}>{isBrands ? 'Brands You Follow' : 'Your Followers'}</span>
+          <span style={{ fontFamily: 'var(--font-body)', fontSize: 12, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--text-muted)' }}>{isBrandSide ? 'Brands You Follow' : 'Your Followers'}</span>
           <h1 style={{ fontFamily: 'var(--font-serif)', fontWeight: 400, fontSize: 48, color: 'var(--text-heading)', margin: 0 }}>
-            {isBrands ? `${m.brands} Brands` : `${m.followers} Followers`}
+            {isFeed ? (isBrandSide ? 'Capsule Feed' : 'Collective Feed') : (isBrandSide ? `${m.brands} Brands` : `${m.followers} Followers`)}
           </h1>
           <p style={{ fontFamily: 'var(--font-body)', fontSize: 15, color: 'var(--text-muted)', margin: 0, maxWidth: 560 }}>
-            {isBrands ? 'Every Capsule brand you follow. Tap any brand to view its page.' : 'Everyone following your fit and reviews. Tap a member to view their profile.'}
+            {isFeed
+              ? (isBrandSide ? 'The latest reviews and inquiries from the brands you follow.' : 'The latest reviews and inquiries from the members who follow you.')
+              : (isBrandSide ? 'Every Capsule brand you follow. Tap any brand to view its page.' : 'Everyone following your fit and reviews. Tap a member to view their profile.')}
           </p>
         </header>
 
         {(() => {
           const Controls: any = SuedeControls || {};
-          const SearchBar = Controls.SearchBar, CollapsibleToolbar = Controls.CollapsibleToolbar;
+          const SearchBar = Controls.SearchBar, Dropdown = Controls.Dropdown, CollapsibleToolbar = Controls.CollapsibleToolbar;
           if (!CollapsibleToolbar) return null;
           return (
-            <CollapsibleToolbar align="flex-end">
-              <SearchBar value={feedQuery} onChange={setFeedQuery} placeholder={isBrands ? 'Search brands' : 'Search followers'} />
+            <CollapsibleToolbar align={isFeed ? 'space-between' : 'flex-end'}>
+              <SearchBar value={feedQuery} onChange={setFeedQuery} placeholder={isFeed ? 'Search by brand' : (isBrandSide ? 'Search brands' : 'Search followers')} />
+              {isFeed && <Dropdown label="Sort" value={feedSort} onChange={setFeedSort} options={[{ value: 'date', label: 'Latest' }, { value: 'high', label: 'Rating: High → Low' }, { value: 'low', label: 'Rating: Low → High' }, { value: 'az', label: 'Brand A → Z' }]} />}
             </CollapsibleToolbar>
           );
         })()}
 
-        {isBrands ? (
+        {isFeed ? (
+          <React.Fragment>
+            <div style={{ maxWidth: 460, margin: '24px auto 32px' }}>
+              <Tabs items={[{ label: 'Reviews', value: 'reviews' }, { label: 'Inquiries', value: 'inquiries' }]} value={feedTab} onChange={setFeedTab} align="stretch" />
+            </div>
+            {feedTab === 'reviews' ? (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 28, paddingBottom: 24 }}>
+                {[...reviews].slice(0, 4).filter(r => r.brand.toLowerCase().includes(ql)).map((r, i) => <ReviewCard key={i} {...r} onSeeFull={() => openReview(r)} />)}
+              </div>
+            ) : (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 28, paddingBottom: 24 }}>
+                {(SUEDE_INQUIRIES || []).filter(it => it.brand.toLowerCase().includes(ql)).map((it, i) => <InquiryCard key={i} {...it} onOpen={() => { appState.inquiry = it; onRoute('inquiry'); }} />)}
+              </div>
+            )}
+          </React.Fragment>
+        ) : isBrandSide ? (
           followedBrands.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '54px 0', fontFamily: 'var(--font-serif)', fontSize: 22, color: 'var(--text-heading)' }}>No brands found.</div>
           ) : (
@@ -171,8 +194,8 @@ export function YourProfileScreen({ onRoute }: any) {
             <div style={{ display: 'flex', justifyContent: 'center', gap: 64, paddingTop: 28, borderTop: '1px solid var(--border-subtle)', textAlign: 'center', width: '100%' }}>
               <YProfStat value={m.reviews} label="Reviews" />
               <YProfStat value={m.inquiries} label="Inquiries" />
-              <YProfStat value={m.brands} label="Brands Followed" feedLabel="See all brands" onFeed={() => setView('brands')} />
-              <YProfStat value={m.followers} label="Followers" feedLabel="See all followers" onFeed={() => setView('followers')} />
+              <YProfStat value={m.brands} label="Brands Followed" links={[{ label: 'Capsule Feed', onClick: () => setView('capsulefeed') }, { label: 'See all brands', onClick: () => setView('brands') }]} />
+              <YProfStat value={m.followers} label="Followers" links={[{ label: 'Collective Feed', onClick: () => setView('collectivefeed') }, { label: 'See all followers', onClick: () => setView('followers') }]} />
             </div>
           </div>
         </div>
