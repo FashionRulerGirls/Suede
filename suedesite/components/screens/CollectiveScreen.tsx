@@ -12,7 +12,7 @@ function CollectiveMemberCard({ name, handle, m, reviews, inquiries, brands, pho
   const conf = ({ high: { tone: 'positive', dot: '#3f7d52', label: 'High Confidence' }, medium: { tone: 'premium', dot: '#c9a96e', label: 'Medium Confidence' }, low: { tone: 'critical', dot: '#c0463a', label: 'Low Confidence' } } as any)[confidence];
   return (
     <div style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-card)', padding: '22px 26px', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
+      <div className="sd-coll-head" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
         <div>
           <button onClick={onView} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'left', fontFamily: 'var(--font-serif)', fontSize: 21, color: 'var(--text-primary)' }}>{name}</button>
           <div style={{ fontFamily: 'var(--font-body)', fontSize: 11, letterSpacing: '0.08em', color: 'var(--text-muted)', marginTop: 3 }}>{handle}</div>
@@ -85,7 +85,7 @@ export function CollectiveScreen({ onRoute, authed = false }: any) {
       <SectionHeading
         eyebrow="Member Directory"
         title="The Collective"
-        subtitle="The trusted voices behind Suede reviews and inquiries, building a community around transparency and brand awareness."
+        subtitle="The trusted voices behind Suede reviews and inquiries, building a community around transparency and brand awareness"
         size="lg"
       />
 
@@ -102,7 +102,7 @@ export function CollectiveScreen({ onRoute, authed = false }: any) {
         {empty ? (
           <div style={{ textAlign: 'center', padding: '54px 0', fontFamily: 'var(--font-serif)', fontSize: 24, color: 'var(--text-heading)' }}>No members found matching that name.</div>
         ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 28 }}>
+        <div className="sd-2col" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 28 }}>
           {(authed ? view : view.slice(0, 6)).map((mem, i) => (
             <div key={mem.handle + i}>
               <CollectiveMemberCard {...mem} photo={photos[i % photos.length]} onView={() => openMember({ ...mem, photo: photos[i % photos.length] })} />

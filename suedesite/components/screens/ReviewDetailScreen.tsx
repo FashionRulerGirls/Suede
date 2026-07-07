@@ -56,12 +56,12 @@ export function ReviewDetailScreen({ onRoute, authed = false }: any) {
   };
 
   return (
-    <div style={{ maxWidth: 1240, margin: '0 auto', padding: '28px 40px 0' }}>
+    <div className="sd-rev-wrap" style={{ maxWidth: 1240, margin: '0 auto', padding: '28px 40px 0' }}>
       <button onClick={() => onRoute('lookbook')} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-secondary)', marginBottom: 24 }}>
         <Icon name="arrow-left" size={16} color="var(--text-secondary)" /> Back to Lookbook
       </button>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 60, alignItems: 'start' }}>
+      <div className="sd-rev-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 60, alignItems: 'start' }}>
         {/* Left — gallery */}
         <div>
           <div style={{ aspectRatio: '1/1', overflow: 'hidden', background: 'var(--linen)' }}>
@@ -78,8 +78,8 @@ export function ReviewDetailScreen({ onRoute, authed = false }: any) {
 
         {/* Right — review */}
         <div>
-          <h1 style={{ fontFamily: 'var(--font-serif)', fontWeight: 500, fontSize: 38, letterSpacing: '-0.01em', color: 'var(--text-heading)', margin: '0 0 28px' }}>{product}</h1>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
+          <h1 className="sd-rev-title" style={{ fontFamily: 'var(--font-serif)', fontWeight: 500, fontSize: 38, letterSpacing: '-0.01em', color: 'var(--text-heading)', margin: '0 0 28px' }}>{product}</h1>
+          <div className="sd-rev-head" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
             <Avatar src={reviewer.avatar} name={reviewer.name} handle={reviewer.handle} size="lg" showName />
             <MeasurementSpec {...m} size="md" tone="muted" style={{ flexWrap: 'nowrap', whiteSpace: 'nowrap' }} />
           </div>

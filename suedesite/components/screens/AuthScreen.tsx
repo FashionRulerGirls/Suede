@@ -13,7 +13,7 @@ export function AuthScreen({ onRoute }: any) {
       <p style={{ textAlign: 'center', fontFamily: 'var(--font-body)', fontSize: 17, color: 'var(--text-muted)', marginBottom: 36 }}>
         Welcome back
       </p>
-      <Card elevation="raised" radius="sm" padding="lg" style={{ padding: '40px 44px' }}>
+      <Card className="sd-auth-card" elevation="raised" radius="sm" padding="lg" style={{ padding: '40px 44px' }}>
         <h1 style={{ fontFamily: 'var(--font-serif)', fontWeight: 100, fontSize: 40, margin: 0 }}>Sign In</h1>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 22, marginTop: 30 }}>
           <Field label="Email Address" htmlFor="email">

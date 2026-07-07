@@ -48,6 +48,7 @@ export function SectionHeading({
       )}
       {subtitle && (
         <p
+          className="sd-sec-sub"
           style={{
             fontFamily: 'var(--font-body)',
             fontSize: 16,

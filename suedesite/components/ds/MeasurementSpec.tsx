@@ -13,6 +13,7 @@ export function MeasurementSpec({
   size = 'md',     // 'sm' | 'md'
   tone = 'default',// 'default' | 'muted'
   style,
+  className,
   ...rest
 }: any) {
   const parts = [
@@ -27,6 +28,7 @@ export function MeasurementSpec({
 
   return (
     <span
+      className={['sd-mspec', className].filter(Boolean).join(' ')}
       style={{
         display: 'inline-flex', alignItems: 'center', gap: 7, flexWrap: 'wrap',
         fontFamily: 'var(--font-meta)',

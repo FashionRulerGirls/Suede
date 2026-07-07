@@ -33,10 +33,10 @@ export function CreateAccountScreen({ onRoute }: any) {
   const [agree, setAgree] = React.useState(false);
   return (
     <AuthShell subtitle="Join the community">
-      <Card elevation="raised" radius="sm" style={{ padding: '40px 44px' }}>
+      <Card className="sd-auth-card" elevation="raised" radius="sm" style={{ padding: '40px 44px' }}>
         <h1 style={{ fontFamily: 'var(--font-serif)', fontWeight: 100, fontSize: 40, margin: 0 }}>Create Account</h1>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20, marginTop: 30 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+          <div className="sd-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
             <Field label="First Name" htmlFor="fn"><Input id="fn" variant="filled" placeholder="First" /></Field>
             <Field label="Last Name" htmlFor="ln"><Input id="ln" variant="filled" placeholder="Last" /></Field>
           </div>
@@ -67,7 +67,7 @@ export function CreateAccountScreen({ onRoute }: any) {
 export function ForgotPasswordScreen({ onRoute }: any) {
   return (
     <AuthShell>
-      <Card elevation="raised" radius="sm" style={{ padding: '36px 44px 40px' }}>
+      <Card className="sd-auth-card" elevation="raised" radius="sm" style={{ padding: '36px 44px 40px' }}>
         <button onClick={() => onRoute('signin')} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-muted)', marginBottom: 22 }}>
           <Icon name="arrow-left" size={15} color="var(--text-muted)" /> Back to Sign in
         </button>
@@ -96,7 +96,7 @@ export function VerificationCodeScreen({ onRoute }: any) {
   };
   return (
     <AuthShell>
-      <Card elevation="raised" radius="sm" style={{ padding: '36px 44px 40px' }}>
+      <Card className="sd-auth-card" elevation="raised" radius="sm" style={{ padding: '36px 44px 40px' }}>
         <h1 style={{ fontFamily: 'var(--font-serif)', fontWeight: 400, fontSize: 36, margin: 0 }}>Verification Code</h1>
         <p style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.5, marginTop: 10, marginBottom: 28 }}>
           Always confirm the security code received on your registered email.
@@ -127,7 +127,7 @@ export function ResetPasswordScreen({ onRoute }: any) {
   const [show2, setShow2] = React.useState(false);
   return (
     <AuthShell>
-      <Card elevation="raised" radius="sm" style={{ padding: '36px 44px 40px' }}>
+      <Card className="sd-auth-card" elevation="raised" radius="sm" style={{ padding: '36px 44px 40px' }}>
         <h1 style={{ fontFamily: 'var(--font-serif)', fontWeight: 400, fontSize: 36, margin: 0 }}>Reset Password</h1>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 22, marginTop: 28 }}>
           <Field label="New Password" htmlFor="np">

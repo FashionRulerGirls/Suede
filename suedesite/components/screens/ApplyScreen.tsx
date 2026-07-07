@@ -11,9 +11,9 @@ export function ApplyScreen({ onRoute }: any) {
     'Capsule Brands get feautured placement on our Brand Directory page, access to personalized dashboards, and response features to engage directly with Reviews / Inquiries.',
   ];
   return (
-    <div style={{ maxWidth: 1240, margin: '0 auto', padding: '56px 52px 0', display: 'grid', gridTemplateColumns: '420px 1fr', columnGap: 80, rowGap: 8, alignItems: 'start' }}>
+    <div className="sd-apply-wrap" style={{ maxWidth: 1240, margin: '0 auto', padding: '56px 52px 0', display: 'grid', gridTemplateColumns: '420px 1fr', columnGap: 80, rowGap: 8, alignItems: 'start' }}>
       {/* Aside */}
-      <aside style={{ display: 'flex', flexDirection: 'column', gap: 24, position: 'sticky', top: 110 }}>
+      <aside className="sd-apply-aside" style={{ display: 'flex', flexDirection: 'column', gap: 24, position: 'sticky', top: 110 }}>
         <Logo variant="monogram" height={52} style={{ alignSelf: 'flex-start' }} />
         <span style={{ fontFamily: 'var(--font-body)', fontSize: 12, letterSpacing: '0.165em', textTransform: 'uppercase', color: 'var(--ink-500)' }}>Apply</span>
         <h1 style={{ fontFamily: 'var(--font-serif)', fontWeight: 100, fontSize: 48, lineHeight: 1, letterSpacing: '-0.02em', color: '#111114', margin: 0 }}>Join the Capsule</h1>
@@ -28,12 +28,12 @@ export function ApplyScreen({ onRoute }: any) {
       </aside>
 
       {/* Form card */}
-      <div style={{ background: 'var(--white)', border: '1px solid var(--border-subtle)', padding: 48 }}>
+      <div className="sd-apply-card" style={{ background: 'var(--white)', border: '1px solid var(--border-subtle)', padding: 48 }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
           <Field label="Brand name"><Input variant="outline" placeholder="e.g., OSA" /></Field>
           <Field label="Website"><Input variant="outline" placeholder="https://" /></Field>
           <Field label="Email"><Input variant="outline" placeholder="e.g you@gmail.com" /></Field>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+          <div className="sd-apply-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
             <Field label="Location"><Input variant="outline" placeholder="City, Country" /></Field>
             <Field label="Ownership / identity">
               <div style={{ position: 'relative' }}>
@@ -79,7 +79,7 @@ export function ApplyScreen({ onRoute }: any) {
             <textarea rows={5} placeholder="Tell us about your Brand and your commitment to Suede's mission"
               style={{ width: '100%', resize: 'vertical', boxSizing: 'border-box', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-xs)', background: 'transparent', padding: '12px 13px', fontFamily: 'var(--font-body)', fontSize: 14, lineHeight: 1.5, color: 'var(--text-primary)', outline: 'none' }} />
           </Field>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, borderTop: '1px solid var(--border-subtle)', paddingTop: 24 }}>
+          <div className="sd-apply-submit" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, borderTop: '1px solid var(--border-subtle)', paddingTop: 24 }}>
             <span style={{ fontFamily: 'var(--font-body)', fontSize: 12, lineHeight: 1.4, color: 'var(--ink-500)', maxWidth: 300 }}>By submitting your Capsule application, you agree to be contacted by the Suede Partnerships team.</span>
             <Button variant="primary" onClick={() => onRoute('brandsignin')}>Submit application</Button>
           </div>

@@ -66,7 +66,7 @@ export function MemberProfileScreen({ onRoute }: any) {
 
           {/* Stats — centered */}
           <div style={{ display: 'flex', justifyContent: 'center', marginTop: 32 }}>
-            <div style={{ display: 'flex', justifyContent: 'center', gap: 64, paddingTop: 28, borderTop: '1px solid var(--border-subtle)', textAlign: 'center', width: '100%' }}>
+            <div className="sd-mprof-stats" style={{ display: 'flex', justifyContent: 'center', gap: 64, paddingTop: 28, borderTop: '1px solid var(--border-subtle)', textAlign: 'center', width: '100%' }}>
               <MProfStat value={m.reviews} label="Reviews" />
               <MProfStat value={m.inquiries} label="Inquiries" />
               <MProfStat value={m.brands} label="Brands Followed" />
@@ -94,7 +94,7 @@ export function MemberProfileScreen({ onRoute }: any) {
         })()}
 
         {/* Feed */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 28, marginTop: 28, paddingBottom: 20 }}>
+        <div className="sd-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 28, marginTop: 28, paddingBottom: 20 }}>
           {tab === 'reviews'
             ? feed.filter(r => r.brand.toLowerCase().includes(mQuery.trim().toLowerCase())).map((r, i) => <ReviewCard key={i} {...r} hideMeasurements onSeeFull={() => { appState.review = r; onRoute('review'); }} />)
             : inqFeed.filter(r => r.brand.toLowerCase().includes(mQuery.trim().toLowerCase())).map((r, i) => { return <InquiryCard key={i} {...r} hideMeasurements onOpen={() => { appState.inquiry = r; onRoute('inquiry'); }} />; })}

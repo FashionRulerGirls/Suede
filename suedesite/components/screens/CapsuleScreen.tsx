@@ -93,10 +93,10 @@ export function CapsuleScreen({ onRoute, authed = false }: any) {
   else if (sort === 'followers') brands = [...brands].sort((a, b) => numVal(b.followers) - numVal(a.followers));
   else if (sort === 'rating') brands = [...brands].sort((a: any, b: any) => (b.rating || 0) - (a.rating || 0));
   return (
-    <div style={{ maxWidth: 1240, margin: '0 auto', padding: '64px 40px 0' }}>      <SectionHeading
+    <div className="sd-wrap" style={{ maxWidth: 1240, margin: '0 auto', padding: '64px 40px 0' }}>      <SectionHeading
         eyebrow="Brand Directory"
         title="The Capsule"
-        subtitle="A curated collection of minority-owned and emerging brands, each vetted for sizing, quality, and design excellence."
+        subtitle="A curated collection of minority-owned and emerging brands, each vetted for sizing, quality, and design excellence"
         size="lg"
       />
 
@@ -122,7 +122,7 @@ export function CapsuleScreen({ onRoute, authed = false }: any) {
             </div>
           </div>
         ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '56px 40px' }}>
+        <div className="sd-3col" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '56px 40px' }}>
           {(authed ? brands : brands.slice(0, 6)).map((b: any, i: number) => (
             <div key={b.name}>
               <BrandCard layout="feature" name={b.name} image={b.image} tagline={b.tagline}
@@ -146,7 +146,7 @@ export function CapsuleScreen({ onRoute, authed = false }: any) {
 
       <ExploreModal brand={explore} authed={authed} onClose={() => setExplore(null)} onRoute={onRoute} />
 
-      <div style={{ maxWidth: 1240, margin: '64px auto 0', padding: '40px', textAlign: 'center', borderTop: '1px solid var(--border-subtle)' }}>
+      <div className="sd-wrap" style={{ maxWidth: 1240, margin: '64px auto 0', padding: '40px', textAlign: 'center', borderTop: '1px solid var(--border-subtle)' }}>
         <p style={{ fontFamily: 'var(--font-serif)', fontSize: 22, color: 'var(--text-heading)', margin: 0 }}>Know a brand that deserves to be featured in the Capsule?</p>
         <div style={{ marginTop: 18 }}>
           <Button variant="primary" shape="pill" onClick={() => onRoute('suggest')}>Complete our Suggestion Form</Button>

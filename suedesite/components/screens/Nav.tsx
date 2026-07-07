@@ -60,12 +60,12 @@ export function Nav({ route, onRoute, authed = false }: any) {
 
   return (
     <React.Fragment>
-    <header style={{
+    <header className="sd-nav-bar" style={{
       position: 'sticky', top: 0, zIndex: 30,
       background: 'rgba(248,246,243,0.86)', backdropFilter: 'blur(12px)',
       borderBottom: '1px solid var(--border-subtle)',
     }}>
-      <div style={{
+      <div className="sd-nav-inner" style={{
         maxWidth: 1460, margin: '0 auto', padding: '18px 52px',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 24,
       }}>
@@ -189,7 +189,7 @@ export function Nav({ route, onRoute, authed = false }: any) {
 
       {/* Hamburger dropdown — holds the section navigation */}
       {open && (
-        <div onClick={() => setOpen(false)} style={{ position: 'fixed', inset: 0, top: 73, zIndex: 25, background: 'rgba(20,18,15,0.12)' }} />
+        <div onClick={() => setOpen(false)} style={{ position: 'fixed', inset: 0, top: 73, zIndex: 25, background: 'transparent' }} />
       )}
       <div onMouseLeave={() => setOpen(false)} style={{
         position: 'absolute', right: 40, top: 'calc(100% + 10px)', zIndex: 26,
@@ -323,7 +323,7 @@ export function Nav({ route, onRoute, authed = false }: any) {
             <Icon name="close" size={22} />
           </button>
           <h2 style={{ textAlign: 'center', fontFamily: 'var(--font-display)', fontWeight: 400, fontSize: 28, color: 'var(--text-heading)', margin: '4px 0 6px' }}>Complete your measurements</h2>
-          <p style={{ textAlign: 'center', fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-muted)', margin: '0 0 18px', whiteSpace: 'nowrap' }}>Accurate measurements mean better fit recommendations across Suede</p>
+          <p className="sd-measure-modal-sub" style={{ textAlign: 'center', fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-muted)', margin: '0 0 18px', whiteSpace: 'nowrap' }}>Accurate measurements mean better fit recommendations across Suede</p>
           <div style={{ height: 1, background: 'var(--border-subtle)', marginBottom: 18 }} />
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {profItems.map(it => (

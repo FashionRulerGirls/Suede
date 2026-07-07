@@ -79,6 +79,7 @@ export function BrandScreen({ onRoute, authed = false }: any) {
   const inqFeed = [...inquiries, ...inquiries].slice(0, 2).map(r => ({ ...r, brand: brand.name }));
   const [flipped, setFlipped] = React.useState(false);
   const [docNote, setDocNote] = React.useState<string | null>(null);
+  const [rateOpen, setRateOpen] = React.useState(false);
   const handle = brand.social || ('@' + brand.name.toLowerCase().replace(/\s+/g, ''));
   const website = 'www.' + brand.name.toLowerCase().replace(/[^a-z]/g, '') + '.com';
 
@@ -97,13 +98,13 @@ export function BrandScreen({ onRoute, authed = false }: any) {
         {/* Centered brand name */}
         <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 14, pointerEvents: 'none', padding: '0 40px' }}>
           <h1 style={{ fontFamily: 'var(--font-serif)', fontWeight: 100, fontSize: 88, lineHeight: 1, letterSpacing: '0.04em', color: 'var(--ink-900)', margin: 0, textTransform: 'uppercase', textAlign: 'center' }}>{brand.name}</h1>
-          <span style={{ fontFamily: 'var(--font-serif)', fontStyle: 'italic', fontSize: 16, color: 'var(--ink-600)', textAlign: 'center', lineHeight: 1.3, whiteSpace: 'nowrap' }}>{brand.tagline}</span>
+          <span className="sd-brandtag" style={{ fontFamily: 'var(--font-serif)', fontStyle: 'italic', fontSize: 16, color: 'var(--ink-600)', textAlign: 'center', lineHeight: 1.3, whiteSpace: 'nowrap' }}>{brand.tagline}</span>
         </div>
 
         <div style={{ flex: 1 }} />
 
         {/* Bottom info bar */}
-        <div style={{ position: 'relative', zIndex: 3, display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'end', gap: 24, padding: '0 40px 28px' }}>
+        <div className="sd-brandbar" style={{ position: 'relative', zIndex: 3, display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'end', gap: 24, padding: '0 40px 28px' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <span style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: 'var(--ink-600)' }}>Founded – {brand.founded || '—'} · {brand.location || '—'}</span>
           </div>
@@ -150,7 +151,7 @@ export function BrandScreen({ onRoute, authed = false }: any) {
 
       {/* Stats strip */}
       <div style={{ padding: '44px 0 8px' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 24, maxWidth: 900, margin: '0 auto' }}>
+        <div className="sd-stats" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 24, maxWidth: 900, margin: '0 auto' }}>
           {[[(brand.rating && brand.rating.toFixed ? brand.rating.toFixed(1) : brand.rating) || '0.0', 'Rating', 'star'], [brand.reviews || '0', 'Reviews', 'reviews'], [brand.inquiries || '0', 'Inquiries', 'message'], [brand.followers || '0', 'Followers', 'user']].map(([val, lbl, ic]: any) => {
             const isRating = lbl === 'Rating';
             const base = brand.rating || 4.5;
@@ -162,13 +163,13 @@ export function BrandScreen({ onRoute, authed = false }: any) {
               ['Customer service', Math.max(1, Math.min(5, Math.round(base * 2) / 2))],
             ] : null;
             return (
-              <div key={lbl} className={isRating ? 'rating-stat' : undefined} style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, textAlign: 'center', cursor: isRating ? 'default' : 'inherit' }}>
+              <div key={lbl} className={isRating ? ('rating-stat' + (rateOpen ? ' rating-open' : '')) : undefined} onClick={isRating ? () => setRateOpen(o => !o) : undefined} style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, textAlign: 'center', cursor: isRating ? 'default' : 'inherit' }}>
                 <span style={{ fontFamily: 'var(--font-serif)', fontWeight: 300, fontSize: 46, lineHeight: 1, letterSpacing: '0.01em', color: 'var(--text-heading)' }}>{val}</span>
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontFamily: 'var(--font-body)', fontSize: 13, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--text-secondary)' }}>
                   <Icon name={ic} size={15} color="var(--text-secondary)" />{lbl}
                 </span>
                 {breakdown && (
-                  <div className="rating-pop" style={{ position: 'absolute', top: 'calc(100% + 14px)', left: '50%', marginLeft: -130, width: 260, background: 'var(--surface-card)', border: '1px solid var(--border-subtle)', boxShadow: 'var(--shadow-lg)', padding: '16px 18px', display: 'flex', flexDirection: 'column', gap: 11, opacity: 0, visibility: 'hidden', transform: 'translateY(-6px)', transition: 'opacity var(--dur-base) var(--ease-out), transform var(--dur-base) var(--ease-out), visibility var(--dur-base)', zIndex: 20 }}>
+                  <div className="rating-pop sd-brating-pop" style={{ position: 'absolute', top: 'calc(100% + 14px)', left: '50%', marginLeft: -130, width: 260, background: 'var(--surface-card)', border: '1px solid var(--border-subtle)', boxShadow: 'var(--shadow-lg)', padding: '16px 18px', display: 'flex', flexDirection: 'column', gap: 11, opacity: 0, visibility: 'hidden', transform: 'translateY(-6px)', transition: 'opacity var(--dur-base) var(--ease-out), transform var(--dur-base) var(--ease-out), visibility var(--dur-base)', zIndex: 20 }}>
                     <span style={{ width: 14, height: 14, position: 'absolute', top: -7, left: '50%', marginLeft: -7, background: 'var(--surface-card)', borderLeft: '1px solid var(--border-subtle)', borderTop: '1px solid var(--border-subtle)', transform: 'rotate(45deg)' }} />
                     {breakdown.map(([blbl, bval]: any) => (
                       <div key={blbl} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
@@ -207,7 +208,7 @@ export function BrandScreen({ onRoute, authed = false }: any) {
       })()}
 
       {/* Feed */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 28, marginTop: 28, paddingBottom: 20 }}>
+      <div className="sd-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 28, marginTop: 28, paddingBottom: 20 }}>
         {tab === 'reviews'
           ? feed.filter(r => (r.product || '').toLowerCase().includes(bQuery.trim().toLowerCase())).slice().sort((a, b) => bSort === 'high' ? (b.rating || 0) - (a.rating || 0) : bSort === 'low' ? (a.rating || 0) - (b.rating || 0) : 0).map((r, i) => <ReviewCard key={i} {...r} onSeeFull={() => { appState.review = r; onRoute('review'); }} onReviewer={() => { appState.member = { name: r.reviewer.name, handle: r.reviewer.handle, avatar: r.reviewer.avatar, social: r.reviewer.handle, bio: "I love to explore the brands and Fashion. It's my hobbyy.", measurements: r.measurements, followers: '30', reviews: '24', inquiries: '12', brands: '8' }; onRoute('member'); }} />)
           : inqFeed.filter(r => (r.product || '').toLowerCase().includes(bQuery.trim().toLowerCase())).map((r, i) => <InquiryCard key={i} {...r} onOpen={() => { appState.inquiry = r; onRoute('inquiry'); }} onAsker={() => { appState.member = { name: r.asker.name, handle: r.asker.handle, avatar: r.asker.avatar, social: r.asker.handle, bio: "I love to explore the brands and Fashion. It's my hobbyy.", measurements: r.measurements, followers: '30', reviews: '24', inquiries: '12', brands: '8' }; onRoute('member'); }} />)}

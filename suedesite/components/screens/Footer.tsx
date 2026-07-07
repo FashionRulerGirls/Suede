@@ -14,8 +14,8 @@ export function Footer({ onRoute }: any) {
   ];
   return (
     <footer style={{ background: 'var(--paper)', borderTop: '1px solid var(--border-subtle)', marginTop: 80 }}>
-      <div style={{ maxWidth: 1460, margin: '0 auto', padding: '64px 52px 36px' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1.4fr repeat(5, 1fr)', gap: 28 }}>
+      <div className="sd-footer-inner" style={{ maxWidth: 1460, margin: '0 auto', padding: '64px 52px 36px' }}>
+        <div className="sd-footer-grid" style={{ display: 'grid', gridTemplateColumns: '1.4fr repeat(5, 1fr)', gap: 28 }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
             <Logo variant="monogram" height={132} style={{ alignSelf: 'flex-start' }} />
             <div style={{ fontFamily: 'var(--font-serif)', fontWeight: 700, fontSize: 15 }}>Sign up for our Newsletter | Per Suede</div>

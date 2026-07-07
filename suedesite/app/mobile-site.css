@@ -1,0 +1,191 @@
+/* ════════════════════════════════════════════════════════════════════
+   SUEDE — MOBILE / RESPONSIVE STYLES  (mobile-only; every rule is inside
+   an @media max-width block, so it cannot affect desktop)
+   Breakpoints: 900px = tablet & below, 640px = phone & below
+   Helper classes: sd-hide-sm / sd-only-sm / sd-stack-sm /
+     sd-2col..sd-5col / sd-wrap / sd-pillgrid
+   ════════════════════════════════════════════════════════════════════ */
+
+html, body { max-width: 100%; overflow-x: hidden; }
+
+@keyframes sdSwipeHintM { 0%, 100% { transform: translateY(-50%) translateX(0); } 50% { transform: translateY(-50%) translateX(6px); } }
+@keyframes sdDestFade { from { opacity: 0; transform: translateX(-50%) translateY(4px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+
+@media (max-width: 900px) {
+  #root .sd-wrap { padding-left: 28px !important; padding-right: 28px !important; }
+  #root .sd-nav-inner { padding-left: 22px !important; padding-right: 22px !important; }
+  #root .sd-2col, #root .sd-3col, #root .sd-4col, #root .sd-5col { grid-template-columns: 1fr 1fr !important; }
+}
+
+@media (max-width: 640px) {
+  #root .sd-wrap { padding-left: 18px !important; padding-right: 18px !important; }
+  #root .sd-nav-inner { padding-left: 16px !important; padding-right: 16px !important; gap: 10px !important; }
+  #root .sd-2col, #root .sd-3col, #root .sd-4col, #root .sd-5col { grid-template-columns: 1fr !important; gap: 22px !important; }
+  #root .sd-stack-sm { flex-direction: column !important; align-items: stretch !important; }
+  #root .sd-full-sm { width: 100% !important; }
+  #root .sd-display { font-size: clamp(30px, 9vw, 44px) !important; }
+  #root .sd-h1 { font-size: clamp(26px, 7vw, 36px) !important; }
+  #root .sd-card-fluid { width: 100% !important; max-width: 460px !important; }
+}
+
+#root .sd-only-sm { display: none; }
+@media (max-width: 640px) {
+  #root .sd-hide-sm { display: none !important; }
+  #root .sd-only-sm { display: block !important; }
+}
+
+@media (max-width: 640px) {
+  #root .sd-pillgrid { display: flex !important; overflow-x: auto !important; -webkit-overflow-scrolling: touch; padding-bottom: 6px; }
+  #root .sd-pillgrid > * { flex: 0 0 auto !important; min-width: 58px; }
+}
+
+/* LANDING — hero (hangers screen) */
+@media (max-width: 640px) {
+  #root .sd-hero-sides { display: flex !important; flex-direction: column !important; justify-content: space-between !important; align-items: flex-start !important; gap: 18px !important; top: 84px !important; bottom: 150px !important; transform: none !important; padding-left: 18px !important; padding-right: 18px !important; }
+  #root .sd-hero-sides > div:first-child { text-align: left !important; align-self: flex-start !important; max-width: none !important; }
+  #root .sd-hero-right { text-align: right !important; align-self: flex-end !important; max-width: none !important; }
+  #root .sd-hero-line { font-size: 19px !important; white-space: normal !important; }
+  #root .sd-browse-title { font-size: 19px !important; }
+  #root .sd-hiw-title { font-size: 19px !important; }
+  #root .sd-hero-links { flex-wrap: nowrap !important; gap: 0 !important; justify-content: space-around !important; bottom: 46px !important; padding-left: 12px !important; padding-right: 12px !important; }
+  #root .sd-hero-links .hero-dest { flex-direction: column !important; gap: 7px !important; align-items: center !important; flex: 1 1 0 !important; }
+  #root .sd-hero-links .hero-dest > span { align-items: center !important; }
+  #root .sd-hero-links .hero-dest span { font-size: 12.5px !important; }
+  #root .sd-hero-links .hero-dest:nth-child(4) { display: none !important; }
+  #root .sd-hero-links .hero-dest [data-ul] { display: none !important; }
+  #root .sd-hero-photo { background-size: auto 68% !important; background-position: center 30% !important; }
+}
+
+/* AUTH CARDS */
+@media (max-width: 640px) {
+  #root .sd-auth-card { padding: 28px 18px !important; }
+}
+
+/* REVIEW CARD — name + measurements + size on one line */
+@media (max-width: 640px) {
+  #root .sd-reviewcard .sd-mspec { flex-wrap: nowrap !important; font-size: 9.5px !important; gap: 4px !important; letter-spacing: 0.02em !important; }
+  #root .sd-reviewcard .sd-mspec span { white-space: nowrap !important; }
+  #root .sd-rc-prodrow { flex-wrap: nowrap !important; }
+  #root .sd-rc-prodrow > span:first-child { font-size: 13.5px !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
+  #root .sd-rc-prodrow > span:last-child { font-size: 12.5px !important; white-space: nowrap !important; flex: none !important; }
+}
+
+/* BRAND PAGE — stats, info bar, tagline */
+@media (max-width: 640px) {
+  #root .sd-stats { grid-template-columns: 1fr 1fr !important; gap: 32px 16px !important; }
+  #root .sd-brandbar { grid-template-columns: 1fr !important; justify-items: center !important; text-align: center !important; gap: 16px !important; }
+  #root .sd-brandbar > * { justify-self: center !important; }
+  #root .sd-brandtag { white-space: normal !important; }
+}
+
+/* HOME — How It Works (two-panel slides) */
+@media (max-width: 640px) {
+  #root .sd-hiw-cols { flex-direction: column !important; gap: 24px !important; }
+  #root .sd-hiw-silk { min-height: 380px !important; }
+  #root .sd-hiw-paper { min-height: 0 !important; padding: 44px 0 !important; }
+  #root .sd-cardstack { left: 50% !important; right: auto !important; transform: translate(-50%, -50%) scale(0.58) !important; }
+}
+
+/* HOME — "Don't know your measurements?" CTA + collective card + popovers */
+@media (max-width: 640px) {
+  #root .sd-measure-cta { padding-top: 56px !important; overflow: hidden !important; gap: 8px !important; }
+  #root .sd-measure-mono { height: 300px !important; width: auto !important; left: -40px !important; }
+  #root .sd-measure-opts { padding-left: 18px !important; padding-right: 18px !important; margin-top: 20px !important; }
+  #root .sd-measure-opts > button { margin-left: 0 !important; margin-right: 0 !important; }
+  #root .sd-measure-opt-line { display: block !important; font-style: italic !important; margin-top: 8px !important; }
+  #root .sd-collcard { padding: 24px 22px !important; }
+  #root .sd-collcard > div:first-child { margin-bottom: 6px !important; }
+  #root .sd-collcard > div:nth-child(2) { margin-top: 22px !important; gap: 18px !important; }
+  #root .sd-collcard > div:last-child { margin-top: 24px !important; padding-top: 18px !important; }
+  #root .sd-rating-pop { left: 50% !important; transform: translateX(-50%) !important; width: calc(100vw - 40px) !important; max-width: 340px !important; }
+  #root .sd-rating-pop > span:first-child { left: 50% !important; }
+  #root .sd-brating-pop { left: 0 !important; margin-left: 0 !important; transform: translateY(-6px) !important; width: calc(100vw - 36px) !important; max-width: 340px !important; }
+  #root .rating-stat.rating-open .sd-brating-pop { transform: translateY(0) !important; }
+  #root .sd-mprof-stats { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 24px 16px !important; }
+  #root .sd-mprof-stats > div { min-width: 0 !important; }
+  #root .sd-brating-pop > span:first-child { display: none !important; }
+  #root .sd-iq-body { grid-template-columns: 1fr 108px !important; gap: 16px !important; }
+  #root .sd-iq-img { aspect-ratio: 3 / 4 !important; max-height: none !important; order: 0; align-self: start !important; }
+  #root .sd-iq-foot { flex-wrap: wrap !important; gap: 12px !important; }
+  #root .sd-iq-head { flex-wrap: nowrap !important; align-items: flex-start; }
+  #root .sd-iq-head .sd-mspec { flex-wrap: nowrap !important; font-size: 9.5px !important; gap: 4px !important; letter-spacing: 0.02em !important; }
+  #root .sd-iq-head .sd-mspec span { white-space: nowrap !important; }
+  #root .sd-coll-head { flex-wrap: nowrap !important; align-items: flex-start !important; }
+  #root .sd-coll-head .sd-mspec { flex-wrap: nowrap !important; font-size: 9.5px !important; gap: 4px !important; letter-spacing: 0.02em !important; }
+  #root .sd-coll-head .sd-mspec span { white-space: nowrap !important; }
+  #root .sd-coll-head > div:first-child button { line-height: 1 !important; }
+  #root .sd-coll-head > div:last-child { margin-top: 2px !important; }
+  #root .sd-measure-modal-sub { white-space: normal !important; }
+  #root .sd-apply-wrap { grid-template-columns: 1fr !important; padding: 40px 18px 0 !important; column-gap: 0 !important; row-gap: 28px !important; }
+  #root .sd-apply-aside { position: static !important; top: auto !important; gap: 16px !important; }
+  #root .sd-apply-aside h1 { font-size: 34px !important; }
+  #root .sd-apply-aside p { font-size: 15px !important; }
+  #root .sd-apply-card { padding: 24px 18px !important; }
+  #root .sd-apply-2col { grid-template-columns: 1fr !important; gap: 24px !important; }
+  #root .sd-apply-submit { flex-direction: column !important; align-items: stretch !important; gap: 14px !important; }
+  #root .sd-apply-submit span { max-width: none !important; }
+  #root .sd-apply-submit button { width: 100% !important; }
+  #root .sd-rev-wrap { padding: 20px 18px 0 !important; }
+  #root .sd-rev-grid { grid-template-columns: 1fr !important; gap: 28px !important; }
+  #root .sd-rev-title { font-size: 27px !important; margin-bottom: 18px !important; }
+  #root .sd-rev-head { flex-wrap: nowrap !important; gap: 10px !important; }
+  #root .sd-rev-head .sd-mspec { font-size: 10px !important; gap: 4px !important; letter-spacing: 0.02em !important; }
+  #root .sd-sec-sub { font-size: 13px !important; }
+}
+
+/* FOOTER */
+@media (max-width: 900px) {
+  #root .sd-footer-inner { padding-left: 28px !important; padding-right: 28px !important; }
+  #root .sd-footer-grid { grid-template-columns: 1fr 1fr 1fr !important; gap: 26px !important; }
+  #root .sd-footer-grid > div:first-child { grid-column: 1 / -1 !important; }
+}
+@media (max-width: 640px) {
+  #root .sd-footer-inner { padding-left: 18px !important; padding-right: 18px !important; }
+  #root .sd-footer-grid { grid-template-columns: 1fr !important; gap: 24px !important; }
+  #root .sd-footer-grid > *:nth-child(1) { order: 1 !important; }
+  #root .sd-footer-grid > *:nth-child(2) { order: 2 !important; }
+  #root .sd-footer-grid > *:nth-child(3) { order: 3 !important; }
+  #root .sd-footer-grid > *:nth-child(5) { order: 4 !important; }
+  #root .sd-footer-grid > *:nth-child(4) { order: 5 !important; }
+  #root .sd-footer-grid > *:nth-child(6) { order: 6 !important; }
+}
+
+/* NAV */
+@media (max-width: 640px) {
+  #root .sd-nav-bar { border-bottom: none !important; }
+  #root .sd-nav-bar .sd-nav-inner { padding-top: 40px !important; padding-bottom: 14px !important; padding-left: 18px !important; padding-right: 18px !important; }
+}
+
+/* HOME — misc cleanups (carousel fade, How-It-Works arrow, hero dest reveal) */
+@media (max-width: 640px) {
+  #root .sd-cap-fade { display: none !important; }
+  #root .sd-hiw { padding-top: 56px !important; }
+  #root .sd-hiw .sd-hiw-silk { order: -1 !important; background: none !important; min-height: 300px !important; }
+  #root .sd-hiw .sd-hiw-paper { min-height: 0 !important; padding: 8px 0 44px !important; }
+  #root .sd-hiw-dots { display: none !important; }
+  #root .sd-hiw-arrow { position: relative !important; background: transparent !important; width: 62px !important; height: 26px !important; top: 64% !important; }
+  #root .sd-hiw-arrow svg { display: none !important; }
+  #root .sd-hiw-arrow-right { right: 14px !important; left: auto !important; }
+  #root .sd-hiw-arrow-right::before { content: ''; position: absolute; top: 50%; left: 4px; right: 11px; height: 1px; background: var(--ink-900); }
+  #root .sd-hiw-arrow-right::after { content: ''; position: absolute; top: 50%; right: 11px; width: 6px; height: 6px; border-top: 1px solid var(--ink-900); border-right: 1px solid var(--ink-900); transform: translateY(-50%) rotate(45deg); }
+  #root .sd-hiw-arrow-left { left: 14px !important; right: auto !important; animation: sdSwipeHintM 1.6s var(--ease-inout) infinite !important; }
+  #root .sd-hiw-arrow-left::before { content: ''; position: absolute; top: 50%; left: 11px; right: 4px; height: 1px; background: var(--ink-900); }
+  #root .sd-hiw-arrow-left::after { content: ''; position: absolute; top: 50%; left: 11px; width: 6px; height: 6px; border-bottom: 1px solid var(--ink-900); border-left: 1px solid var(--ink-900); transform: translateY(-50%) rotate(45deg); }
+  #root .hero-dest [data-desc] { display: none !important; }
+  #root .hero-dest .sd-dest-pop { display: none; }
+  #root .hero-dest[data-open] .sd-dest-pop { display: block !important; position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%); font-family: var(--font-body); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-muted); white-space: nowrap; z-index: 6; opacity: 0; animation: sdDestFade var(--dur-base) var(--ease-out) forwards; }
+  #root .hero-dest .sd-dest-label { color: var(--ink-900) !important; }
+  #root .sd-browse-sec { padding-top: 30px !important; }
+  #root .sd-browse-sec .sd-browse-title { margin-top: 30px !important; }
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   RECONCILIATION — sections that are CSS grid in this Next.js app (the
+   prototype used flexbox), so the flex-direction rules above can't stack
+   them. Force single-column at phone width.
+   ════════════════════════════════════════════════════════════════════ */
+@media (max-width: 640px) {
+  #root .sd-hiw-cols { grid-template-columns: 1fr !important; }
+  #root .sd-hiw-textcols { flex-direction: column !important; gap: 24px !important; }
+  #root .sd-measure-cta { grid-template-columns: 1fr !important; padding-top: 40px !important; }
+}

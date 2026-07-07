@@ -13,7 +13,7 @@ export function InquiryCard({ asker = {}, measurements = {}, product, size, bran
   return (
     <article style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-card)', padding: 22, height: '100%', display: 'flex', flexDirection: 'column', gap: 18 }}>
       {/* header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
+      <div className="sd-iq-head" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
         <span onClick={onAsker} style={{ cursor: onAsker ? 'pointer' : 'default' }}>
           <Avatar src={asker.avatar} name={asker.name} handle={asker.handle} size="sm" showName />
         </span>
@@ -35,7 +35,7 @@ export function InquiryCard({ asker = {}, measurements = {}, product, size, bran
       </div>
 
       {/* body: text + image */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 132px', gap: 18, alignItems: 'stretch' }}>
+      <div className="sd-iq-body" style={{ display: 'grid', gridTemplateColumns: '1fr 132px', gap: 18, alignItems: 'stretch' }}>
         <div style={{ display: 'flex', flexDirection: 'column' }}>
           <div onClick={onBrand} style={{ fontFamily: 'var(--font-display)', fontSize: 19, letterSpacing: 'var(--ls-wide)', textTransform: 'uppercase', color: 'var(--text-heading)', cursor: onBrand ? 'pointer' : 'default' }}>{brand}</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 6 }}>
@@ -43,7 +43,7 @@ export function InquiryCard({ asker = {}, measurements = {}, product, size, bran
             {size && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, border: '1px solid var(--border-default)', borderRadius: 'var(--radius-xs)', padding: '4px 9px', fontFamily: 'var(--font-body)', fontSize: 11, color: 'var(--text-secondary)' }}><Icon name="search" size={11} color="var(--text-muted)" />Size {size}</span>}
           </div>
           <p style={{ fontFamily: 'var(--font-body)', fontSize: 13.5, lineHeight: 1.6, color: 'var(--text-secondary)', margin: '14px 0 0', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', minHeight: 44 }}>{question}</p>
-          <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 10, marginTop: 'auto', paddingTop: 18 }}>
+          <div className="sd-iq-foot" style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 10, marginTop: 'auto', paddingTop: 18 }}>
             <span style={{ display: 'inline-flex', flexDirection: 'column', gap: 8 }}>
               <span style={{ fontFamily: 'var(--font-body)', fontSize: 12, letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--text-muted)' }}>{responses.length} {responses.length === 1 ? 'Response' : 'Responses'}</span>
               <button onClick={(e) => { e.stopPropagation(); setVoted(v => !v); }} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: 13, color: voted ? 'var(--rating-positive)' : 'var(--text-muted)' }}>
@@ -57,7 +57,7 @@ export function InquiryCard({ asker = {}, measurements = {}, product, size, bran
           </div>
         </div>
         <div style={{ borderRadius: 0, overflow: 'hidden', aspectRatio: '3/4', background: 'var(--linen)' }}>
-          <img src={image} alt={product} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          <img className="sd-iq-img" src={image} alt={product} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         </div>
       </div>
     </article>
@@ -110,7 +110,7 @@ export function LookbookScreen({ onRoute, authed = false }: any) {
       <SectionHeading
         eyebrow={isReviews ? 'Review Feed' : 'Inquiry Feed'}
         title="The Lookbook"
-        subtitle={isReviews ? 'Independent brand reviews from real customers with all the information needed to shop with confidence' : 'Real questions from aspiring customers looking for information to help them shop with confidence.'}
+        subtitle={isReviews ? 'Independent brand reviews from real customers with all the information needed to shop with confidence' : 'Real questions from aspiring customers looking for information to help them shop with confidence'}
         size="lg"
       />
 
@@ -149,7 +149,7 @@ export function LookbookScreen({ onRoute, authed = false }: any) {
             </div>
           </div>
         ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 28 }}>
+        <div className="sd-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 28 }}>
           {(authed ? feed : feed.slice(0, 6)).map((r: any, i: number) => (
             <div key={i}>
               {isReviews ? <ReviewCard {...r} onBrand={() => { const bd = (SUEDE_BRANDS || []).find(x => x.name === r.brand); if (bd) { appState.brand = bd; onRoute('brand'); } }} onSeeFull={() => { appState.review = r; onRoute('review'); }} onReviewer={() => { appState.member = { name: r.reviewer.name, handle: r.reviewer.handle, avatar: r.reviewer.avatar, social: r.reviewer.handle, bio: "I love to explore the brands and Fashion. It's my hobbyy.", measurements: r.measurements, followers: '30', reviews: '24', inquiries: '12', brands: '8' }; onRoute('member'); }} /> : <InquiryCard {...r} onBrand={() => { const bd = (SUEDE_BRANDS || []).find(x => x.name === r.brand); if (bd) { appState.brand = bd; onRoute('brand'); } }} onOpen={() => { appState.inquiry = r; onRoute('inquiry'); }} onAsker={() => { appState.member = { name: r.asker.name, handle: r.asker.handle, avatar: r.asker.avatar, social: r.asker.handle, bio: "I love to explore the brands and Fashion. It's my hobbyy.", measurements: r.measurements, followers: '30', reviews: '24', inquiries: '12', brands: '8' }; onRoute('member'); }} />}

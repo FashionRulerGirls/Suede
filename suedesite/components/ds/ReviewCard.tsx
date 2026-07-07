@@ -30,6 +30,7 @@ export function ReviewCard({
 }: any) {
   return (
     <article
+      className="sd-reviewcard"
       style={{
         background: 'var(--surface-card)',
         borderRadius: 0,
@@ -65,7 +66,7 @@ export function ReviewCard({
       {/* body: text + image */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 132px', gap: 18, alignItems: 'stretch' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 10 }}>
+          <div className="sd-rc-prodrow" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 10 }}>
             <span style={{ fontFamily: 'var(--font-body)', fontSize: 15, color: 'var(--text-primary)' }}>{product}</span>
             {size && <span style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-secondary)' }}>Size: {size}</span>}
           </div>
