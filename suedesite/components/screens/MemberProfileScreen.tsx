@@ -42,23 +42,23 @@ export function MemberProfileScreen({ onRoute }: any) {
         </button>
 
         {/* Header card */}
-        <div style={{ backgroundImage: 'linear-gradient(rgba(250,249,246,0.55), rgba(250,249,246,0.55)), url(/assets/imagery/suede-card-bg.jpg)', backgroundSize: 'cover', backgroundPosition: 'center', border: '1px solid var(--border-subtle)', boxShadow: 'var(--shadow-card)', borderRadius: 'var(--radius-sm)', padding: '36px 40px' }}>
-          <div style={{ display: 'flex', gap: 32, alignItems: 'flex-start' }}>
+        <div className="sd-mprof-card" style={{ position: 'relative', backgroundImage: 'linear-gradient(rgba(250,249,246,0.55), rgba(250,249,246,0.55)), url(/assets/imagery/suede-card-bg.jpg)', backgroundSize: 'cover', backgroundPosition: 'center', border: '1px solid var(--border-subtle)', boxShadow: 'var(--shadow-card)', borderRadius: 'var(--radius-sm)', padding: '36px 40px' }}>
+          <div className="sd-mprof-top" style={{ display: 'flex', gap: 32, alignItems: 'flex-start' }}>
             <Avatar src={m.avatar} name={m.name} size={116} ring />
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 22 }}>
-                <div style={{ minWidth: 0 }}>
+            <div className="sd-mprof-info" style={{ flex: 1, minWidth: 0 }}>
+              <div className="sd-mprof-namerow" style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 22 }}>
+                <div className="sd-mprof-nameblock" style={{ minWidth: 0 }}>
                   <h1 style={{ fontFamily: 'var(--font-serif)', fontWeight: 500, fontSize: 38, lineHeight: 1.05, color: 'var(--text-heading)', margin: 0 }}>{m.name}</h1>
                   <div style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-muted)', marginTop: 8 }}>{m.handle}</div>
-                  <div style={{ display: 'flex', gap: 20, marginTop: 14 }}>
+                  <div className="sd-mprof-socials" style={{ display: 'flex', gap: 20, marginTop: 14 }}>
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-secondary)' }}><Icon name="instagram" size={16} color="var(--text-secondary)" />{m.social}</span>
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-secondary)' }}><Icon name="tiktok" size={16} color="var(--text-secondary)" />{m.social}</span>
                   </div>
                 </div>
-                <Button variant="ghost" trailingIcon={following ? 'check' : 'user-plus'} onClick={() => setFollowing(f => !f)}>{following ? 'Following' : 'Follow'}</Button>
+                <span className="sd-mprof-action"><Button variant="ghost" trailingIcon={following ? 'check' : 'user-plus'} onClick={() => setFollowing(f => !f)}>{following ? 'Following' : 'Follow'}</Button></span>
               </div>
-              <p style={{ fontFamily: 'var(--font-body)', fontSize: 14.5, lineHeight: 1.6, color: 'var(--text-secondary)', margin: '20px 0 0', maxWidth: 560 }}>{m.bio}</p>
-              <div style={{ marginTop: 16 }}>
+              <p className="sd-mprof-bio" style={{ fontFamily: 'var(--font-body)', fontSize: 14.5, lineHeight: 1.6, color: 'var(--text-secondary)', margin: '20px 0 0', maxWidth: 560 }}>{m.bio}</p>
+              <div className="sd-mprof-measure" style={{ marginTop: 16 }}>
                 <FullMeasureRow base={m.measurements} extra={m.fullMeasurements || { 'Inseam': '30"', 'Shoulder Width': '16"', 'Arm Length': '23"', 'Torso Length': '24"' }} sizes={m.usualSizes || { 'Tops': ['M', '8'], 'Bottoms': ['M', '8'] }} />
               </div>
             </div>

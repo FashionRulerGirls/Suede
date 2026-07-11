@@ -163,27 +163,27 @@ export function YourProfileScreen({ onRoute }: any) {
         </button>
 
         {/* Header */}
-        <div style={{ backgroundImage: 'linear-gradient(rgba(250,249,246,0.55), rgba(250,249,246,0.55)), url(/assets/imagery/suede-card-bg.jpg)', backgroundSize: 'cover', backgroundPosition: 'center', border: '1px solid var(--border-subtle)', boxShadow: 'var(--shadow-card)', borderRadius: 'var(--radius-sm)', padding: '36px 40px' }}>
-          <div style={{ display: 'flex', gap: 32, alignItems: 'flex-start' }}>
+        <div className="sd-yprof-card" style={{ position: 'relative', backgroundImage: 'linear-gradient(rgba(250,249,246,0.55), rgba(250,249,246,0.55)), url(/assets/imagery/suede-card-bg.jpg)', backgroundSize: 'cover', backgroundPosition: 'center', border: '1px solid var(--border-subtle)', boxShadow: 'var(--shadow-card)', borderRadius: 'var(--radius-sm)', padding: '36px 40px' }}>
+          <div className="sd-yprof-top" style={{ display: 'flex', gap: 32, alignItems: 'flex-start' }}>
             <Avatar src={m.avatar} name={m.name} size={116} ring />
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 22 }}>
-                <div style={{ minWidth: 0 }}>
+            <div className="sd-yprof-info" style={{ flex: 1, minWidth: 0 }}>
+              <div className="sd-yprof-namerow" style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 22 }}>
+                <div className="sd-yprof-nameblock" style={{ minWidth: 0 }}>
                   <h1 style={{ fontFamily: 'var(--font-serif)', fontWeight: 500, fontSize: 38, lineHeight: 1.05, color: 'var(--text-heading)', margin: 0 }}>{m.name}</h1>
                   <div style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-muted)', marginTop: 8 }}>{m.handle}</div>
-                  <div style={{ display: 'flex', gap: 20, marginTop: 14 }}>
+                  <div className="sd-yprof-socials" style={{ display: 'flex', gap: 20, marginTop: 14 }}>
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-secondary)' }}><Icon name="instagram" size={16} color="var(--text-secondary)" />{m.social}</span>
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-secondary)' }}><Icon name="tiktok" size={16} color="var(--text-secondary)" />{m.social}</span>
                   </div>
                 </div>
-                <button aria-label="Edit profile" onClick={() => onRoute('editprofile')} style={{ width: 44, height: 44, flex: 'none', borderRadius: 'var(--radius-pill)', border: '1px solid var(--border-default)', background: 'var(--surface-card)', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-primary)', transition: 'all var(--dur-fast) var(--ease-out)' }}
+                <button aria-label="Edit profile" onClick={() => onRoute('editprofile')} className="sd-yprof-edit" style={{ width: 44, height: 44, flex: 'none', borderRadius: 'var(--radius-pill)', border: '1px solid var(--border-default)', background: 'var(--surface-card)', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-primary)', transition: 'all var(--dur-fast) var(--ease-out)' }}
                   onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--ink-900)'; e.currentTarget.style.color = 'var(--white)'; e.currentTarget.style.borderColor = 'var(--ink-900)'; }}
                   onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--surface-card)'; e.currentTarget.style.color = 'var(--text-primary)'; e.currentTarget.style.borderColor = 'var(--border-default)'; }}>
                   <Icon name="pen" size={17} />
                 </button>
               </div>
-              <p style={{ fontFamily: 'var(--font-body)', fontSize: 14.5, lineHeight: 1.6, color: 'var(--text-secondary)', margin: '20px 0 0', maxWidth: 560 }}>{m.bio}</p>
-              <div style={{ marginTop: 16 }}>
+              <p className="sd-yprof-bio" style={{ fontFamily: 'var(--font-body)', fontSize: 14.5, lineHeight: 1.6, color: 'var(--text-secondary)', margin: '20px 0 0', maxWidth: 560 }}>{m.bio}</p>
+              <div className="sd-yprof-measure" style={{ marginTop: 16 }}>
                 <FullMeasureRow base={m.measurements} extra={m.fullMeasurements} sizes={m.usualSizes} />
               </div>
             </div>
@@ -191,7 +191,7 @@ export function YourProfileScreen({ onRoute }: any) {
 
           {/* Stats — centered; Brands Followed & Followers drill into feeds */}
           <div style={{ display: 'flex', justifyContent: 'center', marginTop: 32 }}>
-            <div style={{ display: 'flex', justifyContent: 'center', gap: 64, paddingTop: 28, borderTop: '1px solid var(--border-subtle)', textAlign: 'center', width: '100%' }}>
+            <div className="sd-yprof-statrow" style={{ display: 'flex', justifyContent: 'center', gap: 64, paddingTop: 28, borderTop: '1px solid var(--border-subtle)', textAlign: 'center', width: '100%' }}>
               <YProfStat value={m.reviews} label="Reviews" />
               <YProfStat value={m.inquiries} label="Inquiries" />
               <YProfStat value={m.brands} label="Brands Followed" links={[{ label: 'Capsule Feed', onClick: () => setView('capsulefeed') }, { label: 'See all brands', onClick: () => setView('brands') }]} />

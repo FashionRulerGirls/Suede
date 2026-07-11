@@ -273,3 +273,44 @@ html, body { max-width: 100%; overflow-x: hidden; }
   #root .sd-brandback-grid { grid-template-columns: 1fr !important; gap: 26px !important; }
   #root .sd-brandback-grid p { max-width: none !important; }
 }
+
+/* ════════════════════════════════════════════════════════════════════
+   PROFILE HEADER CARDS — Your Profile & Member Profile.
+   The two-column (avatar | info) layout is far too narrow on phone: the
+   name collided with the edit/Follow control and the bio/measurements got
+   crushed. Stack it — avatar on top, info centered below. Phone only.
+   ════════════════════════════════════════════════════════════════════ */
+@media (max-width: 640px) {
+  #root .sd-yprof-card, #root .sd-mprof-card { padding: 30px 20px !important; }
+
+  #root .sd-yprof-top, #root .sd-mprof-top {
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 18px !important;
+    text-align: center !important;
+  }
+  #root .sd-yprof-info, #root .sd-mprof-info { width: 100% !important; text-align: center !important; }
+
+  #root .sd-yprof-namerow, #root .sd-mprof-namerow {
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 14px !important;
+  }
+  #root .sd-yprof-nameblock, #root .sd-mprof-nameblock { width: 100% !important; }
+  #root .sd-yprof-nameblock h1, #root .sd-mprof-nameblock h1 { font-size: 30px !important; }
+  #root .sd-yprof-socials, #root .sd-mprof-socials { justify-content: center !important; }
+  #root .sd-yprof-bio, #root .sd-mprof-bio { max-width: none !important; text-align: center !important; }
+
+  /* Your Profile: edit icon pinned to the card corner (out of the flow). */
+  #root .sd-yprof-edit { position: absolute !important; top: 18px !important; right: 18px !important; }
+  /* Member: Follow button centered beneath the socials. */
+  #root .sd-mprof-action { display: inline-flex !important; justify-content: center !important; }
+
+  /* Stats: 2×2 grid instead of one cramped four-up row. */
+  #root .sd-yprof-statrow {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 26px 8px !important;
+  }
+  #root .sd-yprof-statrow > div, #root .sd-mprof-stats > div { min-width: 0 !important; }
+}

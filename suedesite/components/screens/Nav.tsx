@@ -113,9 +113,39 @@ export function Nav({ route, onRoute, authed = false }: any) {
             </div>
           </div>
           {!authed && (
-            <button className="sd-hide-sm" onClick={() => onRoute('createreview')} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', cursor: 'pointer', padding: '6px 2px', fontFamily: 'var(--font-body)', fontSize: 14, fontWeight: 100, color: 'var(--text-primary)' }}>
-              Leave a Review
+          <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+            <button onClick={() => setPlus(p => !p)} aria-label="Create" style={{
+              width: 38, height: 38, borderRadius: 'var(--radius-pill)', border: 'none',
+              background: 'var(--ink-900)', color: 'var(--white)', cursor: 'pointer',
+              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <Icon name="plus" size={18} color="var(--white)" />
             </button>
+            {plus && <div onClick={() => setPlus(false)} style={{ position: 'fixed', inset: 0, top: 73, zIndex: 25 }} />}
+            <div onMouseLeave={() => setPlus(false)} style={{
+              position: 'absolute', right: 0, top: 'calc(100% + 14px)', zIndex: 26, width: 240,
+              background: 'var(--surface-card)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-md)',
+              boxShadow: 'var(--shadow-lg)', overflow: 'hidden', padding: 8,
+              transformOrigin: 'top right',
+              transition: 'opacity 180ms var(--ease-out), transform 180ms var(--ease-out)',
+              opacity: plus ? 1 : 0,
+              transform: plus ? 'translateY(0) scale(1)' : 'translateY(-8px) scale(0.98)',
+              pointerEvents: plus ? 'auto' : 'none',
+            }}>
+              {[{ ic: 'star', label: 'Leave a Review', r: 'createreview' }, { ic: 'message', label: 'Leave an Inquiry', r: 'createinquiry' }].map(it => (
+                <button key={it.label} onClick={() => { setPlus(false); onRoute(it.r); }} style={{
+                  width: '100%', display: 'flex', alignItems: 'center', gap: 12,
+                  padding: '13px 14px', borderRadius: 'var(--radius-sm)', border: 'none',
+                  background: 'transparent', cursor: 'pointer', textAlign: 'left',
+                }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = 'var(--linen)'}
+                  onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
+                  <Icon name={it.ic} size={17} color="var(--text-primary)" />
+                  <span style={{ fontFamily: 'var(--font-serif)', fontWeight: 100, fontSize: 16, color: 'var(--text-primary)' }}>{it.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
           )}
           {authed && (<React.Fragment>
           <div className="sd-hide-sm" style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
@@ -223,14 +253,8 @@ export function Nav({ route, onRoute, authed = false }: any) {
             </button>
           ))}
         </div>
-        {/* Mobile-only: Leave a Review + business, collapsed from the top bar */}
+        {/* Mobile-only: business links, collapsed from the top bar */}
         <div className="sd-only-sm" style={{ borderTop: '1px solid var(--border-subtle)', padding: '8px' }}>
-          {!authed && (
-            <button onClick={() => { setOpen(false); onRoute('createreview'); }} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 14, padding: '13px 14px', borderRadius: 'var(--radius-sm)', border: 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left' }}>
-              <Icon name="star" size={18} color="var(--text-primary)" />
-              <span style={{ fontFamily: 'var(--font-serif)', fontWeight: 300, fontSize: 17, color: 'var(--text-primary)' }}>Leave a Review</span>
-            </button>
-          )}
           {bizItems.map(it => (
             <button key={it.id} onClick={() => { setOpen(false); goBiz(it.id); }} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 14, padding: '13px 14px', borderRadius: 'var(--radius-sm)', border: 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left' }}>
               <Icon name={it.icon} size={18} color="var(--text-primary)" />
