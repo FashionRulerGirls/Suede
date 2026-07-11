@@ -1,7 +1,7 @@
 'use client';
 import React from 'react';
 /* Suede — Landing screen. */
-import { Button, BrandCard, ReviewCard, SectionHeading, Eyebrow, EditorialBanner, Icon, Logo, MeasurementSpec, Badge } from '@/components/ds';
+import { Button, BrandCard, ReviewCard, SectionHeading, Eyebrow, EditorialBanner, Icon, Logo, MeasurementSpec, Badge, Reveal } from '@/components/ds';
 import { SUEDE_BRANDS, SUEDE_REVIEWS } from '@/lib/data';
 import { appState } from '@/lib/appState';
 
@@ -220,15 +220,15 @@ export function LandingScreen({ onRoute, tweaks, authed = false }: any) {
         </div>
       </section>
 
-      <div style={{ marginTop: 35 }}>
+      <Reveal as="div" style={{ marginTop: 35 }}>
         <EditorialBanner tone="ink" scroll>{(tweaks && tweaks.bannerText) || 'DISCOVER, REVIEW, & SHOP MINORITY-OWNED AND EMERGING BRANDS WITH CONFIDENCE'}</EditorialBanner>
-      </div>
+      </Reveal>
 
       {/* How it works — two-slide slider: The Lookbook + The Collective */}
-      <HowItWorks onRoute={onRoute} />
+      <Reveal><HowItWorks onRoute={onRoute} /></Reveal>
 
       {/* Measurements CTA */}
-      <section className="sd-measure-cta" style={{ width: '100%', padding: '90px 0 0', display: 'grid', gridTemplateColumns: '1fr 1fr', alignItems: 'center' }}>
+      <Reveal as="section" className="sd-measure-cta" style={{ width: '100%', padding: '90px 0 0', display: 'grid', gridTemplateColumns: '1fr 1fr', alignItems: 'center' }}>
         <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: 22, maxWidth: 640, margin: '0 auto', width: '100%', padding: '0 9%' }}>
           <Logo variant="monogram" height={600} color="var(--ink-900)" className="sd-measure-mono" style={{ position: 'absolute', left: 0, top: '38%', transform: 'translateY(-50%)', opacity: 0.05, pointerEvents: 'none', zIndex: 0 }} />
           <h2 className="sd-h1" style={{ position: 'relative', zIndex: 1, fontFamily: 'var(--font-serif)', fontWeight: 300, fontSize: 24, lineHeight: 1.25, letterSpacing: '0.01em', textTransform: 'uppercase', color: 'var(--text-heading)', margin: 0, textAlign: 'left', maxWidth: 460 }}>
@@ -265,7 +265,7 @@ export function LandingScreen({ onRoute, tweaks, authed = false }: any) {
             <button onClick={() => onRoute(authed ? 'editprofile' : 'signin')} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-primary)', textDecoration: 'underline', textUnderlineOffset: 3 }}>Add them to your Suede profile</button>
           </div>
         </div>
-      </section>
+      </Reveal>
     </div>
   );
 }
