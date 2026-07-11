@@ -188,10 +188,13 @@ html, body { max-width: 100%; overflow-x: hidden; }
   #root .sd-hiw-cols { grid-template-columns: 1fr !important; }
   #root .sd-hiw-textcols { flex-direction: column !important; gap: 24px !important; }
   #root .sd-measure-cta { grid-template-columns: 1fr !important; padding-top: 40px !important; }
-  /* Hero headline matches "The Trust Layer For Fashion" size (19px). */
-  #root .sd-hero-right .sd-display { font-size: 19px !important; }
-  /* Center the browse sub-mark between the hero and the section title.
-     (Override the handoff's 30px title margin with equal specificity.) */
-  #root .sd-browse-sec { padding-top: 10px !important; }
-  #root .sd-browse-sec .sd-browse-title { margin-top: 54px !important; }
+
+  /* NEW HERO — giant wordmark behind the model carousel + destinations */
+  #root .sd-hero-new { padding: 26px 0 30px !important; min-height: calc(100vh - 73px) !important; }
+  #root .sd-hero-new .sd-browse-title { font-size: 12px !important; letter-spacing: 0.2em !important; }
+  #root .sd-hero-wordmark { top: 24px !important; height: 240px !important; }
+  #root .sd-hero-wordmark > span { height: 150px !important; width: 342px !important; }
+  #root .sd-hero-dests { gap: 34px !important; padding-top: 24px !important; padding-left: 24px !important; padding-right: 24px !important; }
+  #root .sd-hero-dests .sd-dest span { font-size: 14px !important; }
+  #root .sd-hero-dests .sd-dest { gap: 10px !important; }
 }

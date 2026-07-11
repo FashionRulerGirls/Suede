@@ -66,11 +66,13 @@ export function Nav({ route, onRoute, authed = false }: any) {
       borderBottom: '1px solid var(--border-subtle)',
     }}>
       <div className="sd-nav-inner" style={{
+        position: 'relative',
         maxWidth: 1460, margin: '0 auto', padding: '18px 52px',
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 24,
+        display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 24,
       }}>
-        <button onClick={() => onRoute('landing')} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center' }}>
-          <Logo variant="wordmark" height={50} style={{ position: 'relative', top: 6 }} />
+        <button onClick={() => onRoute('landing')} className="sd-nav-logo" style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
+          <Logo variant="monogram" height={36} />
+          <Logo variant="wordmark" height={33} />
         </button>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>

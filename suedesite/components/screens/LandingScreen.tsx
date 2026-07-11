@@ -5,23 +5,24 @@ import { Button, BrandCard, ReviewCard, SectionHeading, Eyebrow, EditorialBanner
 import { SUEDE_BRANDS, SUEDE_REVIEWS } from '@/lib/data';
 import { appState } from '@/lib/appState';
 
-/* Continuous left-to-right marquee of capsule brand cutouts, 5 visible per
-   row, names underneath, with a pause toggle. */
+/* Auto-scrolling model marquee sitting in front of the giant hero wordmark.
+   5 visible on desktop, 3 on tablet, 2 on phone; pause toggles the loop. */
 function CapsuleCarousel({ brands, onRoute }: any) {
   const [paused, setPaused] = React.useState(false);
-  const [visible, setVisible] = React.useState(5);
+  const [vw, setVw] = React.useState(1280);
   React.useEffect(() => {
-    const update = () => setVisible(window.innerWidth <= 640 ? 2 : 5);
-    update();
-    window.addEventListener('resize', update);
-    return () => window.removeEventListener('resize', update);
+    const onR = () => setVw(window.innerWidth);
+    onR();
+    window.addEventListener('resize', onR);
+    return () => window.removeEventListener('resize', onR);
   }, []);
-  const VISIBLE = visible;
+  const VISIBLE = vw <= 640 ? 2 : vw <= 900 ? 3 : 5;
+  const imgH = vw <= 640 ? 230 : 462;
   const loop = [...brands, ...brands];
   const trackWidth = (loop.length / VISIBLE) * 100;   // %
   const itemBasis = 100 / loop.length;                // % of track
   return (
-    <div style={{ position: 'relative', marginTop: 52 }}>
+    <div style={{ position: 'relative', marginTop: 22 }}>
       <style>{`@keyframes suedeMarquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }`}</style>
       <div style={{ overflow: 'hidden' }}>
         <div style={{
@@ -34,87 +35,24 @@ function CapsuleCarousel({ brands, onRoute }: any) {
               flex: `0 0 ${itemBasis}%`, background: 'none', border: 'none', cursor: 'pointer',
               display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 26, padding: 0,
             }}>
-              <span style={{ height: 380, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
-                <img src={b.image} alt={b.name} style={{ height: 370, width: 'auto', objectFit: 'contain' }} />
+              <span style={{ height: imgH + 10, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+                <img src={b.image} alt={b.name} style={{ height: imgH, width: 'auto', objectFit: 'contain' }} />
               </span>
               <span style={{ fontFamily: 'var(--font-serif)', fontSize: 15, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>{b.name}</span>
             </button>
           ))}
         </div>
-        {/* edge fades — dissolve cutouts into the page, signalling more to scroll */}
+        {/* edge fades — dissolve cutouts into the page (hidden on phone) */}
         <div className="sd-cap-fade" style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: 160, background: 'linear-gradient(to right, var(--paper), rgba(248,246,243,0))', pointerEvents: 'none', zIndex: 2 }} />
         <div className="sd-cap-fade" style={{ position: 'absolute', top: 0, bottom: 0, right: 0, width: 160, background: 'linear-gradient(to left, var(--paper), rgba(248,246,243,0))', pointerEvents: 'none', zIndex: 2 }} />
       </div>
       <div style={{ display: 'flex', justifyContent: 'center', marginTop: 40 }}>
         <button onClick={() => setPaused(p => !p)} aria-label={paused ? 'Play' : 'Pause'} title={paused ? 'Play' : 'Pause'}
-          style={{
-            width: 38, height: 38, borderRadius: 'var(--radius-pill)',
-            border: '1px solid var(--border-default)', background: 'var(--surface-card)', cursor: 'pointer',
-            display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-primary)',
-          }}>
+          style={{ width: 38, height: 38, borderRadius: 0, border: 'none', background: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-primary)' }}>
           <Icon name={paused ? 'play' : 'pause'} size={16} />
         </button>
       </div>
     </div>
-  );
-}
-
-function HeroBlock({ onRoute, tweaks }: any) {
-  const headline = (tweaks && tweaks.heroHeadline) || 'Stop shopping blind. Start shopping with intent.';
-  const links = [
-    { ic: 'shirt', label: 'The Capsule', r: 'capsule', desc: 'Brand Directory' },
-    { ic: 'reviews', label: 'The Lookbook', r: 'lookbook', desc: 'Reviews & Inquiries' },
-    { ic: 'user', label: 'The Collective', r: 'collective', desc: 'Member Directory' },
-    { ic: 'inbox', label: 'The Consign', r: null, note: 'Coming Soon' },
-  ];
-  return (
-    <section style={{ position: 'relative', width: '100%', overflow: 'hidden', background: 'var(--surface-page)' }}>
-      {/* centered hanger photograph */}
-      <div className="sd-hero-photo" style={{
-        position: 'absolute', inset: 0,
-        backgroundImage: 'url(/assets/imagery/hero-hangers.png)',
-        backgroundRepeat: 'no-repeat',
-        backgroundPosition: 'center 44%',
-        backgroundSize: 'auto 141%',
-        opacity: 0.5,
-        WebkitMaskImage: 'linear-gradient(to bottom, #000 0%, #000 52%, rgba(0,0,0,0.25) 82%, rgba(0,0,0,0) 100%)',
-        maskImage: 'linear-gradient(to bottom, #000 0%, #000 52%, rgba(0,0,0,0.25) 82%, rgba(0,0,0,0) 100%)',
-      }} />
-
-      <div style={{ position: 'relative', height: 'calc(100vh - 75px)', minHeight: 600, fontWeight: 400 }}>
-        {/* side texts, vertically centered on the hangers */}
-        <div className="sd-hero-sides" style={{ position: 'absolute', top: '40%', left: 0, right: 0, transform: 'translateY(-50%)', maxWidth: 1460, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', padding: '0 52px' }}>
-          <div style={{ textAlign: 'left' }}>
-            <div className="sd-hero-line" style={{ fontFamily: 'var(--font-serif)', fontWeight: 300, fontSize: 24, letterSpacing: '0.01em', textTransform: 'uppercase', color: 'var(--text-primary)', lineHeight: 1.15, whiteSpace: 'nowrap' }}>The Trust Layer For Fashion</div>
-            <div style={{ fontFamily: 'var(--font-serif)', fontSize: 13, letterSpacing: '0.06em', color: 'var(--text-secondary)', marginTop: 8, textAlign: 'right' }}>EST2026</div>
-          </div>
-          <div className="sd-hero-right" style={{ textAlign: 'right', maxWidth: 360 }}>
-            <div className="sd-display" style={{ fontFamily: 'var(--font-serif)', fontWeight: 300, fontSize: 24, lineHeight: 1.18, letterSpacing: '0.01em', textTransform: 'uppercase', color: 'var(--text-primary)' }}>{headline}</div>
-            <button onClick={() => onRoute('createreview')} style={{ marginTop: 26, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-body)', fontWeight: 300, fontSize: 15, letterSpacing: '0.06em', textTransform: 'uppercase', textDecoration: 'underline', textUnderlineOffset: 4, color: 'var(--text-primary)', padding: 0 }}>Leave a Review</button>
-          </div>
-        </div>
-
-        {/* product index row */}
-        <div className="sd-hero-links" style={{ position: 'absolute', left: 0, right: 0, bottom: 48, maxWidth: 1460, margin: '0 auto', display: 'flex', justifyContent: 'space-between', padding: '0 52px' }}>
-          {links.map(l => (
-            <button key={l.label} className="hero-dest" onClick={() => l.r && onRoute(l.r)}
-              onMouseEnter={(e) => { const d = e.currentTarget.querySelector('[data-desc]') as any; const u = e.currentTarget.querySelector('[data-ul]') as any; if (d) { d.style.maxWidth = '160px'; d.style.opacity = '1'; d.style.marginLeft = '10px'; } if (u) u.style.transform = 'scaleX(1)'; }}
-              onMouseLeave={(e) => { const d = e.currentTarget.querySelector('[data-desc]') as any; const u = e.currentTarget.querySelector('[data-ul]') as any; if (d) { d.style.maxWidth = '0px'; d.style.opacity = '0'; d.style.marginLeft = '0px'; } if (u) u.style.transform = 'scaleX(0)'; }}
-              style={{ background: 'none', border: 'none', cursor: l.r ? 'pointer' : 'default', display: 'flex', alignItems: 'center', gap: 11, padding: 0 }}>
-              <Icon name={l.ic} size={19} color="var(--text-secondary)" />
-              <span style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-                <span style={{ display: 'inline-flex', alignItems: 'baseline' }}>
-                  <span className="sd-dest-label" style={{ fontFamily: 'var(--font-serif)', fontSize: 19, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>{l.label}</span>
-                  {l.desc && <span data-desc className="sd-dest-pop" style={{ fontFamily: 'var(--font-body)', fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', maxWidth: 0, opacity: 0, transition: 'max-width var(--dur-base) var(--ease-out), opacity var(--dur-base) var(--ease-out), margin-left var(--dur-base) var(--ease-out)' }}>{l.desc}</span>}
-                  {l.note && <span style={{ fontFamily: 'var(--font-body)', fontSize: 10, letterSpacing: '0.1em', color: 'var(--text-muted)', marginLeft: 8 }}>{l.note}</span>}
-                </span>
-                <span data-ul style={{ height: 1, width: '100%', background: 'var(--ink-900)', transformOrigin: 'left', transform: 'scaleX(0)', transition: 'transform var(--dur-base) var(--ease-out)', marginTop: 4 }} />
-              </span>
-            </button>
-          ))}
-        </div>
-      </div>
-    </section>
   );
 }
 
@@ -247,18 +185,33 @@ export function LandingScreen({ onRoute, tweaks, authed = false }: any) {
   const brands = SUEDE_BRANDS.filter((b) => !HOME_HIDDEN.includes(b.name));
   return (
     <div>
-      <HeroBlock onRoute={onRoute} tweaks={tweaks} />
+      {/* HERO — giant SUEDE wordmark behind the auto-scrolling model carousel */}
+      <section className="sd-hero-new" style={{ position: 'relative', overflow: 'hidden', minHeight: 'calc(100vh - 75px)', display: 'flex', flexDirection: 'column', padding: '38px 0 46px', background: 'var(--surface-page)' }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+          <h2 onClick={() => onRoute('capsule')} className="sd-browse-title" style={{ textAlign: 'center', fontFamily: 'var(--font-serif)', fontWeight: 400, fontSize: 15, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'var(--text-secondary)', margin: '0 0 4px', cursor: 'pointer' }}>Browse Capsule Brands</h2>
 
-      <section className="sd-browse-sec" style={{ position: 'relative', overflow: 'hidden', padding: '45px 0px 8px' }}>
-        {/* centered monogram */}
-        <div style={{ display: 'flex', justifyContent: 'center' }}>
-          <Logo variant="monogram" height={78} />
+          <div className="sd-hero-stage" style={{ position: 'relative' }}>
+            <div className="sd-hero-wordmark" aria-hidden="true" style={{ position: 'absolute', left: 0, right: 0, top: 80, height: 475, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 0, pointerEvents: 'none' }}>
+              <Logo variant="wordmark" height={505} color="var(--ink-900)" style={{ maxWidth: 'none', width: 'auto', flex: 'none' }} />
+            </div>
+            <div style={{ position: 'relative', zIndex: 1 }}>
+              <CapsuleCarousel brands={brands} onRoute={onRoute} />
+            </div>
+          </div>
         </div>
 
-        {/* title */}
-        <h2 onClick={() => onRoute('capsule')} className="sd-h1 sd-browse-title" style={{ textAlign: 'center', fontFamily: 'var(--font-serif)', fontWeight: 400, fontSize: 24, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--text-heading)', margin: '52px 0 0', cursor: 'pointer' }}>Browse Capsule Brands</h2>
-
-        <CapsuleCarousel brands={brands} onRoute={onRoute} />
+        {/* three destinations: Capsule left, Lookbook centered, Collective right */}
+        <div className="sd-hero-dests" style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'start', paddingTop: 40, paddingLeft: 60, paddingRight: 60 }}>
+          {[{ ic: 'search', label: 'The Capsule', r: 'capsule', js: 'start' },
+            { ic: 'reviews', label: 'The Lookbook', r: 'lookbook', js: 'center' },
+            { ic: 'user', label: 'The Collective', r: 'collective', js: 'end' }].map(l => (
+            <button key={l.label} onClick={() => onRoute(l.r)} className="sd-dest"
+              style={{ justifySelf: l.js as any, background: 'none', border: 'none', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14, padding: 0 }}>
+              <Icon name={l.ic} size={22} color="var(--text-secondary)" />
+              <span style={{ fontFamily: 'var(--font-serif)', fontSize: 17, color: 'var(--text-primary)' }}>{l.label}</span>
+            </button>
+          ))}
+        </div>
       </section>
 
       <div style={{ marginTop: 35 }}>
