@@ -16,19 +16,26 @@ function CapsuleCarousel({ brands, onRoute }: any) {
     window.addEventListener('resize', onR);
     return () => window.removeEventListener('resize', onR);
   }, []);
-  const VISIBLE = vw <= 640 ? 2 : vw <= 900 ? 3 : 5;
-  const imgH = vw <= 640 ? 250 : 360;
-  const loop = [...brands, ...brands];
+  const isPhone = vw <= 640;
+  const VISIBLE = isPhone ? 2 : vw <= 900 ? 3 : 5;
+  const imgH = isPhone ? 250 : 360;
+  // On phones the animated track is promoted to a GPU layer; a full-length
+  // duplicated list makes it thousands of px wide and mobile Safari drops
+  // the layer (all models blank out). Cap the phone list so the track stays
+  // well under the max texture size.
+  const list = isPhone ? brands.slice(0, 6) : brands;
+  const loop = [...list, ...list];
   const trackWidth = (loop.length / VISIBLE) * 100;   // %
   const itemBasis = 100 / loop.length;                // % of track
   return (
     <div style={{ position: 'relative', marginTop: 22 }}>
       <style>{`@keyframes suedeMarquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }`}</style>
       <div style={{ overflow: 'hidden' }}>
-        <div style={{
+        <div key={VISIBLE} style={{
           display: 'flex', alignItems: 'flex-end', width: trackWidth + '%',
           animation: 'suedeMarquee 48s linear infinite',
           animationPlayState: paused ? 'paused' : 'running',
+          willChange: 'transform', WebkitBackfaceVisibility: 'hidden', backfaceVisibility: 'hidden',
         }}>
           {loop.map((b, i) => (
             <button key={i} onClick={() => { appState.brand = b; onRoute('brand'); }} style={{
