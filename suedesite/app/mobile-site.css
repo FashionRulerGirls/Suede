@@ -316,3 +316,49 @@ html, body { max-width: 100%; overflow-x: hidden; }
   }
   #root .sd-yprof-statrow > div, #root .sd-mprof-stats > div { min-width: 0 !important; }
 }
+
+/* ════════════════════════════════════════════════════════════════════
+   MOBILE AUDIT PASS — forms, size chips, Edit Profile, Inquiry detail,
+   Review-detail header, About editorial columns. Phone only.
+   ════════════════════════════════════════════════════════════════════ */
+@media (max-width: 640px) {
+  /* Size-chip grids everywhere: wrap instead of crushing chips off-screen */
+  #root .sd-chipgrid { grid-template-columns: repeat(auto-fill, minmax(46px, 1fr)) !important; gap: 8px !important; }
+
+  /* Create Review / Inquiry forms: tighter padding for breathing room */
+  #root .sd-form-wrap { padding-left: 16px !important; padding-right: 16px !important; }
+  #root .sd-form-card { padding: 26px 20px !important; }
+  /* "Your Measurements" header: drop the hide-toggle below the title */
+  #root .sd-form-head { flex-direction: column !important; align-items: flex-start !important; gap: 12px !important; }
+
+  /* ProductFetch: let the Fetch button wrap full-width under the field */
+  #root .sd-fetch-row { flex-wrap: wrap !important; }
+  #root .sd-fetch-row > span { flex: 1 1 100% !important; }
+  #root .sd-fetch-row > button { width: 100% !important; }
+
+  /* Inquiry detail: stack the image | Q&A columns and the asker row */
+  #root .sd-iqd-wrap { padding-left: 18px !important; padding-right: 18px !important; }
+  #root .sd-iqd-grid { grid-template-columns: 1fr !important; gap: 28px !important; }
+  #root .sd-iqd-asker { flex-wrap: wrap !important; gap: 10px !important; }
+
+  /* Review detail header: measurements on their own line (was crammed 10px) */
+  #root .sd-rev-head { flex-direction: column !important; align-items: flex-start !important; gap: 10px !important; }
+  #root .sd-rev-head .sd-mspec { font-size: 12px !important; }
+
+  /* Edit Profile: stack sidebar + form; make the section nav a compact row */
+  #root .sd-ep-wrap { padding-left: 16px !important; padding-right: 16px !important; }
+  #root .sd-ep-grid { grid-template-columns: 1fr !important; }
+  #root .sd-ep-aside { padding-top: 8px !important; }
+  #root .sd-ep-nav { flex-direction: row !important; flex-wrap: wrap !important; gap: 4px !important; margin-bottom: 10px !important; }
+  #root .sd-ep-nav > button { flex: 1 1 auto !important; justify-content: center !important; }
+  #root .sd-ep-sheet { padding: 26px 18px !important; }
+  #root .sd-ep-2col { grid-template-columns: 1fr !important; gap: 20px !important; }
+  #root .sd-ep-stepper { display: none !important; }
+
+  /* About: stack the editorial two-column sections and the stat trio */
+  #root .sd-about-hero { grid-template-columns: 1fr !important; gap: 18px !important; padding: 40px 20px 32px !important; }
+  #root .sd-about-hero-p { text-align: left !important; margin-top: 0 !important; }
+  #root .sd-about-2col { grid-template-columns: 1fr !important; gap: 28px !important; }
+  #root .sd-about-stats { grid-template-columns: 1fr !important; gap: 30px !important; padding-left: 20px !important; padding-right: 20px !important; }
+  #root .sd-about-pad { padding-left: 20px !important; padding-right: 20px !important; }
+}

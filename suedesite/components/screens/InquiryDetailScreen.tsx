@@ -51,12 +51,12 @@ export function InquiryDetailScreen({ onRoute, authed = false }: any) {
   };
 
   return (
-    <div style={{ maxWidth: 1240, margin: '0 auto', padding: '28px 40px 0' }}>
+    <div className="sd-iqd-wrap" style={{ maxWidth: 1240, margin: '0 auto', padding: '28px 40px 0' }}>
       <button onClick={() => { appState.lookbookTab = 'inquiries'; onRoute('lookbook'); }} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-secondary)', marginBottom: 24 }}>
         <Icon name="arrow-left" size={16} color="var(--text-secondary)" /> Back to Lookbook
       </button>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 60, alignItems: 'start' }}>
+      <div className="sd-iqd-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 60, alignItems: 'start' }}>
         {/* Left — product image + CTA */}
         <div>
           <div style={{ aspectRatio: '3/4', overflow: 'hidden', background: 'var(--linen)' }}>
@@ -78,7 +78,7 @@ export function InquiryDetailScreen({ onRoute, authed = false }: any) {
             <Icon name="search" size={13} color="var(--text-muted)" /> Size {size}
           </span>
 
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, marginTop: 24 }}>
+          <div className="sd-iqd-asker" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, marginTop: 24 }}>
             <Avatar src={asker.avatar} name={asker.name} handle={asker.handle} size="lg" showName />
             <MeasurementSpec {...m} size="md" tone="muted" style={{ flexWrap: 'nowrap', whiteSpace: 'nowrap' }} />
           </div>

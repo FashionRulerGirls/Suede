@@ -31,7 +31,7 @@ function ChipRow({ options, value, onChange, cols }: any) {
     fontFamily: 'var(--font-body)', fontSize: 14, transition: 'all var(--dur-fast) var(--ease-out)',
   });
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: `repeat(${cols}, 1fr)`, gap: 10 }}>
+    <div className="sd-chipgrid" style={{ display: 'grid', gridTemplateColumns: `repeat(${cols}, 1fr)`, gap: 10 }}>
       {options.map((o: any) => <button key={o} type="button" onClick={() => onChange(value === o ? '' : o)} style={chip(value === o)}>{o}</button>)}
     </div>
   );
@@ -60,7 +60,7 @@ function PersonalStep({ bio, setBio }: any) {
       <h2 style={{ fontFamily: 'var(--font-serif)', fontWeight: 400, fontSize: 26, color: 'var(--text-heading)', margin: 0 }}>Personal Information</h2>
       <p style={{ fontFamily: 'var(--font-body)', fontSize: 15, color: 'var(--text-muted)', margin: '8px 0 0' }}>This is how other members see you on Suede.</p>
       <div style={{ height: 1, background: 'var(--border-subtle)', margin: '28px 0' }} />
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 28 }}>
+      <div className="sd-ep-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 28 }}>
         <EPInput label="Display Name" defaultValue="Amara K." />
         <EPInput label="Username" defaultValue="@ amara_k" />
       </div>
@@ -88,7 +88,7 @@ function MeasurementsStep({ sizes, setSize }: any) {
         <span style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.6 }}>Accurate measurements improve your match score results by up to 40%. We recommend measuring yourself in form-fitting clothing.</span>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 28, rowGap: 24 }}>
+      <div className="sd-ep-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 28, rowGap: 24 }}>
         <EPInput label="Height" sub="feet & inches" defaultValue={`5'6"`} />
         <EPInput label="Bust" sub="inches" defaultValue={`36"`} />
         <EPInput label="Waist" sub="inches" defaultValue={`28"`} />
@@ -157,7 +157,7 @@ function AccountStep({ onRoute }: any) {
       <h2 style={{ fontFamily: 'var(--font-serif)', fontWeight: 400, fontSize: 26, color: 'var(--text-heading)', margin: 0 }}>Account</h2>
       <p style={{ fontFamily: 'var(--font-body)', fontSize: 15, color: 'var(--text-muted)', margin: '8px 0 0' }}>Manage your login and privacy preferences.</p>
       <div style={{ height: 1, background: 'var(--border-subtle)', margin: '28px 0' }} />
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 28 }}>
+      <div className="sd-ep-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 28 }}>
         <EPInput label="Email" defaultValue="amara@email.com" />
         <EPInput label="Password" type="password" defaultValue="password" />
       </div>
@@ -203,14 +203,14 @@ export function EditProfileScreen({ onRoute, authed = false }: any) {
       {/* hanger watermark */}
       <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 360, backgroundImage: 'url(/assets/imagery/hero-hangers.png)', backgroundRepeat: 'no-repeat', backgroundPosition: 'center -60px', backgroundSize: 'auto 80%', opacity: 0.10, pointerEvents: 'none', zIndex: 0 }} />
 
-      <div style={{ position: 'relative', zIndex: 1, maxWidth: 1320, margin: '0 auto', padding: '24px 48px 0' }}>
+      <div className="sd-ep-wrap" style={{ position: 'relative', zIndex: 1, maxWidth: 1320, margin: '0 auto', padding: '24px 48px 0' }}>
         <button onClick={() => onRoute('yourprofile')} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-secondary)', marginBottom: 28 }}>
           <Icon name="arrow-left" size={16} color="var(--text-secondary)" /> Back to Profile
         </button>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '232px 1fr', gap: 0, alignItems: 'start' }}>
+        <div className="sd-ep-grid" style={{ display: 'grid', gridTemplateColumns: '232px 1fr', gap: 0, alignItems: 'start' }}>
           {/* Left rail */}
-          <aside style={{ paddingTop: 36 }}>
+          <aside className="sd-ep-aside" style={{ paddingTop: 36 }}>
             <label style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', marginBottom: 28, cursor: 'pointer' }}>
               <input type="file" accept="image/*" onChange={onAvatarPick} style={{ display: 'none' }} />
               <div style={{ position: 'relative' }}>
@@ -221,7 +221,7 @@ export function EditProfileScreen({ onRoute, authed = false }: any) {
               </div>
               <span style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-secondary)', marginTop: 12 }}>Change photo</span>
             </label>
-            <nav style={{ display: 'flex', flexDirection: 'column' }}>
+            <nav className="sd-ep-nav" style={{ display: 'flex', flexDirection: 'column' }}>
               {EP_STEPS.map((s, i) => {
                 const active = i === step;
                 return (
@@ -234,7 +234,7 @@ export function EditProfileScreen({ onRoute, authed = false }: any) {
           </aside>
 
           {/* Sheet */}
-          <div style={{ background: 'var(--white)', border: '1px solid var(--border-subtle)', padding: '48px 56px', minHeight: 560 }}>
+          <div className="sd-ep-sheet" style={{ background: 'var(--white)', border: '1px solid var(--border-subtle)', padding: '48px 56px', minHeight: 560 }}>
             <h1 style={{ fontFamily: 'var(--font-serif)', fontWeight: 400, fontSize: 34, color: 'var(--text-heading)', margin: '0 0 32px' }}>Edit Profile</h1>
             {cur === 'personal' && <PersonalStep bio={bio} setBio={setBio} />}
             {cur === 'measurements' && <MeasurementsStep sizes={sizes} setSize={setSize} />}
@@ -244,7 +244,7 @@ export function EditProfileScreen({ onRoute, authed = false }: any) {
         </div>
 
         {/* Stepper */}
-        <div style={{ padding: '44px 0 0', marginLeft: 232 }}>
+        <div className="sd-ep-stepper" style={{ padding: '44px 0 0', marginLeft: 232 }}>
           <div style={{ position: 'relative', display: 'flex', justifyContent: 'space-between', maxWidth: 1000 }}>
             <div style={{ position: 'absolute', top: 38, left: 8, right: 8, height: 2, background: 'var(--ink-900)', zIndex: 0 }} />
             {EP_STEPS.map((s, i) => (

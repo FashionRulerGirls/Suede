@@ -14,21 +14,21 @@ export function AboutScreen() {
   return (
     <div>
       {/* Hero */}
-      <div style={{ maxWidth: 1460, margin: '0 auto', padding: '60px 52px 56px', display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 40, alignItems: 'start' }}>
+      <div className="sd-about-hero" style={{ maxWidth: 1460, margin: '0 auto', padding: '60px 52px 56px', display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 40, alignItems: 'start' }}>
         <div style={{ borderLeft: '1px solid var(--ink-900)', paddingLeft: 28 }}>
           <span style={{ fontFamily: 'var(--font-body)', fontSize: 12, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--text-secondary)' }}>About Us</span>
           <h1 style={{ fontFamily: 'var(--font-serif)', fontWeight: 100, fontSize: 35, lineHeight: 1.1, letterSpacing: '-0.01em', color: 'var(--text-heading)', margin: '20px 0 0', textTransform: 'uppercase' }}>The Trust Layer for Fashion</h1>
         </div>
-        <p style={{ fontFamily: 'var(--font-body)', fontSize: 15, lineHeight: 1.7, color: 'var(--text-secondary)', textAlign: 'right', marginTop: 60 }}>
+        <p className="sd-about-hero-p" style={{ fontFamily: 'var(--font-body)', fontSize: 15, lineHeight: 1.7, color: 'var(--text-secondary)', textAlign: 'right', marginTop: 60 }}>
           A fashion discovery and review platform that uses <b style={{ fontWeight: 600, color: 'var(--text-primary)' }}>body measurements</b> to help you shop with confidence.
         </p>
       </div>
 
       {/* I — Etymology */}
-      <div style={{ maxWidth: 1240, margin: '0 auto', padding: '40px 40px 64px' }}>
+      <div className="sd-about-pad" style={{ maxWidth: 1240, margin: '0 auto', padding: '40px 40px 64px' }}>
         <Eyebrow>I · Etymology</Eyebrow>
         <h2 style={{ fontFamily: 'var(--font-body)', fontWeight: 400, fontSize: 22, color: 'var(--text-primary)', margin: '16px 0 40px' }}>A name with <b style={{ fontWeight: 700 }}>two meanings.</b></h2>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.4fr', gap: 60 }}>
+        <div className="sd-about-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 1.4fr', gap: 60 }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 36 }}>
             <div>
               <div style={{ fontFamily: 'var(--font-serif)', fontSize: 22, letterSpacing: '0.04em', color: 'var(--text-heading)' }}>SUEDE</div>
@@ -51,7 +51,7 @@ export function AboutScreen() {
 
       {/* II — Our Origin (dark) */}
       <div style={{ background: 'var(--ink-900)', color: 'var(--white)' }}>
-        <div style={{ maxWidth: 1240, margin: '0 auto', padding: '72px 40px', display: 'grid', gridTemplateColumns: '1fr 1.4fr', gap: 60 }}>
+        <div className="sd-about-2col sd-about-pad" style={{ maxWidth: 1240, margin: '0 auto', padding: '72px 40px', display: 'grid', gridTemplateColumns: '1fr 1.4fr', gap: 60 }}>
           <div>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 12, fontFamily: 'var(--font-body)', fontSize: 12, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.6)' }}>
               <span style={{ width: 24, height: 1, background: 'rgba(255,255,255,0.6)' }} />II · Our Origin
@@ -68,7 +68,7 @@ export function AboutScreen() {
       </div>
 
       {/* Stats */}
-      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '72px 40px', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 40, textAlign: 'center' }}>
+      <div className="sd-about-stats" style={{ maxWidth: 1100, margin: '0 auto', padding: '72px 40px', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 40, textAlign: 'center' }}>
         {[['25%', 'chance of online apparel orders being returned to the seller'], ['$21 – $46', 'lost per returned product'], ['38%', 'of consumers return clothing they purchased online due to poor fit']].map(([v, l]) => (
           <div key={l}>
             <div style={{ fontFamily: 'var(--font-serif)', fontSize: 44, color: 'var(--text-heading)' }}>{v}</div>
@@ -78,7 +78,7 @@ export function AboutScreen() {
       </div>
 
       {/* III — Our Founder */}
-      <div style={{ maxWidth: 1240, margin: '0 auto', padding: '20px 40px 0', display: 'grid', gridTemplateColumns: '1fr 1.3fr', gap: 60, alignItems: 'start' }}>
+      <div className="sd-about-2col sd-about-pad" style={{ maxWidth: 1240, margin: '0 auto', padding: '20px 40px 0', display: 'grid', gridTemplateColumns: '1fr 1.3fr', gap: 60, alignItems: 'start' }}>
         <div style={{ aspectRatio: '3/4', overflow: 'hidden', background: 'var(--linen)', borderRadius: 'var(--radius-sm)' }}>
           <img src="/assets/imagery/fit-street.jpg" alt="Kikiola, Founder & CEO" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         </div>

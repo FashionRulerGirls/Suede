@@ -41,7 +41,7 @@ export function ProductFetch({
 
   return (
     <div>
-      <div style={{ display: 'flex', gap: 12 }}>
+      <div className="sd-fetch-row" style={{ display: 'flex', gap: 12 }}>
         <span style={{ flex: 1 }}>
           <Input
             variant="outline"

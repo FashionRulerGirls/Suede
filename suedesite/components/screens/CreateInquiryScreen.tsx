@@ -8,7 +8,7 @@ import { ProductFetch } from '@/components/screens/ProductFetch';
 
 function CISectionCard({ title, children }: any) {
   return (
-    <section style={{ background: 'var(--white)', padding: '32px 40px' }}>
+    <section className="sd-form-card" style={{ background: 'var(--white)', padding: '32px 40px' }}>
       <h2 style={{ fontFamily: 'var(--font-serif)', fontWeight: 500, fontSize: 22, color: 'var(--text-heading)', margin: '0 0 22px' }}>{title}</h2>
       {children}
     </section>
@@ -32,7 +32,7 @@ export function CreateInquiryScreen({ onRoute, authed = false }: any) {
         <p style={{ fontFamily: 'var(--font-body)', fontSize: 15, color: 'var(--text-muted)', marginTop: 10, maxWidth: 560, marginLeft: 'auto', marginRight: 'auto', lineHeight: 1.6 }}>Looking for fit intel before you buy? Post a request and get notified when someone reviews the item in your size.</p>
       </div>
 
-      <div style={{ maxWidth: 1000, margin: '0 auto', padding: '0 40px 60px', display: 'flex', flexDirection: 'column', gap: 18 }}>
+      <div className="sd-form-wrap" style={{ maxWidth: 1000, margin: '0 auto', padding: '0 40px 60px', display: 'flex', flexDirection: 'column', gap: 18 }}>
         <CISectionCard title="Product Information">
           <Field label="Paste the product link">
             <ProductFetch placeholder="https://example.com/product" />
@@ -47,7 +47,7 @@ export function CreateInquiryScreen({ onRoute, authed = false }: any) {
             ))}
           </div>
           {scale === 'Letter' && (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(9, 1fr)', gap: 12 }}>
+            <div className="sd-chipgrid" style={{ display: 'grid', gridTemplateColumns: 'repeat(9, 1fr)', gap: 12 }}>
               {['XXS', 'XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL', 'OS'].map(s => <button key={s} type="button" onClick={() => setSize(s)} style={chip(size === s)}>{s}</button>)}
             </div>
           )}
@@ -55,20 +55,20 @@ export function CreateInquiryScreen({ onRoute, authed = false }: any) {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
               <div>
                 <div style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-muted)', marginBottom: 12 }}>US dress / clothing size</div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: 10 }}>
+                <div className="sd-chipgrid" style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: 10 }}>
                   {['00', '0', '2', '4', '6', '8', '10', '12', '14', '16', '18', '20'].map(s => <button key={s} type="button" onClick={() => setSize(s)} style={chip(size === s)}>{s}</button>)}
                 </div>
               </div>
               <div>
                 <div style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-muted)', marginBottom: 12 }}>Waist size (inches) — for bottoms &amp; denim</div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(11, 1fr)', gap: 10 }}>
+                <div className="sd-chipgrid" style={{ display: 'grid', gridTemplateColumns: 'repeat(11, 1fr)', gap: 10 }}>
                   {['24', '26', '28', '30', '32', '34', '36', '38', '40', '42', '44'].map(s => <button key={s} type="button" onClick={() => setSize(s)} style={chip(size === s)}>{s}</button>)}
                 </div>
               </div>
             </div>
           )}
           {scale === 'Plus' && (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 12 }}>
+            <div className="sd-chipgrid" style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 12 }}>
               {['0X', '1X', '2X', '3X', '4X', '5X', '6X'].map(s => <button key={s} type="button" onClick={() => setSize(s)} style={chip(size === s)}>{s}</button>)}
             </div>
           )}

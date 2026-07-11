@@ -57,7 +57,7 @@ function SizeSatisfactionModal({ open, onClose, onContinue }: any) {
             <button key={s} type="button" onClick={() => setScale(s)} style={{ ...chip(scale === s), padding: '12px 22px' }}>{s}</button>
           ))}
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(9, 1fr)', gap: 12 }}>
+        <div className="sd-chipgrid" style={{ display: 'grid', gridTemplateColumns: 'repeat(9, 1fr)', gap: 12 }}>
           {sizes.map(s => <button key={s} type="button" onClick={() => setSize(s)} style={chip(size === s)}>{s}</button>)}
         </div>
         <div style={{ height: 1, background: 'var(--border-subtle)', margin: '26px 0 20px' }} />
@@ -77,10 +77,10 @@ function SizeSatisfactionModal({ open, onClose, onContinue }: any) {
   );
 }
 
-function SectionCard({ title, action, children }: any) {
+function SectionCard({ title, action, children, headClass }: any) {
   return (
-    <section style={{ background: 'var(--white)', padding: '32px 40px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 22 }}>
+    <section className="sd-form-card" style={{ background: 'var(--white)', padding: '32px 40px' }}>
+      <div className={headClass} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 22, gap: 14 }}>
         <h2 style={{ fontFamily: 'var(--font-serif)', fontWeight: 500, fontSize: 22, color: 'var(--text-heading)', margin: 0 }}>{title}</h2>
         {action}
       </div>
@@ -146,7 +146,7 @@ export function CreateReviewScreen({ onRoute, authed = false }: any) {
         </div>
       </div>
 
-      <div style={{ maxWidth: 1000, margin: '0 auto', padding: '0 40px 60px', display: 'flex', flexDirection: 'column', gap: 18 }}>
+      <div className="sd-form-wrap" style={{ maxWidth: 1000, margin: '0 auto', padding: '0 40px 60px', display: 'flex', flexDirection: 'column', gap: 18 }}>
         <SectionCard title="Brand Information">
           <div style={{ display: 'flex', gap: 14, marginBottom: 20 }}>
             {['Capsule Brand', 'Non-Capsule Brand'].map(t => (
@@ -247,7 +247,7 @@ export function CreateReviewScreen({ onRoute, authed = false }: any) {
             ))}
           </div>
           {scale === 'Letter' && (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(9, 1fr)', gap: 12 }}>
+            <div className="sd-chipgrid" style={{ display: 'grid', gridTemplateColumns: 'repeat(9, 1fr)', gap: 12 }}>
               {['XXS', 'XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL', 'OS'].map(s => <button key={s} type="button" onClick={() => setSize(s)} style={chip(size === s)}>{s}</button>)}
             </div>
           )}
@@ -255,20 +255,20 @@ export function CreateReviewScreen({ onRoute, authed = false }: any) {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
               <div>
                 <div style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-muted)', marginBottom: 12 }}>US dress / clothing size</div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: 10 }}>
+                <div className="sd-chipgrid" style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: 10 }}>
                   {['00', '0', '2', '4', '6', '8', '10', '12', '14', '16', '18', '20'].map(s => <button key={s} type="button" onClick={() => setSize(s)} style={chip(size === s)}>{s}</button>)}
                 </div>
               </div>
               <div>
                 <div style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-muted)', marginBottom: 12 }}>Waist size (inches) — for bottoms &amp; denim</div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(11, 1fr)', gap: 10 }}>
+                <div className="sd-chipgrid" style={{ display: 'grid', gridTemplateColumns: 'repeat(11, 1fr)', gap: 10 }}>
                   {['24', '26', '28', '30', '32', '34', '36', '38', '40', '42', '44'].map(s => <button key={s} type="button" onClick={() => setSize(s)} style={chip(size === s)}>{s}</button>)}
                 </div>
               </div>
             </div>
           )}
           {scale === 'Plus' && (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 12 }}>
+            <div className="sd-chipgrid" style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 12 }}>
               {['0X', '1X', '2X', '3X', '4X', '5X', '6X'].map(s => <button key={s} type="button" onClick={() => setSize(s)} style={chip(size === s)}>{s}</button>)}
             </div>
           )}
@@ -320,7 +320,7 @@ export function CreateReviewScreen({ onRoute, authed = false }: any) {
           </div>
         </SectionCard>
 
-        <SectionCard title="Your Measurements" action={
+        <SectionCard title="Your Measurements" headClass="sd-form-head" action={
           <label style={{ display: 'inline-flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
             <span style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-muted)' }}>Hide your measurement from other users</span>
             <input type="checkbox" checked={hideMeasure} onChange={(e) => setHideMeasure(e.target.checked)} style={{ width: 0, height: 0, opacity: 0, position: 'absolute' }} />
@@ -330,7 +330,7 @@ export function CreateReviewScreen({ onRoute, authed = false }: any) {
           </label>
         }>
           <div style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-muted)', marginBottom: 16, marginTop: -8 }}>These measurements will be shown with your review. Even if hidden, they still contribute to our Suede Match calculation.</div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
+          <div className="sd-chipgrid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
             {[['Height', "5'6\""], ['Bust', '34"'], ['Waist', '26"'], ['Hips', '36"']].map(([k, v]) => (
               <div key={k} style={{ background: 'var(--linen)', padding: '14px 16px', textAlign: 'center' }}>
                 <div style={{ fontFamily: 'var(--font-body)', fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--text-muted)' }}>{k}</div>
