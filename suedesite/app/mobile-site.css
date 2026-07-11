@@ -158,7 +158,9 @@ html, body { max-width: 100%; overflow-x: hidden; }
 
 /* HOME — misc cleanups (carousel fade, How-It-Works arrow, hero dest reveal) */
 @media (max-width: 640px) {
-  #root .sd-cap-fade { display: none !important; }
+  /* keep the edge fades on phone (narrower) so the entering/exiting models
+     dissolve into the page instead of hard-clipping at the screen edge */
+  #root .sd-cap-fade { display: block !important; width: 60px !important; }
   #root .sd-hiw { padding-top: 56px !important; }
   #root .sd-hiw .sd-hiw-silk { order: -1 !important; background: none !important; min-height: 300px !important; }
   #root .sd-hiw .sd-hiw-paper { min-height: 0 !important; padding: 8px 0 44px !important; }

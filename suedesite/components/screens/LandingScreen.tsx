@@ -17,7 +17,7 @@ function CapsuleCarousel({ brands, onRoute }: any) {
     return () => window.removeEventListener('resize', onR);
   }, []);
   const VISIBLE = vw <= 640 ? 2 : vw <= 900 ? 3 : 5;
-  const imgH = vw <= 640 ? 300 : 360;
+  const imgH = vw <= 640 ? 250 : 360;
   const loop = [...brands, ...brands];
   const trackWidth = (loop.length / VISIBLE) * 100;   // %
   const itemBasis = 100 / loop.length;                // % of track
