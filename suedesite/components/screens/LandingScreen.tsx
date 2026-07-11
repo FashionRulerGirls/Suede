@@ -17,7 +17,14 @@ const capArrow = (side): any => ({
 
 function CapsuleCarousel({ brands, onRoute }: any) {
   const [paused, setPaused] = React.useState(false);
-  const VISIBLE = 5;
+  const [visible, setVisible] = React.useState(5);
+  React.useEffect(() => {
+    const update = () => setVisible(window.innerWidth <= 640 ? 2 : 5);
+    update();
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, []);
+  const VISIBLE = visible;
   const loop = [...brands, ...brands];
   const trackWidth = (loop.length / VISIBLE) * 100;   // %
   const itemBasis = 100 / loop.length;                // % of track

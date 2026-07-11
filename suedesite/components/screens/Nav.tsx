@@ -75,7 +75,7 @@ export function Nav({ route, onRoute, authed = false }: any) {
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
           <IconButton icon="search" variant="plain" label="Search" onClick={openSearch} />
-          <div style={{ position: 'relative' }}>
+          <div className="sd-hide-sm" style={{ position: 'relative' }}>
             <button onClick={() => setBiz(b => !b)} style={{
               display: 'inline-flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', cursor: 'pointer', padding: '6px 2px',
               fontFamily: 'var(--font-body)', fontSize: 14, fontWeight: 100, color: 'var(--text-primary)',
@@ -111,10 +111,12 @@ export function Nav({ route, onRoute, authed = false }: any) {
             </div>
           </div>
           {!authed && (
-            <AuthToggle value="Sign In" onChange={(v) => onRoute(v === 'Create Account' ? 'createaccount' : 'signin')} />
+            <span className="sd-hide-sm">
+              <AuthToggle value="Sign In" onChange={(v) => onRoute(v === 'Create Account' ? 'createaccount' : 'signin')} />
+            </span>
           )}
           {authed && (<React.Fragment>
-          <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+          <div className="sd-hide-sm" style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
             <button onClick={() => setPlus(p => !p)} aria-label="Create" style={{
               width: 38, height: 38, borderRadius: 'var(--radius-pill)', border: 'none',
               background: 'var(--ink-900)', color: 'var(--white)', cursor: 'pointer',
@@ -147,7 +149,7 @@ export function Nav({ route, onRoute, authed = false }: any) {
               ))}
             </div>
           </div>
-          <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+          <div className="sd-hide-sm" style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
             <button onClick={() => setAcct(a => !a)} aria-label="Account" style={{
               display: 'inline-flex', alignItems: 'center', gap: 5, background: 'none', border: 'none', cursor: 'pointer', padding: 0, position: 'relative',
             }}>
@@ -218,6 +220,29 @@ export function Nav({ route, onRoute, authed = false }: any) {
               </span>
             </button>
           ))}
+        </div>
+        {/* Mobile-only: business + auth, collapsed from the top bar */}
+        <div className="sd-only-sm" style={{ borderTop: '1px solid var(--border-subtle)', padding: '8px' }}>
+          {bizItems.map(it => (
+            <button key={it.id} onClick={() => { setOpen(false); goBiz(it.id); }} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 14, padding: '13px 14px', borderRadius: 'var(--radius-sm)', border: 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left' }}>
+              <Icon name={it.icon} size={18} color="var(--text-primary)" />
+              <span style={{ fontFamily: 'var(--font-serif)', fontWeight: 300, fontSize: 17, color: 'var(--text-primary)' }}>{it.label}</span>
+            </button>
+          ))}
+        </div>
+        <div className="sd-only-sm" style={{ borderTop: '1px solid var(--border-subtle)', padding: '14px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {!authed ? (
+            <React.Fragment>
+              <button onClick={() => { setOpen(false); onRoute('signin'); }} style={{ height: 50, width: '100%', background: 'var(--ink-900)', color: 'var(--white)', border: '1px solid var(--ink-900)', borderRadius: 'var(--radius-xs)', cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: 14, letterSpacing: 'var(--ls-wide)' }}>Sign In</button>
+              <button onClick={() => { setOpen(false); onRoute('createaccount'); }} style={{ height: 50, width: '100%', background: 'var(--surface-card)', color: 'var(--text-primary)', border: '1px solid var(--border-strong)', borderRadius: 'var(--radius-xs)', cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: 14, letterSpacing: 'var(--ls-wide)' }}>Create Account</button>
+            </React.Fragment>
+          ) : (
+            [{ label: 'Leave a Review', fn: () => onRoute('createreview') }, { label: 'Leave an Inquiry', fn: () => onRoute('createinquiry') }, { label: 'Your Profile', fn: () => onRoute('yourprofile') }, { label: 'Notifications', fn: () => onRoute('notifications') }, { label: 'Sign Out', fn: () => onRoute('__signout') }].map(a => (
+              <button key={a.label} onClick={() => { setOpen(false); a.fn(); }} style={{ width: '100%', textAlign: 'left', padding: '11px 4px', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: 15, color: 'var(--text-primary)' }}>{a.label}</button>
+            ))
+          )}
+          </div>
         </div>
         <div style={{ borderTop: '1px solid var(--border-subtle)', padding: '8px' }}>
           <button onClick={() => { setOpen(false); setMeasure(true); }}
