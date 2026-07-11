@@ -361,4 +361,7 @@ html, body { max-width: 100%; overflow-x: hidden; }
   #root .sd-about-2col { grid-template-columns: 1fr !important; gap: 28px !important; }
   #root .sd-about-stats { grid-template-columns: 1fr !important; gap: 30px !important; padding-left: 20px !important; padding-right: 20px !important; }
   #root .sd-about-pad { padding-left: 20px !important; padding-right: 20px !important; }
+
+  /* Privacy policy: stack each section's heading | body columns */
+  #root .sd-priv-sec { grid-template-columns: 1fr !important; gap: 18px !important; padding: 30px 0 !important; }
 }
