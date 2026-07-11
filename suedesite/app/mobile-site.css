@@ -248,3 +248,28 @@ html, body { max-width: 100%; overflow-x: hidden; }
   }
   #root .sd-coll-actions button { text-align: center !important; }
 }
+
+/* ════════════════════════════════════════════════════════════════════
+   BRAND FLIP CARD — front (giant name) & back (bio + documents).
+   The back is position:absolute, so the flip card's height is set by the
+   FRONT face — both faces get a taller min-height on phone so the back's
+   stacked content fits without an awkward inner scroll. Phone only.
+   ════════════════════════════════════════════════════════════════════ */
+@media (max-width: 640px) {
+  #root .sd-brand-wrap { padding-left: 16px !important; padding-right: 16px !important; }
+
+  /* both faces tall enough for the stacked back content */
+  #root .sd-brandcard-front,
+  #root .sd-brandcard-back { min-height: 600px !important; }
+
+  /* FRONT — shrink the wordmark so it fits on one line and stops
+     colliding with the bottom info bar; give the name block room. */
+  #root .sd-brandname { font-size: 34px !important; }
+  #root .sd-brandname-block { padding: 0 20px !important; justify-content: center !important; gap: 12px !important; }
+  #root .sd-brandcard-front .sd-brandbar { padding: 0 20px 24px !important; }
+
+  /* BACK — stack The Brand / Documents into one column, tighten padding. */
+  #root .sd-brandcard-back { padding: 28px 22px !important; }
+  #root .sd-brandback-grid { grid-template-columns: 1fr !important; gap: 26px !important; }
+  #root .sd-brandback-grid p { max-width: none !important; }
+}

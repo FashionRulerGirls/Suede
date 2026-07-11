@@ -84,7 +84,7 @@ export function BrandScreen({ onRoute, authed = false }: any) {
   const website = 'www.' + brand.name.toLowerCase().replace(/[^a-z]/g, '') + '.com';
 
   return (
-    <div style={{ maxWidth: 1240, margin: '0 auto', padding: '28px 40px 0' }}>
+    <div className="sd-brand-wrap" style={{ maxWidth: 1240, margin: '0 auto', padding: '28px 40px 0' }}>
       <style>{`.rating-stat:hover .rating-pop{opacity:1 !important;visibility:visible !important;transform:translateY(0) !important}`}</style>
       <button onClick={() => onRoute('capsule')} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-secondary)', marginBottom: 18 }}>
         <Icon name="arrow-left" size={16} color="var(--text-secondary)" /> Back to The Capsule
@@ -94,10 +94,10 @@ export function BrandScreen({ onRoute, authed = false }: any) {
       <div style={{ perspective: 2000 }}>
       <div style={{ position: 'relative', transition: 'transform 700ms var(--ease-inout)', transformStyle: 'preserve-3d', transform: flipped ? 'rotateY(180deg)' : 'none' }}>
       {/* FRONT — Dark suede hero box */}
-      <div style={{ position: 'relative', minHeight: 420, backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden', backgroundImage: `linear-gradient(rgba(250,249,246,0.4), rgba(250,249,246,0.4)), url(${brand.hero || '/assets/imagery/suede-card-bg.jpg'})`, backgroundSize: 'cover', backgroundPosition: 'center', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div className="sd-brandcard-front" style={{ position: 'relative', minHeight: 420, backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden', backgroundImage: `linear-gradient(rgba(250,249,246,0.4), rgba(250,249,246,0.4)), url(${brand.hero || '/assets/imagery/suede-card-bg.jpg'})`, backgroundSize: 'cover', backgroundPosition: 'center', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {/* Centered brand name */}
-        <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 14, pointerEvents: 'none', padding: '0 40px' }}>
-          <h1 style={{ fontFamily: 'var(--font-serif)', fontWeight: 100, fontSize: 88, lineHeight: 1, letterSpacing: '0.04em', color: 'var(--ink-900)', margin: 0, textTransform: 'uppercase', textAlign: 'center' }}>{brand.name}</h1>
+        <div className="sd-brandname-block" style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 14, pointerEvents: 'none', padding: '0 40px' }}>
+          <h1 className="sd-brandname" style={{ fontFamily: 'var(--font-serif)', fontWeight: 100, fontSize: 88, lineHeight: 1, letterSpacing: '0.04em', color: 'var(--ink-900)', margin: 0, textTransform: 'uppercase', textAlign: 'center' }}>{brand.name}</h1>
           <span className="sd-brandtag" style={{ fontFamily: 'var(--font-serif)', fontStyle: 'italic', fontSize: 16, color: 'var(--ink-600)', textAlign: 'center', lineHeight: 1.3, whiteSpace: 'nowrap' }}>{brand.tagline}</span>
         </div>
 
@@ -119,11 +119,11 @@ export function BrandScreen({ onRoute, authed = false }: any) {
       </div>
 
       {/* BACK — bio + documents */}
-      <div style={{ position: 'absolute', inset: 0, backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden', transform: 'rotateY(180deg)', backgroundImage: `linear-gradient(rgba(250,249,246,0.4), rgba(250,249,246,0.4)), url(${brand.hero || '/assets/imagery/suede-card-bg.jpg'})`, backgroundSize: 'cover', backgroundPosition: 'center', border: '1px solid var(--border-subtle)', display: 'flex', flexDirection: 'column', padding: '36px 40px', overflowY: 'auto' }}>
+      <div className="sd-brandcard-back" style={{ position: 'absolute', inset: 0, backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden', transform: 'rotateY(180deg)', backgroundImage: `linear-gradient(rgba(250,249,246,0.4), rgba(250,249,246,0.4)), url(${brand.hero || '/assets/imagery/suede-card-bg.jpg'})`, backgroundSize: 'cover', backgroundPosition: 'center', border: '1px solid var(--border-subtle)', display: 'flex', flexDirection: 'column', padding: '36px 40px', overflowY: 'auto' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 22 }}>
           <span style={{ fontFamily: 'var(--font-serif)', fontSize: 20, color: 'var(--text-heading)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>{brand.name}</span>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 40, alignItems: 'start', marginTop: 8 }}>
+        <div className="sd-brandback-grid" style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 40, alignItems: 'start', marginTop: 8 }}>
           <div>
             <div style={{ fontFamily: 'var(--font-body)', fontSize: 11, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 12 }}>The Brand</div>
             <p style={{ fontFamily: 'var(--font-body)', fontSize: 14.5, lineHeight: 1.75, color: 'var(--text-secondary)', margin: 0, maxWidth: 450 }}>{brand.founder || ''} Every piece is produced in considered, limited runs — a deliberate stand against overproduction. We design for longevity: garments meant to be worn, kept, and remembered season after season.</p>
