@@ -113,7 +113,7 @@ export function Nav({ route, onRoute, authed = false }: any) {
             </div>
           </div>
           {!authed && (
-          <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+          <div className="sd-hide-sm" style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
             <button onClick={() => setPlus(p => !p)} aria-label="Create" style={{
               width: 38, height: 38, borderRadius: 'var(--radius-pill)', border: 'none',
               background: 'var(--ink-900)', color: 'var(--white)', cursor: 'pointer',
@@ -253,8 +253,14 @@ export function Nav({ route, onRoute, authed = false }: any) {
             </button>
           ))}
         </div>
-        {/* Mobile-only: business links, collapsed from the top bar */}
+        {/* Mobile-only: write actions (guests) + business links, collapsed from the top bar */}
         <div className="sd-only-sm" style={{ borderTop: '1px solid var(--border-subtle)', padding: '8px' }}>
+          {!authed && [{ ic: 'star', label: 'Leave a Review', r: 'createreview' }, { ic: 'message', label: 'Leave an Inquiry', r: 'createinquiry' }].map(it => (
+            <button key={it.label} onClick={() => { setOpen(false); onRoute(it.r); }} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 14, padding: '13px 14px', borderRadius: 'var(--radius-sm)', border: 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left' }}>
+              <Icon name={it.ic} size={18} color="var(--text-primary)" />
+              <span style={{ fontFamily: 'var(--font-serif)', fontWeight: 300, fontSize: 17, color: 'var(--text-primary)' }}>{it.label}</span>
+            </button>
+          ))}
           {bizItems.map(it => (
             <button key={it.id} onClick={() => { setOpen(false); goBiz(it.id); }} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 14, padding: '13px 14px', borderRadius: 'var(--radius-sm)', border: 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left' }}>
               <Icon name={it.icon} size={18} color="var(--text-primary)" />

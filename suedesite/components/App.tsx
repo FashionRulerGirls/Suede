@@ -55,7 +55,7 @@ const TWEAK_DEFAULTS = {
   cardCorners: 4,
   heroHeadline: 'Stop shopping blind. Start shopping with intent.',
   bannerText:
-    'Curated collection of minority-owned and emerging brands that deserve your attention',
+    'DISCOVER, REVIEW, & SHOP MINORITY-OWNED AND EMERGING BRANDS WITH CONFIDENCE',
 };
 
 export default function App() {

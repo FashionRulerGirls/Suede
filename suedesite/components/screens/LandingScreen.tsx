@@ -27,13 +27,14 @@ function CapsuleCarousel({ brands, onRoute }: any) {
   const loop = [...list, ...list];
   const trackWidth = (loop.length / VISIBLE) * 100;   // %
   const itemBasis = 100 / loop.length;                // % of track
+  const dur = isPhone ? 34 : 48;                       // phones scroll a touch faster
   return (
     <div style={{ position: 'relative', marginTop: 22 }}>
       <style>{`@keyframes suedeMarquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }`}</style>
       <div style={{ overflow: 'hidden' }}>
         <div key={VISIBLE} style={{
           display: 'flex', alignItems: 'flex-end', width: trackWidth + '%',
-          animation: 'suedeMarquee 48s linear infinite',
+          animation: `suedeMarquee ${dur}s linear infinite`,
           animationPlayState: paused ? 'paused' : 'running',
           willChange: 'transform', WebkitBackfaceVisibility: 'hidden', backfaceVisibility: 'hidden',
         }}>
@@ -220,7 +221,7 @@ export function LandingScreen({ onRoute, tweaks, authed = false }: any) {
       </section>
 
       <div style={{ marginTop: 35 }}>
-        <EditorialBanner tone="ink" scroll>{(tweaks && tweaks.bannerText) || 'Curated collection of minority-owned and emerging brands that deserve your attention'}</EditorialBanner>
+        <EditorialBanner tone="ink" scroll>{(tweaks && tweaks.bannerText) || 'DISCOVER, REVIEW, & SHOP MINORITY-OWNED AND EMERGING BRANDS WITH CONFIDENCE'}</EditorialBanner>
       </div>
 
       {/* How it works — two-slide slider: The Lookbook + The Collective */}
