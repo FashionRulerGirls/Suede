@@ -7,6 +7,7 @@ export function ApplyScreen({ onRoute }: any) {
   const [own, setOwn] = React.useState('Brand Owner');
   const [ownOpen, setOwnOpen] = React.useState(false);
   const [ownOther, setOwnOther] = React.useState('');
+  const [why, setWhy] = React.useState('');
   const points = [
     'Capsule Brands get feautured placement on our Brand Directory page, access to personalized dashboards, and response features to engage directly with Reviews / Inquiries.',
   ];
@@ -30,11 +31,11 @@ export function ApplyScreen({ onRoute }: any) {
       {/* Form card */}
       <div className="sd-apply-card" style={{ background: 'var(--white)', border: '1px solid var(--border-subtle)', padding: 48 }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-          <Field label="Brand name"><Input variant="outline" placeholder="e.g., OSA" /></Field>
-          <Field label="Website"><Input variant="outline" placeholder="https://" /></Field>
-          <Field label="Email"><Input variant="outline" placeholder="e.g you@gmail.com" /></Field>
+          <Field label="Brand name"><Input variant="outline" maxLength={80} placeholder="e.g., OSA" /></Field>
+          <Field label="Website"><Input variant="outline" maxLength={300} placeholder="https://" /></Field>
+          <Field label="Email"><Input variant="outline" maxLength={120} placeholder="e.g you@gmail.com" /></Field>
           <div className="sd-apply-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-            <Field label="Location"><Input variant="outline" placeholder="City, Country" /></Field>
+            <Field label="Location"><Input variant="outline" maxLength={80} placeholder="City, Country" /></Field>
             <Field label="Ownership / identity">
               <div style={{ position: 'relative' }}>
                 <button type="button" onClick={() => setOwnOpen(o => !o)} style={{
@@ -71,13 +72,14 @@ export function ApplyScreen({ onRoute }: any) {
               </div>
             </Field>
           </div>
-          <Field label="Founding year"><Input variant="outline" placeholder="2019" /></Field>
+          <Field label="Founding year"><Input variant="outline" maxLength={4} inputMode="numeric" placeholder="2019" /></Field>
           {own === 'Other' && (
-            <Field label="Please specify your role"><Input variant="outline" placeholder="e.g. Stylist, Founder's partner" value={ownOther} onChange={(e: any) => setOwnOther(e.target.value)} /></Field>
+            <Field label="Please specify your role"><Input variant="outline" maxLength={60} placeholder="e.g. Stylist, Founder's partner" value={ownOther} onChange={(e: any) => setOwnOther(e.target.value)} /></Field>
           )}
           <Field label="Why should your brand be in The Capsule?" hint="A few sentences is plenty.">
-            <textarea rows={5} placeholder="Tell us about your Brand and your commitment to Suede's mission"
+            <textarea rows={5} maxLength={600} value={why} onChange={(e) => setWhy(e.target.value)} placeholder="Tell us about your Brand and your commitment to Suede's mission"
               style={{ width: '100%', resize: 'vertical', boxSizing: 'border-box', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-xs)', background: 'transparent', padding: '12px 13px', fontFamily: 'var(--font-body)', fontSize: 14, lineHeight: 1.5, color: 'var(--text-primary)', outline: 'none' }} />
+            <div style={{ textAlign: 'right', fontFamily: 'var(--font-body)', fontSize: 12, color: 'var(--text-muted)', marginTop: 8 }}>{why.length} / 600 characters</div>
           </Field>
           <div className="sd-apply-submit" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, borderTop: '1px solid var(--border-subtle)', paddingTop: 24 }}>
             <span style={{ fontFamily: 'var(--font-body)', fontSize: 12, lineHeight: 1.4, color: 'var(--ink-500)', maxWidth: 300 }}>By submitting your Capsule application, you agree to be contacted by the Suede Partnerships team.</span>

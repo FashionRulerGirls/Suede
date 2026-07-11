@@ -18,6 +18,8 @@ function CISectionCard({ title, children }: any) {
 export function CreateInquiryScreen({ onRoute, authed = false }: any) {
   const [scale, setScale] = React.useState('Letter');
   const [size, setSize] = React.useState('');
+  const [otherSize, setOtherSize] = React.useState('');
+  const [detail, setDetail] = React.useState('');
   const chip = (active: any) => ({
     padding: '13px 0', textAlign: 'center' as any, cursor: 'pointer',
     border: `1px solid ${active ? 'var(--ink-900)' : 'var(--border-default)'}`,
@@ -74,13 +76,13 @@ export function CreateInquiryScreen({ onRoute, authed = false }: any) {
           )}
           <div style={{ height: 1, background: 'var(--border-subtle)', margin: '22px 0 16px' }} />
           <div style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-muted)', marginBottom: 10 }}>Other / brand-specific:</div>
-          <Input variant="outline" placeholder="e.g, 1, 2, 3..." />
+          <Input variant="outline" maxLength={24} value={otherSize} onChange={(e: any) => setOtherSize(e.target.value)} placeholder="e.g, 1, 2, 3..." />
         </CISectionCard>
 
         <CISectionCard title="Tell us more about your inquiry">
-          <textarea rows={5} maxLength={500} placeholder="e.g., Planning to wear this to a wedding — need to know if it's flattering on curvy body types!"
+          <textarea rows={5} maxLength={500} value={detail} onChange={(e) => setDetail(e.target.value)} placeholder="e.g., Planning to wear this to a wedding — need to know if it's flattering on curvy body types!"
             style={{ width: '100%', boxSizing: 'border-box', resize: 'vertical', border: '1px solid var(--border-default)', borderRadius: 'var(--radius-xs)', background: 'transparent', padding: '12px 13px', fontFamily: 'var(--font-body)', fontSize: 14, lineHeight: 1.5, color: 'var(--text-primary)', outline: 'none' }} />
-          <div style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: 'var(--text-muted)', marginTop: 8 }}>0 / 500 characters</div>
+          <div style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: 'var(--text-muted)', marginTop: 8 }}>{detail.length} / 500 characters</div>
         </CISectionCard>
 
         <Button variant="primary" fullWidth size="lg" onClick={() => { appState.lookbookTab = 'inquiries'; onRoute('lookbook'); }}>Submit Inquiry</Button>

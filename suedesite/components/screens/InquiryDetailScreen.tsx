@@ -89,10 +89,10 @@ export function InquiryDetailScreen({ onRoute, authed = false }: any) {
 
           {/* Response composer */}
           <div style={{ background: 'var(--surface-card)', border: '1px solid var(--border-subtle)', padding: 22 }}>
-            <textarea rows={3} value={draft} onChange={(e) => setDraft(e.target.value)} placeholder="Let's have community discussion across the page"
+            <textarea rows={3} maxLength={500} value={draft} onChange={(e) => setDraft(e.target.value)} placeholder="Let's have community discussion across the page"
               style={{ width: '100%', boxSizing: 'border-box', resize: 'vertical', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-xs)', background: 'transparent', padding: '12px 13px', fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-primary)', outline: 'none' }} />
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 14 }}>
-              <span style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-muted)' }}>Be respectful and constructive</span>
+              <span style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-muted)' }}>Be respectful and constructive · {draft.length} / 500</span>
               <Button variant="primary" size="sm" disabled={authed && !draft.trim()} onClick={submitResponse}>Submit Response</Button>
             </div>
           </div>

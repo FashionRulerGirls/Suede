@@ -61,8 +61,8 @@ function PersonalStep({ bio, setBio }: any) {
       <p style={{ fontFamily: 'var(--font-body)', fontSize: 15, color: 'var(--text-muted)', margin: '8px 0 0' }}>This is how other members see you on Suede.</p>
       <div style={{ height: 1, background: 'var(--border-subtle)', margin: '28px 0' }} />
       <div className="sd-ep-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 28 }}>
-        <EPInput label="Display Name" defaultValue="Amara K." />
-        <EPInput label="Username" defaultValue="@ amara_k" />
+        <EPInput label="Display Name" maxLength={50} defaultValue="Amara K." />
+        <EPInput label="Username" maxLength={30} defaultValue="@ amara_k" />
       </div>
       <div style={{ marginTop: 28 }}>
         <EPLabel>Bio</EPLabel>
@@ -89,14 +89,14 @@ function MeasurementsStep({ sizes, setSize }: any) {
       </div>
 
       <div className="sd-ep-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 28, rowGap: 24 }}>
-        <EPInput label="Height" sub="feet & inches" defaultValue={`5'6"`} />
-        <EPInput label="Bust" sub="inches" defaultValue={`36"`} />
-        <EPInput label="Waist" sub="inches" defaultValue={`28"`} />
-        <EPInput label="Hips" sub="inches" defaultValue={`40"`} />
-        <EPInput label="Inseam" optional sub="inches" defaultValue={`30"`} />
-        <EPInput label="Shoulder Width" optional sub="inches" defaultValue={`16"`} />
-        <EPInput label="Arm Length" optional sub="inches" defaultValue={`23"`} />
-        <EPInput label="Torso Length" optional sub="inches" defaultValue={`24"`} />
+        <EPInput label="Height" sub="feet & inches" maxLength={12} defaultValue={`5'6"`} />
+        <EPInput label="Bust" sub="inches" maxLength={8} defaultValue={`36"`} />
+        <EPInput label="Waist" sub="inches" maxLength={8} defaultValue={`28"`} />
+        <EPInput label="Hips" sub="inches" maxLength={8} defaultValue={`40"`} />
+        <EPInput label="Inseam" optional sub="inches" maxLength={8} defaultValue={`30"`} />
+        <EPInput label="Shoulder Width" optional sub="inches" maxLength={8} defaultValue={`16"`} />
+        <EPInput label="Arm Length" optional sub="inches" maxLength={8} defaultValue={`23"`} />
+        <EPInput label="Torso Length" optional sub="inches" maxLength={8} defaultValue={`24"`} />
       </div>
 
       <Divider />
@@ -132,9 +132,9 @@ function SocialStep() {
       <p style={{ fontFamily: 'var(--font-body)', fontSize: 15, color: 'var(--text-muted)', margin: '8px 0 0' }}>Connect your channels so members can follow your style off-platform.</p>
       <div style={{ height: 1, background: 'var(--border-subtle)', margin: '28px 0' }} />
       <div style={{ display: 'flex', flexDirection: 'column', gap: 24, maxWidth: 620 }}>
-        <EPInput label="Instagram" icon="instagram" placeholder="@yourhandle" />
-        <EPInput label="TikTok" icon="tiktok" placeholder="@yourhandle" />
-        <EPInput label="Website" icon="globe" placeholder="https://" />
+        <EPInput label="Instagram" icon="instagram" maxLength={60} placeholder="@yourhandle" />
+        <EPInput label="TikTok" icon="tiktok" maxLength={60} placeholder="@yourhandle" />
+        <EPInput label="Website" icon="globe" maxLength={300} placeholder="https://" />
       </div>
     </div>
   );
@@ -158,8 +158,8 @@ function AccountStep({ onRoute }: any) {
       <p style={{ fontFamily: 'var(--font-body)', fontSize: 15, color: 'var(--text-muted)', margin: '8px 0 0' }}>Manage your login and privacy preferences.</p>
       <div style={{ height: 1, background: 'var(--border-subtle)', margin: '28px 0' }} />
       <div className="sd-ep-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 28 }}>
-        <EPInput label="Email" defaultValue="amara@email.com" />
-        <EPInput label="Password" type="password" defaultValue="password" />
+        <EPInput label="Email" maxLength={120} defaultValue="amara@email.com" />
+        <EPInput label="Password" type="password" maxLength={72} defaultValue="password" />
       </div>
       <div style={{ marginTop: 28, display: 'flex', flexDirection: 'column', gap: 14 }}>
         {[['Private measurements', 'Only share aggregate match percentages — never raw numbers.'],

@@ -17,10 +17,10 @@ export function AuthScreen({ onRoute }: any) {
         <h1 style={{ fontFamily: 'var(--font-serif)', fontWeight: 100, fontSize: 40, margin: 0 }}>Sign In</h1>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 22, marginTop: 30 }}>
           <Field label="Email Address" htmlFor="email">
-            <Input id="email" variant="filled" placeholder="your@email.com" />
+            <Input id="email" variant="filled" maxLength={120} placeholder="your@email.com" />
           </Field>
           <Field label="Password" htmlFor="pw">
-            <Input id="pw" variant="filled" type={show ? 'text' : 'password'} placeholder="Enter your password"
+            <Input id="pw" variant="filled" maxLength={72} type={show ? 'text' : 'password'} placeholder="Enter your password"
               trailingIcon={show ? 'eye-off' : 'eye'} onTrailingClick={() => setShow(s => !s)} />
           </Field>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

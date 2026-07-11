@@ -37,16 +37,16 @@ export function CreateAccountScreen({ onRoute }: any) {
         <h1 style={{ fontFamily: 'var(--font-serif)', fontWeight: 100, fontSize: 40, margin: 0 }}>Create Account</h1>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20, marginTop: 30 }}>
           <div className="sd-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-            <Field label="First Name" htmlFor="fn"><Input id="fn" variant="filled" placeholder="First" /></Field>
-            <Field label="Last Name" htmlFor="ln"><Input id="ln" variant="filled" placeholder="Last" /></Field>
+            <Field label="First Name" htmlFor="fn"><Input id="fn" variant="filled" maxLength={40} placeholder="First" /></Field>
+            <Field label="Last Name" htmlFor="ln"><Input id="ln" variant="filled" maxLength={40} placeholder="Last" /></Field>
           </div>
-          <Field label="Email Address" htmlFor="em"><Input id="em" variant="filled" placeholder="your@email.com" /></Field>
+          <Field label="Email Address" htmlFor="em"><Input id="em" variant="filled" maxLength={120} placeholder="your@email.com" /></Field>
           <Field label="Password" htmlFor="pw">
-            <Input id="pw" variant="filled" type={show ? 'text' : 'password'} placeholder="At least 12 characters"
+            <Input id="pw" variant="filled" maxLength={72} type={show ? 'text' : 'password'} placeholder="At least 12 characters"
               trailingIcon={show ? 'eye-off' : 'eye'} onTrailingClick={() => setShow(s => !s)} />
           </Field>
           <Field label="Confirm Password" htmlFor="cpw">
-            <Input id="cpw" variant="filled" type={show2 ? 'text' : 'password'} placeholder="Re-enter password"
+            <Input id="cpw" variant="filled" maxLength={72} type={show2 ? 'text' : 'password'} placeholder="Re-enter password"
               trailingIcon={show2 ? 'eye-off' : 'eye'} onTrailingClick={() => setShow2(s => !s)} />
           </Field>
           <Checkbox id="agree" checked={agree} onChange={setAgree} label="I agree to the Terms of Service and Privacy Policy" />
@@ -76,7 +76,7 @@ export function ForgotPasswordScreen({ onRoute }: any) {
           Enter your email address and we'll send you an OTP to reset your password.
         </p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
-          <Field label="Email Address" htmlFor="fem"><Input id="fem" variant="filled" placeholder="your@email.com" /></Field>
+          <Field label="Email Address" htmlFor="fem"><Input id="fem" variant="filled" maxLength={120} placeholder="your@email.com" /></Field>
           <Button variant="primary" fullWidth onClick={() => onRoute('verify')}>Send OTP</Button>
         </div>
       </Card>
@@ -131,11 +131,11 @@ export function ResetPasswordScreen({ onRoute }: any) {
         <h1 style={{ fontFamily: 'var(--font-serif)', fontWeight: 400, fontSize: 36, margin: 0 }}>Reset Password</h1>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 22, marginTop: 28 }}>
           <Field label="New Password" htmlFor="np">
-            <Input id="np" variant="filled" type={show ? 'text' : 'password'} placeholder="Enter your password"
+            <Input id="np" variant="filled" maxLength={72} type={show ? 'text' : 'password'} placeholder="Enter your password"
               trailingIcon={show ? 'eye-off' : 'eye'} onTrailingClick={() => setShow(s => !s)} />
           </Field>
           <Field label="Confirm New Password" htmlFor="cnp">
-            <Input id="cnp" variant="filled" type={show2 ? 'text' : 'password'} placeholder="Enter your password"
+            <Input id="cnp" variant="filled" maxLength={72} type={show2 ? 'text' : 'password'} placeholder="Enter your password"
               trailingIcon={show2 ? 'eye-off' : 'eye'} onTrailingClick={() => setShow2(s => !s)} />
           </Field>
           <Button variant="primary" fullWidth onClick={() => onRoute('__signin')}>Confirm</Button>

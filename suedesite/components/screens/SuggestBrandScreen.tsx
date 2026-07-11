@@ -44,14 +44,15 @@ export function SuggestBrandScreen({ onRoute }: any) {
 
       <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 40px 60px', display: 'flex', flexDirection: 'column', gap: 18 }}>
         <SuggestSection label="Name of the Brand">
-          <Input variant="outline" placeholder="e.g. OSA" value={name} onChange={(e: any) => setName(e.target.value)} />
+          <Input variant="outline" maxLength={80} placeholder="e.g. OSA" value={name} onChange={(e: any) => setName(e.target.value)} />
         </SuggestSection>
         <SuggestSection label="Website URL">
-          <Input variant="outline" placeholder="https:// example.com" value={url} onChange={(e: any) => setUrl(e.target.value)} />
+          <Input variant="outline" maxLength={300} placeholder="https:// example.com" value={url} onChange={(e: any) => setUrl(e.target.value)} />
         </SuggestSection>
         <SuggestSection label="Why should we add this brand in The Capsule?">
-          <textarea rows={6} value={why} onChange={(e) => setWhy(e.target.value)} placeholder="Tell us what makes this brand worth featuring — their craft, their fit, their point of view."
+          <textarea rows={6} maxLength={600} value={why} onChange={(e) => setWhy(e.target.value)} placeholder="Tell us what makes this brand worth featuring — their craft, their fit, their point of view."
             style={{ width: '100%', boxSizing: 'border-box', resize: 'vertical', border: '1px solid var(--border-default)', borderRadius: 'var(--radius-xs)', background: 'transparent', padding: '12px 13px', fontFamily: 'var(--font-body)', fontSize: 14, lineHeight: 1.5, color: 'var(--text-primary)', outline: 'none' }} />
+          <div style={{ textAlign: 'right', fontFamily: 'var(--font-body)', fontSize: 12, color: 'var(--text-muted)', marginTop: 8 }}>{why.length} / 600 characters</div>
         </SuggestSection>
         <Button variant="primary" fullWidth size="lg" disabled={!name.trim()} onClick={() => setSubmitted(true)}>Submit</Button>
       </div>

@@ -19,7 +19,7 @@ export function Footer({ onRoute }: any) {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
             <Logo variant="monogram" height={132} style={{ alignSelf: 'flex-start' }} />
             <div style={{ fontFamily: 'var(--font-serif)', fontWeight: 700, fontSize: 15 }}>Sign up for our Newsletter | Per Suede</div>
-            <Input variant="underline" placeholder="Email Address" trailingIcon="pen" />
+            <Input variant="underline" maxLength={120} placeholder="Email Address" trailingIcon="pen" />
           </div>
           {cols.map(c => (
             <div key={c.h} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>

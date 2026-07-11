@@ -62,7 +62,7 @@ function SizeSatisfactionModal({ open, onClose, onContinue }: any) {
         </div>
         <div style={{ height: 1, background: 'var(--border-subtle)', margin: '26px 0 20px' }} />
         <div style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-muted)', marginBottom: 10 }}>Other / brand-specific:</div>
-        <input value={other} onChange={(e) => setOther(e.target.value)} placeholder="e.g, 1, 2, 3..."
+        <input value={other} maxLength={24} onChange={(e) => setOther(e.target.value)} placeholder="e.g, 1, 2, 3..."
           style={{ width: '100%', boxSizing: 'border-box', height: 56, border: '1px solid var(--border-default)', borderRadius: 'var(--radius-xs)', background: 'transparent', padding: '0 16px', fontFamily: 'var(--font-body)', fontSize: 15, color: 'var(--text-primary)', outline: 'none' }} />
         <div style={{ fontFamily: 'var(--font-body)', fontSize: 18, color: 'var(--text-primary)', margin: '30px 0 16px' }}>2. Did the item require tailoring?</div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
@@ -106,6 +106,9 @@ export function CreateReviewScreen({ onRoute, authed = false }: any) {
   const [brandOpen, setBrandOpen] = React.useState(false);
   const [brandQuery, setBrandQuery] = React.useState('');
   const [productSel, setProductSel] = React.useState('');
+  const [reviewText, setReviewText] = React.useState('');
+  const [otherSize, setOtherSize] = React.useState('');
+  const [contentLink, setContentLink] = React.useState('');
   const [photos, setPhotos] = React.useState<string[]>([]);
   const onPhotos = (e: any) => {
     const files = Array.from(e.target.files || []) as any[];
@@ -192,7 +195,7 @@ export function CreateReviewScreen({ onRoute, authed = false }: any) {
               </div>
             </Field>
           ) : (
-            <Field label="Brand name" hint="Not in The Capsule yet? Enter the brand name."><Input variant="outline" placeholder="Enter Brand name. Please try to spell it as accurately as possible." /></Field>
+            <Field label="Brand name" hint="Not in The Capsule yet? Enter the brand name."><Input variant="outline" maxLength={80} placeholder="Enter Brand name. Please try to spell it as accurately as possible." /></Field>
           )}
         </SectionCard>
 
@@ -226,8 +229,8 @@ export function CreateReviewScreen({ onRoute, authed = false }: any) {
           )}
           {mode === 'manual' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-              <Field label="Product Name"><Input variant="outline" placeholder="e.g. The Nyomi Maxi" /></Field>
-              <Field label="Product URL (Optional)"><Input variant="outline" placeholder="https:// example.com/product" /></Field>
+              <Field label="Product Name"><Input variant="outline" maxLength={120} placeholder="e.g. The Nyomi Maxi" /></Field>
+              <Field label="Product URL (Optional)"><Input variant="outline" maxLength={300} placeholder="https:// example.com/product" /></Field>
             </div>
           )}
         </SectionCard>
@@ -274,7 +277,7 @@ export function CreateReviewScreen({ onRoute, authed = false }: any) {
           )}
           <div style={{ height: 1, background: 'var(--border-subtle)', margin: '22px 0 16px' }} />
           <div style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-muted)', marginBottom: 10 }}>Other / brand-specific:</div>
-          <Input variant="outline" placeholder="e.g, 1, 2, 3..." />
+          <Input variant="outline" maxLength={24} value={otherSize} onChange={(e: any) => setOtherSize(e.target.value)} placeholder="e.g, 1, 2, 3..." />
           {size && <div style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-muted)', marginTop: 14 }}>Selected: {size}</div>}
         </SectionCard>
 
@@ -304,13 +307,13 @@ export function CreateReviewScreen({ onRoute, authed = false }: any) {
 
         <SectionCard title="Add Link to Existing Content (Optional)">
           <div style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-muted)', marginBottom: 14, marginTop: -8 }}>Share a TikTok, Instagram, or other social media link if you already have review content you'd like to add.</div>
-          <Input variant="outline" placeholder="Paste link here" />
+          <Input variant="outline" maxLength={300} value={contentLink} onChange={(e: any) => setContentLink(e.target.value)} placeholder="Paste link here" />
         </SectionCard>
 
         <SectionCard title="Your Review">
-          <textarea rows={5} maxLength={500} placeholder="Tell the community how this item fits on your body."
+          <textarea rows={5} maxLength={1000} value={reviewText} onChange={(e) => setReviewText(e.target.value)} placeholder="Tell the community how this item fits on your body."
             style={{ width: '100%', boxSizing: 'border-box', resize: 'vertical', border: '1px solid var(--border-default)', borderRadius: 'var(--radius-xs)', background: 'transparent', padding: '12px 13px', fontFamily: 'var(--font-body)', fontSize: 14, lineHeight: 1.5, color: 'var(--text-primary)', outline: 'none' }} />
-          <div style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: 'var(--text-muted)', marginTop: 8 }}>0 / 500 characters</div>
+          <div style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: 'var(--text-muted)', marginTop: 8 }}>{reviewText.length} / 1000 characters</div>
         </SectionCard>
 
         <SectionCard title="Would you recommend this item?">

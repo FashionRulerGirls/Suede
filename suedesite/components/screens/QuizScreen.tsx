@@ -499,9 +499,10 @@ Respond ONLY with a valid JSON object in this exact format, no markdown, no prea
                 <H2 mb={12}>Anything else? <span style={{ color: ink(0.3), fontSize: 16, fontStyle: 'italic' }}>optional</span></H2>
                 <Sub>Sometimes the best signal comes from how you describe yourself. Share anything the questions didn't capture.</Sub>
               </div>
-              <textarea value={a.description} onChange={(e) => update('description', e.target.value)} rows={6}
+              <textarea value={a.description} maxLength={600} onChange={(e) => update('description', e.target.value)} rows={6}
                 placeholder="e.g., I have broad shoulders for my frame, a long torso, and shorter legs. Tops always run short and pants are always loose at the waist…"
                 style={{ width: '100%', boxSizing: 'border-box', background: 'var(--white)', border: `1px solid ${ink(0.15)}`, borderRadius: 0, padding: 20, outline: 'none', resize: 'none', lineHeight: 1.6, fontFamily: 'var(--font-body)', fontSize: 16, color: INK }} />
+              <div style={{ textAlign: 'right', fontFamily: 'var(--font-body)', fontSize: 12, color: ink(0.4), marginTop: -20 }}>{(a.description || '').length} / 600 characters</div>
               <div>
                 <div style={{ fontSize: 12, color: ink(0.4), letterSpacing: '0.15em', textTransform: 'uppercase', marginBottom: 12 }}>Need inspiration? You could mention</div>
                 <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 6 }}>

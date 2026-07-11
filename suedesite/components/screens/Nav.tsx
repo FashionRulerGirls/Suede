@@ -50,7 +50,6 @@ export function Nav({ route, onRoute, authed = false }: any) {
     { id: 'capsule', icon: 'shirt', label: 'The Capsule', note: 'Brand Directory' },
     { id: 'lookbook', icon: 'reviews', label: 'The Lookbook', note: 'Reviews & Inquiries' },
     { id: 'collective', icon: 'user', label: 'The Collective', note: 'Member Discovery' },
-    { id: null, icon: 'inbox', label: 'The Consign', note: 'Coming Soon' },
   ];
   const extra = [
     { id: 'suggest', label: 'Suggest a Brand' },
