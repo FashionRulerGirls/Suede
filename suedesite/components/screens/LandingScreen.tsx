@@ -189,7 +189,7 @@ export function LandingScreen({ onRoute, tweaks, authed = false }: any) {
       <section className="sd-hero-new" style={{ position: 'relative', overflow: 'hidden', minHeight: 'calc(100vh - 75px)', display: 'flex', flexDirection: 'column', padding: '38px 0 46px', background: 'var(--surface-page)' }}>
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
           <div className="sd-hero-stage" style={{ position: 'relative' }}>
-            <div className="sd-hero-wordmark" aria-hidden="true" style={{ position: 'absolute', left: 0, right: 0, top: 80, height: 475, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 0, pointerEvents: 'none' }}>
+            <div className="sd-hero-wordmark" aria-hidden="true" style={{ position: 'absolute', left: 0, right: 0, top: 20, height: 475, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 0, pointerEvents: 'none' }}>
               <Logo variant="wordmark" height={400} color="var(--ink-900)" style={{ maxWidth: 'none', width: 'auto', flex: 'none' }} />
             </div>
             <div style={{ position: 'relative', zIndex: 1 }}>
