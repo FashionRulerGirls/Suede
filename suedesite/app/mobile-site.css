@@ -197,3 +197,54 @@ html, body { max-width: 100%; overflow-x: hidden; }
   #root .sd-hero-dests .sd-dest span { font-size: 14px !important; }
   #root .sd-hero-dests .sd-dest { gap: 10px !important; }
 }
+
+/* ════════════════════════════════════════════════════════════════════
+   DE-CROWD — Brand (review / inquiry) & Collective (member) white cards.
+   Placed last so these win over the earlier "cram onto one 9.5px line"
+   rules at equal specificity. Phone only.
+   ════════════════════════════════════════════════════════════════════ */
+@media (max-width: 640px) {
+  /* Stack each card header: reviewer lockup on top, measurements below on
+     their own full-width line instead of crammed beside a wrapping name. */
+  #root .sd-reviewcard > div:first-child,
+  #root .sd-iq-head,
+  #root .sd-coll-head {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+  }
+  #root .sd-reviewcard > div:first-child > div:last-child,
+  #root .sd-iq-head > div:last-child,
+  #root .sd-coll-head > div:last-child {
+    align-items: flex-start !important;
+    margin-top: 0 !important;
+  }
+  /* Give the measurements room to breathe now that they own the line. */
+  #root .sd-reviewcard .sd-mspec,
+  #root .sd-iq-head .sd-mspec,
+  #root .sd-coll-head .sd-mspec {
+    flex-wrap: wrap !important;
+    font-size: 12px !important;
+    gap: 6px 12px !important;
+    letter-spacing: 0.03em !important;
+  }
+  #root .sd-reviewcard .sd-mspec span,
+  #root .sd-iq-head .sd-mspec span,
+  #root .sd-coll-head .sd-mspec span { white-space: nowrap !important; }
+
+  /* Member card body: single centered column — photo centered, the
+     Follow / View Profile actions sit in a row beneath it. */
+  #root .sd-coll-body {
+    grid-template-columns: 1fr !important;
+    justify-items: center !important;
+    gap: 16px !important;
+  }
+  #root .sd-coll-body > span[aria-hidden] { display: none !important; }
+  #root .sd-coll-actions {
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-self: center !important;
+    gap: 28px !important;
+  }
+  #root .sd-coll-actions button { text-align: center !important; }
+}

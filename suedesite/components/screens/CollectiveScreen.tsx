@@ -31,10 +31,10 @@ function CollectiveMemberCard({ name, handle, m, reviews, inquiries, brands, pho
           </span>
         </div>
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', gap: 14, marginTop: 16 }}>
+      <div className="sd-coll-body" style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', gap: 14, marginTop: 16 }}>
         <span aria-hidden="true" />
         <img src={photo} alt={name} style={{ width: 168, height: 220, objectFit: 'cover', objectPosition: 'center 28%', justifySelf: 'center' }} />
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 14, justifySelf: 'end', alignItems: 'flex-end' }}>
+        <div className="sd-coll-actions" style={{ display: 'flex', flexDirection: 'column', gap: 14, justifySelf: 'end', alignItems: 'flex-end' }}>
           <button style={{ ...link, color: following ? 'var(--text-muted)' : 'var(--text-primary)' }} onClick={() => setFollowing(f => !f)}>{following ? 'Following ✓' : 'Follow+'}</button>
           <button style={link} onClick={onView}>View Profile</button>
         </div>
