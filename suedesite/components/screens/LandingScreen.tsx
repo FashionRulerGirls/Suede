@@ -7,14 +7,6 @@ import { appState } from '@/lib/appState';
 
 /* Continuous left-to-right marquee of capsule brand cutouts, 5 visible per
    row, names underneath, with a pause toggle. */
-const capArrow = (side): any => ({
-  position: 'absolute', top: 175, [side]: 28, zIndex: 3,
-  width: 46, height: 46, borderRadius: 'var(--radius-pill)',
-  border: '1px solid var(--border-default)', background: 'var(--surface-card)', cursor: 'pointer',
-  display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-primary)',
-  boxShadow: 'var(--shadow-md, 0 4px 16px rgba(0,0,0,0.1))',
-});
-
 function CapsuleCarousel({ brands, onRoute }: any) {
   const [paused, setPaused] = React.useState(false);
   const [visible, setVisible] = React.useState(5);
@@ -28,13 +20,10 @@ function CapsuleCarousel({ brands, onRoute }: any) {
   const loop = [...brands, ...brands];
   const trackWidth = (loop.length / VISIBLE) * 100;   // %
   const itemBasis = 100 / loop.length;                // % of track
-  const [nudge, setNudge] = React.useState(0);
-  const step = () => (typeof window !== 'undefined' ? window.innerWidth / VISIBLE : 280);
   return (
     <div style={{ position: 'relative', marginTop: 52 }}>
       <style>{`@keyframes suedeMarquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }`}</style>
       <div style={{ overflow: 'hidden' }}>
-        <div style={{ transform: `translateX(${nudge}px)`, transition: 'transform var(--dur-base) var(--ease-out)' }}>
         <div style={{
           display: 'flex', alignItems: 'flex-end', width: trackWidth + '%',
           animation: 'suedeMarquee 48s linear infinite',
@@ -52,21 +41,9 @@ function CapsuleCarousel({ brands, onRoute }: any) {
             </button>
           ))}
         </div>
-        </div>
         {/* edge fades — dissolve cutouts into the page, signalling more to scroll */}
         <div className="sd-cap-fade" style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: 160, background: 'linear-gradient(to right, var(--paper), rgba(248,246,243,0))', pointerEvents: 'none', zIndex: 2 }} />
         <div className="sd-cap-fade" style={{ position: 'absolute', top: 0, bottom: 0, right: 0, width: 160, background: 'linear-gradient(to left, var(--paper), rgba(248,246,243,0))', pointerEvents: 'none', zIndex: 2 }} />
-        {/* bidirectional nudge arrows — only while paused */}
-        {paused && (
-          <React.Fragment>
-            <button onClick={() => setNudge(n => Math.min(n + step(), step() * 3))} aria-label="Previous" style={capArrow('left')}>
-              <Icon name="arrow-left" size={18} />
-            </button>
-            <button onClick={() => setNudge(n => Math.max(n - step(), -step() * 3))} aria-label="Next" style={capArrow('right')}>
-              <Icon name="arrow-right" size={18} />
-            </button>
-          </React.Fragment>
-        )}
       </div>
       <div style={{ display: 'flex', justifyContent: 'center', marginTop: 40 }}>
         <button onClick={() => setPaused(p => !p)} aria-label={paused ? 'Play' : 'Pause'} title={paused ? 'Play' : 'Pause'}
