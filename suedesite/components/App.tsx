@@ -18,6 +18,7 @@ import { CreateInquiryScreen } from '@/components/screens/CreateInquiryScreen';
 import { AboutScreen } from '@/components/screens/AboutScreen';
 import { NotificationsScreen } from '@/components/screens/NotificationsScreen';
 import { PrivacyScreen } from '@/components/screens/PrivacyScreen';
+import { TermsScreen } from '@/components/screens/TermsScreen';
 import { SuggestBrandScreen } from '@/components/screens/SuggestBrandScreen';
 import { EditProfileScreen } from '@/components/screens/EditProfileScreen';
 import { QuizScreen } from '@/components/screens/QuizScreen';
@@ -156,6 +157,7 @@ export default function App() {
     about: AboutScreen,
     notifications: NotificationsScreen,
     privacy: PrivacyScreen,
+    terms: TermsScreen,
     suggest: SuggestBrandScreen,
     editprofile: EditProfileScreen,
     quiz: QuizScreen,

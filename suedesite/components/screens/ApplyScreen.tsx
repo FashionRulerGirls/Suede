@@ -8,9 +8,41 @@ export function ApplyScreen({ onRoute }: any) {
   const [ownOpen, setOwnOpen] = React.useState(false);
   const [ownOther, setOwnOther] = React.useState('');
   const [why, setWhy] = React.useState('');
+  const [brandName, setBrandName] = React.useState('');
+  const [website, setWebsite] = React.useState('');
+  const [email, setEmail] = React.useState('');
+  const [errors, setErrors] = React.useState<string[]>([]);
+  const [submitted, setSubmitted] = React.useState(false);
+  const submitApplication = () => {
+    const e: string[] = [];
+    if (!brandName.trim()) e.push('Enter your brand name');
+    if (!website.trim()) e.push('Add your website');
+    if (!email.trim() || !email.includes('@')) e.push('Enter a valid contact email');
+    if (!why.trim()) e.push('Tell us why your brand belongs in The Capsule');
+    setErrors(e);
+    if (!e.length) setSubmitted(true);
+  };
   const points = [
     'Capsule Brands get feautured placement on our Brand Directory page, access to personalized dashboards, and response features to engage directly with Reviews / Inquiries.',
   ];
+  if (submitted) {
+    return (
+      <div style={{ maxWidth: 720, margin: '0 auto', padding: '96px 40px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 18 }}>
+        <span style={{ width: 64, height: 64, borderRadius: '50%', background: 'var(--ink-900)', color: 'var(--white)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+          <Icon name="check" size={30} color="var(--white)" />
+        </span>
+        <h1 style={{ fontFamily: 'var(--font-serif)', fontWeight: 500, fontSize: 40, color: 'var(--text-heading)', margin: 0 }}>Application received</h1>
+        <p style={{ fontFamily: 'var(--font-body)', fontSize: 16, color: 'var(--text-secondary)', margin: 0, maxWidth: 480, lineHeight: 1.6 }}>
+          Thanks for applying to The Capsule. Our Partnerships team reviews every brand and will be in touch at {email || 'your email'}.
+        </p>
+        <div style={{ display: 'flex', gap: 14, marginTop: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
+          <Button variant="secondary" onClick={() => onRoute('capsule')}>Back to The Capsule</Button>
+          <Button variant="primary" onClick={() => onRoute('brandsignin')}>Sign in to your brand</Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="sd-apply-wrap" style={{ maxWidth: 1240, margin: '0 auto', padding: '56px 52px 0', display: 'grid', gridTemplateColumns: '420px 1fr', columnGap: 80, rowGap: 8, alignItems: 'start' }}>
       {/* Aside */}
@@ -31,9 +63,9 @@ export function ApplyScreen({ onRoute }: any) {
       {/* Form card */}
       <div className="sd-apply-card" style={{ background: 'var(--white)', border: '1px solid var(--border-subtle)', padding: 48 }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-          <Field label="Brand name"><Input variant="outline" maxLength={80} placeholder="e.g., OSA" /></Field>
-          <Field label="Website"><Input variant="outline" maxLength={300} placeholder="https://" /></Field>
-          <Field label="Email"><Input variant="outline" maxLength={120} placeholder="e.g you@gmail.com" /></Field>
+          <Field label="Brand name"><Input variant="outline" maxLength={80} value={brandName} onChange={(e: any) => setBrandName(e.target.value)} placeholder="e.g., OSA" /></Field>
+          <Field label="Website"><Input variant="outline" maxLength={300} value={website} onChange={(e: any) => setWebsite(e.target.value)} placeholder="https://" /></Field>
+          <Field label="Email"><Input variant="outline" maxLength={120} value={email} onChange={(e: any) => setEmail(e.target.value)} placeholder="e.g you@gmail.com" /></Field>
           <div className="sd-apply-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
             <Field label="Location"><Input variant="outline" maxLength={80} placeholder="City, Country" /></Field>
             <Field label="Ownership / identity">
@@ -81,9 +113,19 @@ export function ApplyScreen({ onRoute }: any) {
               style={{ width: '100%', resize: 'vertical', boxSizing: 'border-box', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-xs)', background: 'transparent', padding: '12px 13px', fontFamily: 'var(--font-body)', fontSize: 14, lineHeight: 1.5, color: 'var(--text-primary)', outline: 'none' }} />
             <div style={{ textAlign: 'right', fontFamily: 'var(--font-body)', fontSize: 12, color: 'var(--text-muted)', marginTop: 8 }}>{why.length} / 600 characters</div>
           </Field>
+          {errors.length > 0 && (
+            <div role="alert" style={{ background: 'var(--surface-card)', border: '1px solid var(--rating-critical)', borderRadius: 'var(--radius-xs)', padding: '14px 16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--rating-critical)', marginBottom: 8 }}>
+                <Icon name="info" size={16} color="var(--rating-critical)" /> Please complete the following:
+              </div>
+              <ul style={{ margin: 0, paddingLeft: 26, fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-secondary)' }}>
+                {errors.map((e) => <li key={e} style={{ marginTop: 4 }}>{e}</li>)}
+              </ul>
+            </div>
+          )}
           <div className="sd-apply-submit" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, borderTop: '1px solid var(--border-subtle)', paddingTop: 24 }}>
             <span style={{ fontFamily: 'var(--font-body)', fontSize: 12, lineHeight: 1.4, color: 'var(--ink-500)', maxWidth: 300 }}>By submitting your Capsule application, you agree to be contacted by the Suede Partnerships team.</span>
-            <Button variant="primary" onClick={() => onRoute('brandsignin')}>Submit application</Button>
+            <Button variant="primary" onClick={submitApplication}>Submit application</Button>
           </div>
         </div>
       </div>

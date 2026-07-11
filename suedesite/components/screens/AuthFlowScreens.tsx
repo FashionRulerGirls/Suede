@@ -49,7 +49,11 @@ export function CreateAccountScreen({ onRoute }: any) {
             <Input id="cpw" variant="filled" maxLength={72} type={show2 ? 'text' : 'password'} placeholder="Re-enter password"
               trailingIcon={show2 ? 'eye-off' : 'eye'} onTrailingClick={() => setShow2(s => !s)} />
           </Field>
-          <Checkbox id="agree" checked={agree} onChange={setAgree} label="I agree to the Terms of Service and Privacy Policy" />
+          <Checkbox id="agree" checked={agree} onChange={setAgree} label={(() => {
+            const link = { background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'inherit', fontSize: 'inherit', color: 'var(--text-primary)', textDecoration: 'underline', textUnderlineOffset: 3 } as any;
+            const stop = (r: string) => (e: any) => { e.preventDefault(); e.stopPropagation(); onRoute(r); };
+            return <span>I agree to the <button type="button" style={link} onClick={stop('terms')}>Terms of Service</button> and <button type="button" style={link} onClick={stop('privacy')}>Privacy Policy</button></span>;
+          })()} />
           <Button variant="primary" fullWidth onClick={() => onRoute('__signin')}>Create Account</Button>
           <OrDivider />
           <Button variant="secondary" fullWidth icon="google" onClick={() => onRoute('__signin')}>Continue with Google</Button>

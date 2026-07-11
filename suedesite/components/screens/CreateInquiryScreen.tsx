@@ -20,6 +20,23 @@ export function CreateInquiryScreen({ onRoute, authed = false }: any) {
   const [size, setSize] = React.useState('');
   const [otherSize, setOtherSize] = React.useState('');
   const [detail, setDetail] = React.useState('');
+  const [product, setProduct] = React.useState('');
+  const [errors, setErrors] = React.useState<string[]>([]);
+  const [submitted, setSubmitted] = React.useState(false);
+  const validate = () => {
+    const e: string[] = [];
+    if (!product.trim()) e.push('Add the product link and tap Fetch');
+    if (!(size || otherSize.trim())) e.push('Select a size');
+    if (!detail.trim()) e.push('Describe your inquiry');
+    return e;
+  };
+  const submitInquiry = () => {
+    const e = validate();
+    setErrors(e);
+    if (e.length) return;
+    setSubmitted(true);
+  };
+  const resetForm = () => { setSubmitted(false); setErrors([]); setProduct(''); setSize(''); setOtherSize(''); setDetail(''); };
   const chip = (active: any) => ({
     padding: '13px 0', textAlign: 'center' as any, cursor: 'pointer',
     border: `1px solid ${active ? 'var(--ink-900)' : 'var(--border-default)'}`,
@@ -27,6 +44,23 @@ export function CreateInquiryScreen({ onRoute, authed = false }: any) {
     fontFamily: 'var(--font-body)', fontSize: 14, transition: 'all var(--dur-fast) var(--ease-out)',
   });
   if (!authed) return <SignInGate onRoute={onRoute} title="Leave an Inquiry" message="Sign in to ask the community about fit, sizing, and quality before you buy." />;
+  if (submitted) {
+    return (
+      <div style={{ maxWidth: 720, margin: '0 auto', padding: '96px 40px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 18 }}>
+        <span style={{ width: 64, height: 64, borderRadius: '50%', background: 'var(--ink-900)', color: 'var(--white)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+          <Icon name="check" size={30} color="var(--white)" />
+        </span>
+        <h1 style={{ fontFamily: 'var(--font-serif)', fontWeight: 500, fontSize: 40, color: 'var(--text-heading)', margin: 0 }}>Inquiry posted</h1>
+        <p style={{ fontFamily: 'var(--font-body)', fontSize: 16, color: 'var(--text-secondary)', margin: 0, maxWidth: 480, lineHeight: 1.6 }}>
+          We'll notify you when someone who's worn it responds with fit and sizing detail.
+        </p>
+        <div style={{ display: 'flex', gap: 14, marginTop: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
+          <Button variant="secondary" onClick={resetForm}>Post another</Button>
+          <Button variant="primary" onClick={() => { appState.lookbookTab = 'inquiries'; onRoute('lookbook'); }}>View The Lookbook</Button>
+        </div>
+      </div>
+    );
+  }
   return (
     <div>
       <div style={{ textAlign: 'center', padding: '60px 24px 36px' }}>
@@ -37,7 +71,7 @@ export function CreateInquiryScreen({ onRoute, authed = false }: any) {
       <div className="sd-form-wrap" style={{ maxWidth: 1000, margin: '0 auto', padding: '0 40px 60px', display: 'flex', flexDirection: 'column', gap: 18 }}>
         <CISectionCard title="Product Information">
           <Field label="Paste the product link">
-            <ProductFetch placeholder="https://example.com/product" />
+            <ProductFetch placeholder="https://example.com/product" onFetched={(p: any) => setProduct(p.title || 'Product')} />
           </Field>
           <Field label="Category (Optional)"><Select variant="outline" defaultValue=""><option value="" disabled>Select a category</option>{['Tops', 'Bottoms', 'Dresses', 'Outerwear'].map(c => <option key={c}>{c}</option>)}</Select></Field>
         </CISectionCard>
@@ -85,7 +119,17 @@ export function CreateInquiryScreen({ onRoute, authed = false }: any) {
           <div style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: 'var(--text-muted)', marginTop: 8 }}>{detail.length} / 500 characters</div>
         </CISectionCard>
 
-        <Button variant="primary" fullWidth size="lg" onClick={() => { appState.lookbookTab = 'inquiries'; onRoute('lookbook'); }}>Submit Inquiry</Button>
+        {errors.length > 0 && (
+          <div role="alert" style={{ background: 'var(--white)', border: '1px solid var(--rating-critical)', borderRadius: 'var(--radius-xs)', padding: '16px 18px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--rating-critical)', marginBottom: 8 }}>
+              <Icon name="info" size={16} color="var(--rating-critical)" /> Please complete the following before submitting:
+            </div>
+            <ul style={{ margin: 0, paddingLeft: 26, fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-secondary)' }}>
+              {errors.map((e) => <li key={e} style={{ marginTop: 4 }}>{e}</li>)}
+            </ul>
+          </div>
+        )}
+        <Button variant="primary" fullWidth size="lg" onClick={submitInquiry}>Submit Inquiry</Button>
       </div>
     </div>
   );

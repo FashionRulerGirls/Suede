@@ -7,7 +7,7 @@ export function Footer({ onRoute }: any) {
   const go = (r) => { if (r && onRoute) onRoute(r); };
   const cols = [
     { h: 'About Us', items: [], route: 'about' },
-    { h: 'Privacy', items: [], route: 'privacy' },
+    { h: 'Privacy', items: [{ label: 'Terms of Service', route: 'terms' }], route: 'privacy' },
     { h: 'Suede for Business', items: [{ label: 'Apply', route: 'apply' }, { label: 'Brand Portal', route: 'brandsignin' }] },
     { h: 'Suggest a Brand', items: [], route: 'suggest' },
     { h: 'Navigate', items: [{ label: 'The Capsule | Brand Directory', route: 'capsule' }, { label: 'The Lookbook | Reviews & Inquiries', route: 'lookbook' }, { label: 'The Collective | Member Discovery', route: 'collective' }] },

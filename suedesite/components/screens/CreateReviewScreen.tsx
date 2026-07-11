@@ -106,10 +106,13 @@ export function CreateReviewScreen({ onRoute, authed = false }: any) {
   const [brandOpen, setBrandOpen] = React.useState(false);
   const [brandQuery, setBrandQuery] = React.useState('');
   const [productSel, setProductSel] = React.useState('');
+  const [nonCapsuleBrand, setNonCapsuleBrand] = React.useState('');
   const [reviewText, setReviewText] = React.useState('');
   const [otherSize, setOtherSize] = React.useState('');
   const [contentLink, setContentLink] = React.useState('');
   const [photos, setPhotos] = React.useState<string[]>([]);
+  const [errors, setErrors] = React.useState<string[]>([]);
+  const [submitted, setSubmitted] = React.useState(false);
   const onPhotos = (e: any) => {
     const files = Array.from(e.target.files || []) as any[];
     if (!files.length) return;
@@ -119,9 +122,25 @@ export function CreateReviewScreen({ onRoute, authed = false }: any) {
   const setRating = (k: any, v: any) => {
     setRatings(r => ({ ...r, [k]: v }));
   };
+  const validate = () => {
+    const e: string[] = [];
+    const brand = brandType === 'Capsule Brand' ? brandSel : nonCapsuleBrand.trim();
+    if (!brand) e.push('Select or enter a brand');
+    if (!productSel.trim()) e.push('Choose or enter a product');
+    if (!ratings.sizing) e.push('Rate the sizing accuracy');
+    if (!reviewText.trim()) e.push('Write your review');
+    return e;
+  };
   const submitReview = () => {
+    const e = validate();
+    setErrors(e);
+    if (e.length) return;
     if (ratings.sizing > 0 && ratings.sizing < 5) setModal(true);
-    else onRoute('lookbook');
+    else setSubmitted(true);
+  };
+  const resetForm = () => {
+    setSubmitted(false); setErrors([]); setReviewText(''); setProductSel(''); setNonCapsuleBrand('');
+    setRatings({ sizing: 0, material: 0, value: 0, photos: 0, service: 0 }); setSize(''); setRec(null); setPhotos([]);
   };
 
   const sizes = ['XXS', 'XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL', 'OS'];
@@ -137,6 +156,24 @@ export function CreateReviewScreen({ onRoute, authed = false }: any) {
       background: mode === id ? 'var(--ink-900)' : 'var(--linen)', color: mode === id ? 'var(--white)' : 'var(--text-primary)',
     }}>{label}</button>
   );
+
+  if (authed && submitted) {
+    return (
+      <div style={{ maxWidth: 720, margin: '0 auto', padding: '96px 40px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 18 }}>
+        <span style={{ width: 64, height: 64, borderRadius: '50%', background: 'var(--ink-900)', color: 'var(--white)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+          <Icon name="check" size={30} color="var(--white)" />
+        </span>
+        <h1 style={{ fontFamily: 'var(--font-serif)', fontWeight: 500, fontSize: 40, color: 'var(--text-heading)', margin: 0 }}>Review submitted</h1>
+        <p style={{ fontFamily: 'var(--font-body)', fontSize: 16, color: 'var(--text-secondary)', margin: 0, maxWidth: 480, lineHeight: 1.6 }}>
+          Thank you for sharing your fit. Your review helps the community shop with confidence.
+        </p>
+        <div style={{ display: 'flex', gap: 14, marginTop: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
+          <Button variant="secondary" onClick={resetForm}>Write another</Button>
+          <Button variant="primary" onClick={() => onRoute('lookbook')}>View The Lookbook</Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -195,7 +232,7 @@ export function CreateReviewScreen({ onRoute, authed = false }: any) {
               </div>
             </Field>
           ) : (
-            <Field label="Brand name" hint="Not in The Capsule yet? Enter the brand name."><Input variant="outline" maxLength={80} placeholder="Enter Brand name. Please try to spell it as accurately as possible." /></Field>
+            <Field label="Brand name" hint="Not in The Capsule yet? Enter the brand name."><Input variant="outline" maxLength={80} value={nonCapsuleBrand} onChange={(e: any) => setNonCapsuleBrand(e.target.value)} placeholder="Enter Brand name. Please try to spell it as accurately as possible." /></Field>
           )}
         </SectionCard>
 
@@ -224,12 +261,12 @@ export function CreateReviewScreen({ onRoute, authed = false }: any) {
           )}
           {mode === 'url' && (
             <Field label="Product URL">
-              <ProductFetch placeholder="https://example.com/product" />
+              <ProductFetch placeholder="https://example.com/product" onFetched={(p: any) => setProductSel(p.title || '')} />
             </Field>
           )}
           {mode === 'manual' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-              <Field label="Product Name"><Input variant="outline" maxLength={120} placeholder="e.g. The Nyomi Maxi" /></Field>
+              <Field label="Product Name"><Input variant="outline" maxLength={120} value={productSel} onChange={(e: any) => setProductSel(e.target.value)} placeholder="e.g. The Nyomi Maxi" /></Field>
               <Field label="Product URL (Optional)"><Input variant="outline" maxLength={300} placeholder="https:// example.com/product" /></Field>
             </div>
           )}
@@ -343,10 +380,20 @@ export function CreateReviewScreen({ onRoute, authed = false }: any) {
           </div>
         </SectionCard>
 
+        {errors.length > 0 && (
+          <div role="alert" style={{ background: 'var(--surface-card)', border: '1px solid var(--rating-critical)', borderRadius: 'var(--radius-xs)', padding: '16px 18px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--rating-critical)', marginBottom: errors.length ? 8 : 0 }}>
+              <Icon name="info" size={16} color="var(--rating-critical)" /> Please complete the following before submitting:
+            </div>
+            <ul style={{ margin: 0, paddingLeft: 26, fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-secondary)' }}>
+              {errors.map((e) => <li key={e} style={{ marginTop: 4 }}>{e}</li>)}
+            </ul>
+          </div>
+        )}
         <Button variant="primary" fullWidth size="lg" onClick={submitReview}>Submit Review</Button>
       </div>
 
-      <SizeSatisfactionModal open={modal} onClose={() => setModal(false)} onContinue={() => { setModal(false); onRoute('lookbook'); }} />
+      <SizeSatisfactionModal open={modal} onClose={() => setModal(false)} onContinue={() => { setModal(false); setSubmitted(true); }} />
       </React.Fragment>}
     </div>
   );
