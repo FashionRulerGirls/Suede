@@ -105,14 +105,14 @@ export function PrivacyScreen() {
           <P>Where the law requires it, we rely on your <B>consent</B> — for example, to process your body measurements — and you can withdraw that consent at any time.</P>
         </PrivacySection>
 
-        <PrivacySection num="III · Your Body Measurements" title="Sensitive by nature — and treated that way.">
-          <P>Your measurements are the heart of Suede, and we handle them as <B>sensitive information</B>. We collect them only with your consent, to calculate <B>Match Scores</B> between you and reviewers so you can find people who share your silhouette.</P>
-          <P>Your raw measurements are <B>kept private by default</B>. Other members never see your exact numbers — only an aggregate match indicator (high, medium, or low confidence). Even when hidden, they still contribute to your match calculations. You can review, edit, or delete them anytime in <B>Edit Profile → Measurements</B>.</P>
+        <PrivacySection num="III · Your Body Measurements" title="Sensitive by nature — and yours to control.">
+          <P>Your measurements are the heart of Suede — they power the <B>Suede Match</B> scores that help you find reviewers who share your silhouette. We handle them as <B>sensitive information</B> and collect them only with your consent.</P>
+          <P>By default, your measurements are <B>visible to the community</B> alongside your reviews, inquiries, and profile, so members can see the body a piece was sized on. You’re always in control: from the privacy toggle in the review form, or in <B>Edit Profile → Account</B>, you can <B>hide your measurements</B> from other members at any time. When hidden, members see only your Suede Match indicator (high, medium, or low confidence) instead of your exact numbers — and your measurements still power Match calculations. Review, edit, or delete them anytime in <B>Edit Profile → Measurements</B>.</P>
         </PrivacySection>
 
         <PrivacySection num="IV · How We Share Your Information" title="Only in the limited ways below — and never for sale.">
           <PBullets items={[
-            <span key="a"><B>With the community</B> — the profile details, reviews, inquiries, and content you choose to make public.</span>,
+            <span key="a"><B>With the community</B> — your public profile, reviews, inquiries, and content, and — unless you hide them — your measurements, shown so members can size against your body.</span>,
             <span key="b"><B>With brands (aggregate only)</B> — overall ratings, recommendation rates, and average sizing accuracy across their reviews. Never your name, contact details, or individual measurements.</span>,
             <span key="c"><B>With service providers</B> — vetted vendors who host our site, send email, or provide analytics on our behalf, under confidentiality obligations.</span>,
             <span key="d"><B>For legal reasons</B> — when required by law, to respond to lawful requests, or to protect the rights, safety, and security of Suede and its members.</span>,
@@ -123,7 +123,7 @@ export function PrivacyScreen() {
         <PrivacySection num="V · What We Never Do" title="The short list that matters most.">
           <PBullets items={[
             'We never sell your personal information to anyone.',
-            'We never share your raw measurements with brands or other members.',
+            'We never share your raw measurements with brands — they receive aggregate insights only.',
             'We never run third-party advertising trackers on Suede.',
             'We never accept paid placement in reviews or The Capsule directory.',
           ]} />
