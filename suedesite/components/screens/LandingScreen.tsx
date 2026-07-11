@@ -17,7 +17,7 @@ function CapsuleCarousel({ brands, onRoute }: any) {
     return () => window.removeEventListener('resize', onR);
   }, []);
   const VISIBLE = vw <= 640 ? 2 : vw <= 900 ? 3 : 5;
-  const imgH = vw <= 640 ? 230 : 462;
+  const imgH = vw <= 640 ? 230 : 360;
   const loop = [...brands, ...brands];
   const trackWidth = (loop.length / VISIBLE) * 100;   // %
   const itemBasis = 100 / loop.length;                // % of track
@@ -190,7 +190,7 @@ export function LandingScreen({ onRoute, tweaks, authed = false }: any) {
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
           <div className="sd-hero-stage" style={{ position: 'relative' }}>
             <div className="sd-hero-wordmark" aria-hidden="true" style={{ position: 'absolute', left: 0, right: 0, top: 80, height: 475, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 0, pointerEvents: 'none' }}>
-              <Logo variant="wordmark" height={505} color="var(--ink-900)" style={{ maxWidth: 'none', width: 'auto', flex: 'none' }} />
+              <Logo variant="wordmark" height={400} color="var(--ink-900)" style={{ maxWidth: 'none', width: 'auto', flex: 'none' }} />
             </div>
             <div style={{ position: 'relative', zIndex: 1 }}>
               <CapsuleCarousel brands={brands} onRoute={onRoute} />
