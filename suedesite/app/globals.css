@@ -12,6 +12,11 @@
 /* Page canvas (from ui_kits/suede/index.html <style>) */
 body { margin: 0; background: var(--surface-page); }
 
+/* Buttons should inherit the text ink, not the browser default. On iOS Safari
+   an un-colored <button> renders its text/currentColor as system blue — which
+   turned the wordmark logo (currentColor) and some in-button icons blue. */
+button { color: inherit; }
+
 /* Ambient attention pulse — always running, draws the eye to key destinations. */
 @keyframes suedePulse {
   0%, 100% { transform: scale(1); opacity: 0.78; }

@@ -188,4 +188,10 @@ html, body { max-width: 100%; overflow-x: hidden; }
   #root .sd-hiw-cols { grid-template-columns: 1fr !important; }
   #root .sd-hiw-textcols { flex-direction: column !important; gap: 24px !important; }
   #root .sd-measure-cta { grid-template-columns: 1fr !important; padding-top: 40px !important; }
+  /* Hero headline matches "The Trust Layer For Fashion" size (19px). */
+  #root .sd-hero-right .sd-display { font-size: 19px !important; }
+  /* Center the browse sub-mark between the hero and the section title.
+     (Override the handoff's 30px title margin with equal specificity.) */
+  #root .sd-browse-sec { padding-top: 10px !important; }
+  #root .sd-browse-sec .sd-browse-title { margin-top: 54px !important; }
 }
