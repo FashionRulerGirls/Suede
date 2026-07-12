@@ -226,3 +226,89 @@ export async function loadBrandInquiries(sb: SupabaseClient, brandName: string, 
   const { data } = await q.order('created_at', { ascending: false });
   return (data || []).map(inquiryRowToCard);
 }
+
+// ── detail pages ───────────────────────────────────────────────────
+export function formatDate(iso?: string): string {
+  if (!iso) return '';
+  try {
+    return new Date(iso).toLocaleDateString(undefined, { day: '2-digit', month: 'long', year: 'numeric' });
+  } catch { return ''; }
+}
+
+export function relativeTime(iso?: string): string {
+  if (!iso) return '';
+  const then = new Date(iso).getTime();
+  const s = Math.max(0, Math.floor((Date.now() - then) / 1000));
+  if (s < 60) return 'Just now';
+  const m = Math.floor(s / 60); if (m < 60) return `${m} minute${m > 1 ? 's' : ''} ago`;
+  const h = Math.floor(m / 60); if (h < 24) return `${h} hour${h > 1 ? 's' : ''} ago`;
+  const d = Math.floor(h / 24); if (d < 7) return `${d} day${d > 1 ? 's' : ''} ago`;
+  return formatDate(iso);
+}
+
+export async function loadReviewById(sb: SupabaseClient, id: string) {
+  const { data } = await sb.from('reviews').select(REVIEW_SELECT).eq('id', id).maybeSingle();
+  return data as any;
+}
+
+export async function loadInquiryById(sb: SupabaseClient, id: string) {
+  const { data } = await sb.from('inquiries').select(INQUIRY_SELECT).eq('id', id).maybeSingle();
+  return data as any;
+}
+
+// Comments / responses (public read). Author measurements aren't readable by
+// other members (owner-only RLS), so responder specs are left blank.
+export async function loadReviewComments(sb: SupabaseClient, reviewId: string) {
+  const { data } = await sb
+    .from('review_comments')
+    .select('id, body, created_at, author:profiles!author_id(username, display_name, avatar_url)')
+    .eq('review_id', reviewId)
+    .order('created_at', { ascending: false });
+  return (data || []).map((c: any) => ({
+    id: c.id,
+    avatar: c.author?.avatar_url || '',
+    name: c.author?.display_name || c.author?.username || 'Member',
+    when: relativeTime(c.created_at),
+    body: c.body,
+    likes: 0,
+  }));
+}
+
+export async function loadInquiryResponses(sb: SupabaseClient, inquiryId: string) {
+  const { data } = await sb
+    .from('inquiry_responses')
+    .select('id, body, created_at, author:profiles!author_id(username, display_name, avatar_url)')
+    .eq('inquiry_id', inquiryId)
+    .order('created_at', { ascending: true });
+  return (data || []).map((c: any) => ({
+    id: c.id,
+    avatar: c.author?.avatar_url || '',
+    name: c.author?.display_name || c.author?.username || 'Member',
+    specs: '',
+    when: relativeTime(c.created_at),
+    body: c.body,
+    likes: 0,
+  }));
+}
+
+export async function postReviewComment(sb: SupabaseClient, userId: string, reviewId: string, body: string) {
+  const { data, error } = await sb
+    .from('review_comments')
+    .insert({ review_id: reviewId, author_id: userId, body: body.trim() })
+    .select('id, body, created_at, author:profiles!author_id(username, display_name, avatar_url)')
+    .single();
+  if (error) throw error;
+  const c = data as any;
+  return { id: c.id, avatar: c.author?.avatar_url || '', name: c.author?.display_name || c.author?.username || 'You', when: relativeTime(c.created_at), body: c.body, likes: 0 };
+}
+
+export async function postInquiryResponse(sb: SupabaseClient, userId: string, inquiryId: string, body: string) {
+  const { data, error } = await sb
+    .from('inquiry_responses')
+    .insert({ inquiry_id: inquiryId, author_id: userId, body: body.trim() })
+    .select('id, body, created_at, author:profiles!author_id(username, display_name, avatar_url)')
+    .single();
+  if (error) throw error;
+  const c = data as any;
+  return { id: c.id, avatar: c.author?.avatar_url || '', name: c.author?.display_name || c.author?.username || 'You', specs: '', when: relativeTime(c.created_at), body: c.body, likes: 0 };
+}

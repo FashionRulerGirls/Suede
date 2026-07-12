@@ -5,6 +5,9 @@ import { Avatar, MeasurementSpec, Button, Icon } from '@/components/ds';
 import { SUEDE_BRANDS } from '@/lib/data';
 import { appState } from '@/lib/appState';
 import { InquiryCard } from '@/components/screens/LookbookScreen';
+import { useAuth } from '@/lib/auth';
+import { createClient } from '@/lib/supabase/client';
+import { loadInquiryById, loadInquiryResponses, postInquiryResponse } from '@/lib/contentData';
 
 function ResponseRow({ avatar, name, specs, when, body, likes }: any) {
   return (
@@ -30,23 +33,51 @@ function ResponseRow({ avatar, name, specs, when, body, likes }: any) {
 
 export function InquiryDetailScreen({ onRoute, authed = false }: any) {
   const q = appState.inquiry || {};
-  const asker = q.asker || { name: 'Kikiola Akanbi', handle: '@kikiolaakanbi', avatar: '/assets/avatars/avatar-asaya.jpg' };
-  const m = q.measurements || { height: "5'5\"", bust: '33"', waist: '29"', hips: '40"' };
-  const image = q.image || '/assets/imagery/fit-street.jpg';
-  const brand = q.brand || 'Nadi';
-  const product = q.product || 'The Nyomi Maxi';
-  const size = q.size || '6';
-  const question = q.question || 'How much coverage does the dress offer?';
-  const [responses, setResponses] = React.useState([
+  const real = !!q._id; // came from the database (vs. the guest/demo sample)
+  const { user, profile } = useAuth();
+  const [full, setFull] = React.useState<any>(null);
+  const [responses, setResponses] = React.useState<any[]>(real ? [] : [
     { avatar: '/assets/avatars/avatar-rose.jpg', name: 'Sophie L.', specs: '5\'6"/33"/39"/40"', when: '2 days ago', likes: 3, body: 'Good coverage — fully lined through the bodice and skirt, only the leg slit is high.' },
     { avatar: '/assets/avatars/avatar-blue.jpg', name: 'Maria T.', specs: '5\'6"/33"/39"/40"', when: '1 day ago', likes: 1, body: 'Pretty good coverage. The neckline sits high and the sleeves are full length.' },
   ]);
+  React.useEffect(() => {
+    if (!real) return;
+    const sb = createClient();
+    if (!sb) return;
+    let active = true;
+    loadInquiryById(sb, q._id).then((f) => { if (active) setFull(f); }).catch(() => {});
+    loadInquiryResponses(sb, q._id).then((rs) => { if (active) setResponses(rs); }).catch(() => {});
+    return () => { active = false; };
+  }, [q._id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const asker = q.asker || { name: 'Kikiola Akanbi', handle: '@kikiolaakanbi', avatar: '/assets/avatars/avatar-asaya.jpg' };
+  const m = q.measurements || { height: "5'5\"", bust: '33"', waist: '29"', hips: '40"' };
+  const image = real ? '' : (q.image || '/assets/imagery/fit-street.jpg');
+  const brand = (real ? (full?.brand_name || q.brand) : q.brand) || 'Nadi';
+  const product = (real ? (full?.product_name || q.product) : q.product) || 'The Nyomi Maxi';
+  const size = real ? (full?.size_value || full?.size_other || q.size || '') : (q.size || '6');
+  const question = (real ? (full?.body || q.question) : q.question) || 'How much coverage does the dress offer?';
+  const productUrl = real ? full?.product_url : null;
   const [draft, setDraft] = React.useState('');
-  const submitResponse = () => {
+  const [posting, setPosting] = React.useState(false);
+  const submitResponse = async () => {
     if (!authed) { onRoute('signin'); return; }
-    const body = draft.trim();
-    if (!body) return;
-    setResponses(rs => [...rs, { avatar: '/assets/avatars/avatar-rose.jpg', name: 'Kikiola Akanbi', specs: '5\'5"/33"/29"/40"', when: 'Just now', likes: 0, body }]);
+    const text = draft.trim();
+    if (!text) return;
+    if (real) {
+      const sb = createClient();
+      if (sb && user) {
+        setPosting(true);
+        try {
+          const resp = await postInquiryResponse(sb, user.id, q._id, text);
+          setResponses((rs) => [...rs, resp]);
+          setDraft('');
+        } catch { /* ignore */ }
+        setPosting(false);
+        return;
+      }
+    }
+    setResponses(rs => [...rs, { avatar: profile?.avatar_url || '/assets/avatars/avatar-rose.jpg', name: profile?.display_name || 'Kikiola Akanbi', specs: '', when: 'Just now', likes: 0, body: text }]);
     setDraft('');
   };
 
@@ -59,10 +90,10 @@ export function InquiryDetailScreen({ onRoute, authed = false }: any) {
       <div className="sd-iqd-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 60, alignItems: 'start' }}>
         {/* Left — product image + CTA */}
         <div>
-          <div style={{ aspectRatio: '3/4', overflow: 'hidden', background: 'var(--linen)' }}>
-            <img src={image} alt={product} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          <div style={{ aspectRatio: '3/4', overflow: 'hidden', background: 'var(--linen)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            {image ? <img src={image} alt={product} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <Icon name="image" size={40} color="var(--text-muted)" />}
           </div>
-          <Button variant="primary" fullWidth style={{ marginTop: 14 }} onClick={() => { appState.brand = (SUEDE_BRANDS || []).find(b => b.name === brand); onRoute('brand'); }}>View Product</Button>
+          <Button variant="primary" fullWidth style={{ marginTop: 14 }} onClick={() => { if (productUrl) { window.open(productUrl, '_blank', 'noopener,noreferrer'); return; } const bd = (SUEDE_BRANDS || []).find(b => b.name === brand); if (bd) { appState.brand = bd; onRoute('brand'); } }}>View Product</Button>
         </div>
 
         {/* Right — inquiry + responses */}
@@ -93,13 +124,15 @@ export function InquiryDetailScreen({ onRoute, authed = false }: any) {
               style={{ width: '100%', boxSizing: 'border-box', resize: 'vertical', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-xs)', background: 'transparent', padding: '12px 13px', fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-primary)', outline: 'none' }} />
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 14 }}>
               <span style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-muted)' }}>Be respectful and constructive · {draft.length} / 500</span>
-              <Button variant="primary" size="sm" disabled={authed && !draft.trim()} onClick={submitResponse}>Submit Response</Button>
+              <Button variant="primary" size="sm" disabled={(authed && !draft.trim()) || posting} onClick={submitResponse}>{posting ? 'Posting…' : 'Submit Response'}</Button>
             </div>
           </div>
 
           {/* Responses */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginTop: 16 }}>
-            {responses.map((r, i) => <ResponseRow key={i} {...r} />)}
+            {responses.length === 0
+              ? <div style={{ textAlign: 'center', padding: '28px 0', fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-muted)' }}>No responses yet — be the first to help.</div>
+              : responses.map((r, i) => <ResponseRow key={r.id || i} {...r} />)}
           </div>
         </div>
       </div>
