@@ -281,11 +281,11 @@ export function YourProfileScreen({ onRoute }: any) {
             );
           }
           return tab === 'reviews' ? (
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 28, marginTop: 28, paddingBottom: 20 }}>
+            <div className="sd-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 28, marginTop: 28, paddingBottom: 20 }}>
               {feed.filter(r => r.brand.toLowerCase().includes(feedQuery.trim().toLowerCase())).map((r, i) => <ReviewCard key={i} {...r} hideMeasurements onSeeFull={() => openReview(r)} />)}
             </div>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 28, marginTop: 28, paddingBottom: 20 }}>
+            <div className="sd-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 28, marginTop: 28, paddingBottom: 20 }}>
               {inquiries.filter(it => it.brand.toLowerCase().includes(feedQuery.trim().toLowerCase())).map((it, i) => {
                 return <InquiryCard key={i} {...it} hideMeasurements onOpen={() => { appState.inquiry = it; onRoute('inquiry'); }} />;
               })}

@@ -39,7 +39,7 @@ export function InquiryCard({ asker = {}, measurements = {}, product, size, bran
 
       {/* body: text + image */}
       <div className="sd-iq-body" style={{ display: 'grid', gridTemplateColumns: '1fr 132px', gap: 18, alignItems: 'stretch' }}>
-        <div style={{ display: 'flex', flexDirection: 'column' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
           <div onClick={onBrand} style={{ fontFamily: 'var(--font-display)', fontSize: 19, letterSpacing: 'var(--ls-wide)', textTransform: 'uppercase', color: 'var(--text-heading)', cursor: onBrand ? 'pointer' : 'default' }}>{brand}</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 6 }}>
             <span style={{ fontFamily: 'var(--font-body)', fontSize: 15, color: 'var(--text-primary)' }}>{product}</span>
@@ -59,7 +59,7 @@ export function InquiryCard({ asker = {}, measurements = {}, product, size, bran
             </span>
           </div>
         </div>
-        <div style={{ borderRadius: 0, overflow: 'hidden', aspectRatio: '3/4', background: 'var(--linen)' }}>
+        <div style={{ minWidth: 0, borderRadius: 0, overflow: 'hidden', aspectRatio: '3/4', background: 'var(--linen)' }}>
           {image && <img className="sd-iq-img" src={image} alt={product} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
         </div>
       </div>

@@ -1,7 +1,7 @@
 'use client';
 /* Suede — Full Review detail page. */
 import React from 'react';
-import { Avatar, MeasurementSpec, StarRating, Button, Icon } from '@/components/ds';
+import { Avatar, MeasurementSpec, StarRating, Button, Icon, Lightbox } from '@/components/ds';
 import { SUEDE_BRANDS } from '@/lib/data';
 import { appState } from '@/lib/appState';
 import { useAuth } from '@/lib/auth';
@@ -41,7 +41,8 @@ export function ReviewDetailScreen({ onRoute, authed = false }: any) {
   const real = !!r._id; // came from the database (vs. the guest/demo sample)
   const { user, profile } = useAuth();
   const [full, setFull] = React.useState<any>(null);
-  const [mediaUrls, setMediaUrls] = React.useState<string[]>([]);
+  const [media, setMedia] = React.useState<{ url: string; kind: string }[]>([]);
+  const [lb, setLb] = React.useState<number | null>(null);
   const [comments, setComments] = React.useState<any[]>(real ? [] : [
     { avatar: '/assets/avatars/avatar-rose.jpg', name: 'Sophie L.', when: '2 days ago', likes: 3, body: "These look amazing! How do they compare to your usual size? I'm between sizes too." },
     { avatar: '/assets/avatars/avatar-blue.jpg', name: 'Maria T.', when: '1 day ago', likes: 1, body: 'The drape on these is beautiful. Do they stretch at all in the waist?' },
@@ -54,21 +55,26 @@ export function ReviewDetailScreen({ onRoute, authed = false }: any) {
     let active = true;
     loadReviewById(sb, r._id).then((f) => { if (active) setFull(f); }).catch(() => {});
     loadReviewComments(sb, r._id).then((c) => { if (active) setComments(c); }).catch(() => {});
-    loadReviewMedia(sb, r._id).then((u) => { if (active) setMediaUrls(u); }).catch(() => {});
+    loadReviewMedia(sb, r._id).then((u) => { if (active) setMedia(u); }).catch(() => {});
     return () => { active = false; };
   }, [r._id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const reviewer = r.reviewer || { name: 'Kikiola Akanbi', handle: '@kikiolaakanbi', avatar: '/assets/avatars/avatar-asaya.jpg' };
   const hideMeas = real ? !!full?.hide_measurements : false;
   const m = r.measurements || { height: "5'5\"", bust: '33"', waist: '29"', hips: '40"' };
-  const image = real ? (mediaUrls[0] || '') : (r.image || '/assets/imagery/fit-bomber.png');
+  const firstImage = real ? (media.find((x) => x.kind === 'image')?.url || '') : '';
+  const image = real ? firstImage : (r.image || '/assets/imagery/fit-bomber.png');
+  // Everything the lightbox can page through (all photos/videos for a real
+  // review; the single sample image otherwise).
+  const gallery = real ? media : (image ? [{ url: image, kind: 'image' }] : []);
+  const openLightbox = (i: number) => { if (gallery.length) setLb(Math.max(0, Math.min(i, gallery.length - 1))); };
   const product = (real ? (full?.product_name || r.product) : r.product) || 'Tailored Wide-Leg Trouser';
   const brand = (real ? (full?.brand_name || r.brand) : r.brand) || 'Nadi';
   const body = (real ? (full?.body || r.excerpt) : r.full) || r.excerpt || "These trousers are everything. The wide leg is flattering without being overwhelming, and they hit at just the right length for my height. True to size for my measurements—I ordered a medium and it fits perfectly at the waist and hips. The fabric has a beautiful drape with a subtle sheen that elevates any outfit. I've worn them to work with a silk blouse and also dressed them down with sneakers on the weekend. The tailoring is impeccable—you can tell these are made to last. The only minor note is that they do wrinkle easily, so steaming before wear is recommended. Overall, absolutely worth the investment for a versatile wardrobe staple.";
   const dateStr = real ? (full ? formatDate(full.created_at) : '') : '01 February 2026';
   const size = real ? (full?.size_value || full?.size_other || '') : (r.size || '');
   const productUrl = real ? full?.product_url : null;
-  const thumbs = real ? mediaUrls : [image, image, image, image];
+  const thumbs = real ? media : (image ? [image, image, image, image] : []);
   const subRatings = real
     ? ([['Sizing Accuracy', 'rating_sizing'], ['Material Quality', 'rating_material'], ['Value for Price', 'rating_value'], ['True to Photos', 'rating_photos'], ['Customer service', 'rating_service']] as const)
         .map(([label, key]) => ({ label, value: full?.[key] })).filter((s) => s.value != null)
@@ -105,16 +111,22 @@ export function ReviewDetailScreen({ onRoute, authed = false }: any) {
       <div className="sd-rev-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 60, alignItems: 'start' }}>
         {/* Left — gallery */}
         <div>
-          <div style={{ aspectRatio: '1/1', overflow: 'hidden', background: 'var(--linen)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div onClick={() => image && openLightbox(gallery.findIndex((g) => g.kind === 'image'))} style={{ position: 'relative', aspectRatio: '1/1', overflow: 'hidden', background: 'var(--linen)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: image ? 'zoom-in' : 'default' }}>
             {image ? <img src={image} alt={product} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <Icon name="image" size={40} color="var(--text-muted)" />}
           </div>
           {thumbs.length > 0 && (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14, marginTop: 14 }}>
-            {thumbs.map((t, i) => (
-              <div key={i} style={{ aspectRatio: '1/1', overflow: 'hidden', background: 'var(--linen)', cursor: 'pointer' }}>
-                <img src={t} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              </div>
-            ))}
+            {thumbs.map((t: any, i: number) => {
+              const url = typeof t === 'string' ? t : t.url;
+              const isVideo = typeof t !== 'string' && t.kind === 'video';
+              return (
+                <div key={i} onClick={() => openLightbox(real ? i : 0)} style={{ position: 'relative', aspectRatio: '1/1', overflow: 'hidden', background: isVideo ? 'var(--ink-900)' : 'var(--linen)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  {isVideo
+                    ? <><video src={url} muted playsInline preload="metadata" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.75 }} /><span style={{ position: 'absolute', display: 'inline-flex' }}><Icon name="play" size={22} color="#fff" /></span></>
+                    : <img src={url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
+                </div>
+              );
+            })}
           </div>
           )}
         </div>
@@ -193,6 +205,8 @@ export function ReviewDetailScreen({ onRoute, authed = false }: any) {
           <Button variant="primary" shape="pill" onClick={() => onRoute('signin')}>Sign In</Button>
         </div>
       )}
+
+      {lb !== null && <Lightbox items={gallery} index={lb} onClose={() => setLb(null)} onIndex={setLb} />}
     </div>
   );
 }

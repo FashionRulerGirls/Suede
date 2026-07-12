@@ -21,3 +21,4 @@ export { BrandCard } from './BrandCard';
 export { ReviewCard } from './ReviewCard';
 export { StatCard } from './StatCard';
 export { Reveal } from './Reveal';
+export { Lightbox } from './Lightbox';

@@ -64,8 +64,8 @@ export function ReviewCard({
       </div>
 
       {/* body: text + image */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 132px', gap: 18, alignItems: 'stretch' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <div className="sd-rc-body" style={{ display: 'grid', gridTemplateColumns: '1fr 132px', gap: 18, alignItems: 'stretch' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, minWidth: 0 }}>
           <div className="sd-rc-prodrow" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 10 }}>
             <span style={{ fontFamily: 'var(--font-body)', fontSize: 15, color: 'var(--text-primary)' }}>{product}</span>
             {size && <span style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-secondary)' }}>Size: {size}</span>}
@@ -77,7 +77,7 @@ export function ReviewCard({
             See Full Review
           </button>
         </div>
-        <div style={{ position: 'relative', borderRadius: 0, overflow: 'hidden', aspectRatio: '3/4', background: 'var(--linen)' }}>
+        <div style={{ position: 'relative', minWidth: 0, borderRadius: 0, overflow: 'hidden', aspectRatio: '3/4', background: 'var(--linen)' }}>
           {image && <img src={image} alt={product} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
           {extraCount != null && (
             <span style={{ position: 'absolute', right: 8, bottom: 8, display: 'inline-flex', alignItems: 'center', gap: 4, background: 'rgba(0,0,0,0.6)', color: '#fff', borderRadius: 'var(--radius-xs)', padding: '3px 7px', fontSize: 11, fontFamily: 'var(--font-body)' }}>

@@ -189,14 +189,14 @@ async function attachReviewMedia(sb: SupabaseClient, cards: any[]) {
   });
 }
 
-export async function loadReviewMedia(sb: SupabaseClient, reviewId: string): Promise<string[]> {
+export async function loadReviewMedia(sb: SupabaseClient, reviewId: string): Promise<{ url: string; kind: string }[]> {
   const { data } = await sb
     .from('media')
     .select('url, kind, position')
     .eq('parent_type', 'review')
     .eq('parent_id', reviewId)
     .order('position', { ascending: true });
-  return (data || []).filter((m: any) => m.kind === 'image').map((m: any) => m.url);
+  return (data || []).map((m: any) => ({ url: m.url, kind: m.kind }));
 }
 
 export async function loadUserReviews(sb: SupabaseClient, userId: string) {

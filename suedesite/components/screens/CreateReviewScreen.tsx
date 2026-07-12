@@ -2,7 +2,7 @@
 /* Suede — Submit a Review (full form). A "size satisfaction" popup fires
    when Sizing Accuracy is rated under 5 stars. */
 import React from 'react';
-import { Button, Field, Input, Select, Icon } from '@/components/ds';
+import { Button, Field, Input, Select, Icon, Lightbox } from '@/components/ds';
 import { SUEDE_BRANDS } from '@/lib/data';
 import { appState } from '@/lib/appState';
 import { SignInGate } from '@/components/screens/SignInGate';
@@ -119,6 +119,8 @@ export function CreateReviewScreen({ onRoute, authed = false }: any) {
   const [errors, setErrors] = React.useState<string[]>([]);
   const [submitted, setSubmitted] = React.useState(false);
   const [saving, setSaving] = React.useState(false);
+  const [lb, setLb] = React.useState<number | null>(null);
+  const gallery = photos.map((p) => ({ url: p.url, kind: (p.file.type || '').startsWith('video') ? 'video' : 'image' }));
   const onPhotos = (e: any) => {
     const files = Array.from(e.target.files || []) as File[];
     if (!files.length) return;
@@ -364,7 +366,9 @@ export function CreateReviewScreen({ onRoute, authed = false }: any) {
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginBottom: 14 }}>
               {photos.map((ph, i) => (
                 <span key={i} style={{ position: 'relative', width: 84, height: 104, background: 'var(--linen)', overflow: 'hidden' }}>
-                  <img src={ph.url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  {gallery[i]?.kind === 'video'
+                    ? <span onClick={() => setLb(i)} style={{ position: 'absolute', inset: 0, background: 'var(--ink-900)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Icon name="play" size={20} color="#fff" /></span>
+                    : <img src={ph.url} alt="" onClick={() => setLb(i)} style={{ width: '100%', height: '100%', objectFit: 'cover', cursor: 'zoom-in' }} />}
                   <button type="button" onClick={() => setPhotos(p => p.filter((_, j) => j !== i))} aria-label="Remove photo"
                     style={{ position: 'absolute', top: 4, right: 4, width: 22, height: 22, borderRadius: '50%', border: 'none', background: 'rgba(20,18,15,0.7)', color: 'var(--white)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <Icon name="close" size={13} color="var(--white)" />
@@ -434,6 +438,7 @@ export function CreateReviewScreen({ onRoute, authed = false }: any) {
       </div>
 
       <SizeSatisfactionModal open={modal} onClose={() => setModal(false)} onContinue={(s: any) => void finalize(s)} />
+      {lb !== null && <Lightbox items={gallery} index={lb} onClose={() => setLb(null)} onIndex={setLb} />}
       </React.Fragment>}
     </div>
   );
