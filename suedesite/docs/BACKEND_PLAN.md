@@ -314,23 +314,23 @@ create table newsletter_subscribers (
 );
 ```
 
-**Notifications — working framework (under discussion).** Two questions per type:
-*how much does the user act on it* and *how time-sensitive is it?* That decides the tier
-and the channel (in-app bell / live / email). Draft below — to be finalized before build.
+**Notifications — final tiers.** Ranked by *how much the user acts on it* × *how
+time-sensitive it is*, which sets the tier and channel (in-app bell / live / email / digest).
 
-| Notification | Acts on it? | Time-sensitive? | Proposed tier & channel |
-|---|---|---|---|
-| Response to **your inquiry** | High | High | **Tier 1 — live** + email |
-| Security (new login, password change) | High | High | **Tier 1 — email** (transactional) |
-| New **matched review** in your size/silhouette | High | Med | **Tier 1 — live or daily digest** |
-| Comment/reply on **your** review or response | Med | Med | Tier 2 — in-app (fetched) |
-| New follower | Med | Low | Tier 2 — in-app (fetched) |
-| Someone you follow posted a review/inquiry | Med | Low | Tier 3 — feed, no notification |
-| Brand you follow: new review / joined Capsule | Med | Low | Tier 3 — fetched or weekly digest |
-| Someone found your review **helpful** (like) | Low | Low | Tier 4 — batched/off by default |
+| Notification | Tier & channel |
+|---|---|
+| Response to **your inquiry** | **Tier 1 — live (Realtime) + email** |
+| Security (new login, password change) | **Tier 1 — email** (transactional) |
+| New **matched review** in your size/silhouette | **Tier 1 — daily digest** (batched, avoids noise) |
+| Comment / reply on **your** review or response | Tier 2 — in-app (fetched on load) |
+| New follower | Tier 2 — in-app (fetched on load) |
+| Someone you follow posted a review/inquiry | Tier 3 — appears in the feed, **no notification** |
+| Brand you follow: new review / joined Capsule | Tier 3 — fetched, or weekly digest |
+| Someone found your review **helpful** (like) | Tier 4 — batched / off by default |
 
-Open calls: (a) is a matched-review **live** or a **daily digest** (live could get noisy)?
-(b) which are **email** vs. in-app only at launch? (c) anything here that shouldn't exist yet?
+**Email at launch = Tier 1 only** (inquiry response + security). Everything else is in-app.
+The `notifications` table backs the in-app bell; digests are a scheduled job that reads the
+same rows. Any type can move tiers later without a schema change.
 
 ---
 
@@ -525,13 +525,11 @@ Each step is shippable on its own; the app keeps working on mock data for anythi
   `source_confidence` (tape ≈1.0, manual ≈0.9, quiz = its own answer-quality score ×
   a quiz ceiling), pair capped by the weaker side. Launch with this and tune on real data.
 - **Auto-flag list** — start from a standard open-source blocklist, refine over time.
-
-### Still thinking 🤔
-- **Notifications** — stepping back to decide which notification types matter most, which are
-  live vs. fetched vs. email-digest, before building. See the working tiers below.
+- **Notifications** — final tiers set (see §3). Tier 1 (inquiry response, security, matched-
+  review digest) = live/email; the rest in-app fetched; email at launch = Tier 1 only.
 
 ---
 
-*Next once notifications are settled: **Phase 1 (Foundation)** — migration SQL, Supabase
-client wired in, brands seeded from `lib/data.ts`. (Foundation doesn't depend on the
-notification decision, so we can start it in parallel whenever you're ready.)*
+*Everything is settled. Next step: **Phase 1 (Foundation)** — generate the migration SQL
+files (all tables + RLS + Match function + storage buckets), wire the Supabase client into
+the app, and seed brands from `lib/data.ts`.*
