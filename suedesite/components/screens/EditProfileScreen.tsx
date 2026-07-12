@@ -11,6 +11,7 @@ import { createClient } from '@/lib/supabase/client';
 import {
   loadProfileData, saveProfileFields, saveMeasurements,
   heightToInches, inchesToHeight, toInches, inchesDisplay,
+  buildUsualSizes, splitUsualSizes,
 } from '@/lib/profileData';
 
 const EP_STEPS = [
@@ -251,7 +252,7 @@ export function EditProfileScreen({ onRoute, authed = false }: any) {
           arm: inchesDisplay(measurements.arm_in),
           torso: inchesDisplay(measurements.torso_in),
         }));
-        if (measurements.usual_sizes) setSizes((s: any) => ({ ...s, ...measurements.usual_sizes }));
+        if (measurements.usual_sizes) setSizes((s: any) => ({ ...s, ...splitUsualSizes(measurements.usual_sizes) }));
       }
     }).catch(() => {});
     return () => { active = false; };
@@ -283,7 +284,12 @@ export function EditProfileScreen({ onRoute, authed = false }: any) {
         shoulder_in: toInches(f.shoulder),
         arm_in: toInches(f.arm),
         torso_in: toInches(f.torso),
-        usual_sizes: sizes,
+        usual_sizes: buildUsualSizes({
+          tops: [sizes.topsLetter, sizes.topsNum],
+          bottoms: [sizes.botLetter, sizes.botNum],
+          waist: [sizes.waist],
+          plus: [sizes.plus],
+        }),
         source: 'manual',
         source_confidence: 0.9,
       }),

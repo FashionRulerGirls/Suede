@@ -8,6 +8,9 @@ import React from 'react';
 import { Icon, Logo } from '@/components/ds';
 import { claudeComplete } from '@/lib/claude';
 import { SignInGate } from '@/components/screens/SignInGate';
+import { useAuth } from '@/lib/auth';
+import { createClient } from '@/lib/supabase/client';
+import { saveQuizResult, buildUsualSizes } from '@/lib/profileData';
 
 const WORDMARK = '/assets/brand/suede-wordmark.svg';
 const MARK = '/assets/brand/suede-monogram.svg';
@@ -120,6 +123,7 @@ const FieldLabel = ({ children }: any) => (
 const numInput = { background: 'transparent', borderBottom: `1px solid ${ink(0.2)}`, outline: 'none', padding: '12px 0', fontSize: 24, ...SERIF, color: INK, border: 'none', borderRadius: 0 };
 
 export function QuizScreen({ onRoute, authed }: any) {
+  const { user } = useAuth();
   const [step, setStep] = React.useState(0);
   const [a, setA] = React.useState({
     sex: null, heightUnit: 'ft', heightFt: '', heightIn: '', heightCm: '',
@@ -230,6 +234,36 @@ Respond ONLY with a valid JSON object in this exact format, no markdown, no prea
     } catch (err) {
       setError('Something went wrong reading your measurements. Please try again.');
     } finally { setLoading(false); }
+  };
+
+  // Save the derived measurements + usual sizes to the signed-in profile, and
+  // log the full run to quiz_results. No-op in demo/unconfigured mode.
+  const persistToProfile = async () => {
+    const sb = createClient();
+    if (!sb || !user || !results) return;
+    setSaveStatus('saving');
+    try {
+      await saveQuizResult(sb, user.id, {
+        answers: a,
+        derived: {
+          bust: results.bust, waist: results.waist, hips: results.hips,
+          inseam: results.inseam, confidence: results.confidence, reasoning: results.reasoning,
+        },
+        height: formatHeight(),
+        usualSizes: buildUsualSizes({
+          tops: [...a.topsLetter, ...a.topsNum],
+          bottoms: [...a.botLetter, ...a.botNum],
+          waist: a.waistSize,
+          plus: a.plusSize,
+        }),
+      });
+      setSaveStatus('saved');
+    } catch { setSaveStatus('ready'); }
+  };
+
+  const finishQuiz = async () => {
+    await persistToProfile();
+    onRoute(authed ? 'yourprofile' : 'signin');
   };
 
   const next = async () => {
@@ -553,8 +587,8 @@ Respond ONLY with a valid JSON object in this exact format, no markdown, no prea
                 <p style={{ fontSize: 14, color: ink(0.65), lineHeight: 1.6, margin: '0 0 24px' }}>Add your usual sizes so brands and Suede Match can recommend the right fit across labels. Optional — you can always add these later in your profile.</p>
                 {usualSizesBlock}
               </div>
-              <button onClick={() => onRoute(authed ? 'yourprofile' : 'signin')} style={primaryBtn({ width: '100%', marginTop: 32 })}>
-                {authed ? 'Return to your profile' : 'Save to my profile'} <Icon name="arrow-right" size={16} color="var(--white)" />
+              <button onClick={finishQuiz} disabled={saveStatus === 'saving'} style={primaryBtn({ width: '100%', marginTop: 32, opacity: saveStatus === 'saving' ? 0.6 : 1 })}>
+                {saveStatus === 'saving' ? 'Saving…' : (authed ? 'Save & return to your profile' : 'Save to my profile')} <Icon name="arrow-right" size={16} color="var(--white)" />
               </button>
               <button onClick={restart} style={{ marginTop: 16, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '12px 0', fontSize: 14, color: ink(0.5), letterSpacing: '0.02em', background: 'none', border: 'none', cursor: 'pointer' }}>
                 <Icon name="refresh" size={16} color={ink(0.5)} /> Start over

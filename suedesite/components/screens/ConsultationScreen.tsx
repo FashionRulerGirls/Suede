@@ -7,6 +7,9 @@
 import React from 'react';
 import { Icon } from '@/components/ds';
 import { SignInGate } from '@/components/screens/SignInGate';
+import { useAuth } from '@/lib/auth';
+import { createClient } from '@/lib/supabase/client';
+import { saveConsultationMeasurements } from '@/lib/profileData';
 
 // Full US sizing sets — shared with profile setup & quiz.
 const CS_TOPS_LETTER = ['XXS', 'XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL', 'OS'];
@@ -74,6 +77,7 @@ function TutorialVideo({ video, label }: any) {
 }
 
 export function ConsultationScreen({ onRoute, authed }: any) {
+  const { user } = useAuth();
   const [started, setStarted] = React.useState(false);
   const [currentStep, setCurrentStep] = React.useState(0);
   const [messages, setMessages] = React.useState<any[]>([]);
@@ -200,6 +204,10 @@ export function ConsultationScreen({ onRoute, authed }: any) {
 
   const saveMeasurements = async () => {
     setSaving(true);
+    const sb = createClient();
+    if (sb && user) {
+      try { await saveConsultationMeasurements(sb, user.id, measurements); } catch { /* offline/demo */ }
+    }
     await addAssistantMessage("Your measurements have been saved to your SUEDE profile! 🎉\n\nNow when you browse reviews, you'll be matched with reviewers who share your measurements. Happy shopping!");
     setSaving(false);
     setTimeout(() => onRoute(authed ? 'yourprofile' : 'signin'), 2600);

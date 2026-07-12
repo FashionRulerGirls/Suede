@@ -53,7 +53,7 @@ export function YourProfileScreen({ onRoute }: any) {
   const m = real ? {
     name: p.display_name || p.username,
     handle: '@' + p.username,
-    avatar: p.avatar_url || '/assets/avatars/avatar-rose.jpg',
+    avatar: p.avatar_url || '',
     social: p.instagram || p.tiktok || ('@' + p.username),
     bio: p.bio || '',
     measurements: {

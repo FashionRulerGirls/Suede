@@ -3,11 +3,19 @@ import React from 'react';
 /* Suede marketing-site top navigation.
    Section links live in the hamburger menu only; the bar keeps the
    wordmark, search, business menu and auth. */
-import { Logo, IconButton, AuthToggle, Select, Icon } from '@/components/ds';
+import { Logo, IconButton, AuthToggle, Select, Icon, Avatar } from '@/components/ds';
 import { SUEDE_BRANDS, SUEDE_MEMBERS, SUEDE_REVIEWS, SUEDE_INQUIRIES, SUEDE_NOTIF_COUNT } from '@/lib/data';
 import { appState } from '@/lib/appState';
+import { useAuth } from '@/lib/auth';
 
 export function Nav({ route, onRoute, authed = false }: any) {
+  const { user, profile } = useAuth();
+  // A real signed-in account shows its own (blank) avatar + no mock notifs;
+  // the demo/test-authed path keeps the sample avatar and badge count.
+  const real = !!user;
+  const notifCount = real ? 0 : SUEDE_NOTIF_COUNT;
+  const avatarSrc = real ? (profile?.avatar_url || undefined) : '/assets/avatars/avatar-rose.jpg';
+  const avatarName = profile?.display_name || profile?.username || '';
   const [open, setOpen] = React.useState(false);
   const [biz, setBiz] = React.useState(false);
   const [prof, setProf] = React.useState(false);
@@ -184,9 +192,9 @@ export function Nav({ route, onRoute, authed = false }: any) {
             <button onClick={() => setAcct(a => !a)} aria-label="Account" style={{
               display: 'inline-flex', alignItems: 'center', gap: 5, background: 'none', border: 'none', cursor: 'pointer', padding: 0, position: 'relative',
             }}>
-              <img src="/assets/avatars/avatar-rose.jpg" alt="" style={{ width: 38, height: 38, borderRadius: '50%', objectFit: 'cover', display: 'block' }} />
-              {(SUEDE_NOTIF_COUNT > 0) && (
-                <span style={{ position: 'absolute', top: -3, left: 28, minWidth: 17, height: 17, padding: '0 4px', boxSizing: 'border-box', borderRadius: 9, background: 'var(--ink-900)', color: 'var(--white)', fontFamily: 'var(--font-meta, var(--font-body))', fontSize: 10.5, fontWeight: 600, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', border: '2px solid var(--paper)', lineHeight: 1 }}>{SUEDE_NOTIF_COUNT}</span>
+              <Avatar src={avatarSrc} name={avatarName} size={38} />
+              {(notifCount > 0) && (
+                <span style={{ position: 'absolute', top: -3, left: 28, minWidth: 17, height: 17, padding: '0 4px', boxSizing: 'border-box', borderRadius: 9, background: 'var(--ink-900)', color: 'var(--white)', fontFamily: 'var(--font-meta, var(--font-body))', fontSize: 10.5, fontWeight: 600, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', border: '2px solid var(--paper)', lineHeight: 1 }}>{notifCount}</span>
               )}
               <Icon name="chevron-down" size={14} color="var(--text-secondary)" style={{ transition: 'transform var(--dur-base) var(--ease-out)', transform: acct ? 'rotate(180deg)' : 'none' }} />
             </button>

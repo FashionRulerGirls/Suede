@@ -6,6 +6,7 @@ import React from 'react';
 import { Avatar, Icon, Button } from '@/components/ds';
 import { SUEDE_NOTIFICATIONS } from '@/lib/data';
 import { SignInGate } from '@/components/screens/SignInGate';
+import { useAuth } from '@/lib/auth';
 
 function NotificationRow({ n, onRoute }: any) {
   return (
@@ -35,7 +36,10 @@ function NotificationRow({ n, onRoute }: any) {
 }
 
 export function NotificationsScreen({ onRoute, authed }: any) {
-  const [items, setItems] = React.useState(SUEDE_NOTIFICATIONS);
+  const { user } = useAuth();
+  const real = !!user; // a real account has no activity yet; demo shows samples
+  const [items, setItems] = React.useState(real ? [] : SUEDE_NOTIFICATIONS);
+  React.useEffect(() => { setItems(real ? [] : SUEDE_NOTIFICATIONS); }, [real]);
   if (!authed && SignInGate) return <SignInGate onRoute={onRoute} title="Notifications" message="Sign in to see your Suede activity." />;
   const markAll = () => setItems((prev) => prev.map((n) => ({ ...n, unread: false })));
 
@@ -50,10 +54,20 @@ export function NotificationsScreen({ onRoute, authed }: any) {
       </div>
 
       <div style={{ marginTop: 28, background: 'var(--surface-card)', border: '1px solid var(--border-subtle)' }}>
-        {items.map((n) => <NotificationRow key={n.id} n={n} onRoute={onRoute} />)}
-        <div style={{ padding: '22px', textAlign: 'center' }}>
-          <span style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-muted)' }}>You're all caught up.</span>
-        </div>
+        {items.length === 0 ? (
+          <div style={{ padding: '64px 22px', textAlign: 'center' }}>
+            <span style={{ display: 'inline-flex', width: 52, height: 52, borderRadius: '50%', background: 'var(--linen)', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}><Icon name="bell" size={22} color="var(--text-muted)" /></span>
+            <p style={{ fontFamily: 'var(--font-serif)', fontSize: 20, color: 'var(--text-heading)', margin: '0 0 6px' }}>No notifications yet</p>
+            <p style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-muted)', margin: 0 }}>When members react to your reviews or follow you, it&rsquo;ll show up here.</p>
+          </div>
+        ) : (
+          <>
+            {items.map((n) => <NotificationRow key={n.id} n={n} onRoute={onRoute} />)}
+            <div style={{ padding: '22px', textAlign: 'center' }}>
+              <span style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-muted)' }}>You're all caught up.</span>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
