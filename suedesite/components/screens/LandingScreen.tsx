@@ -224,14 +224,14 @@ export function LandingScreen({ onRoute, tweaks, authed = false }: any) {
         <EditorialBanner tone="ink" scroll>{(tweaks && tweaks.bannerText) || 'DISCOVER, REVIEW, & SHOP MINORITY-OWNED AND EMERGING BRANDS WITH CONFIDENCE'}</EditorialBanner>
       </Reveal>
 
-      {/* Thesis — the "why Suede exists" in one editorial line */}
-      <Reveal as="section" className="sd-thesis" style={{ padding: '96px 24px 44px', display: 'flex', justifyContent: 'center' }}>
-        <figure style={{ margin: 0, maxWidth: 880, textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 28 }}>
-          <span aria-hidden="true" style={{ fontFamily: 'var(--font-serif)', fontSize: 70, lineHeight: 0.4, color: 'var(--ink-300)' }}>&ldquo;</span>
-          <blockquote className="sd-thesis-q" style={{ margin: 0, fontFamily: 'var(--font-serif)', fontWeight: 300, fontSize: 35, lineHeight: 1.3, letterSpacing: '0.005em', color: 'var(--text-heading)' }}>
+      {/* Thesis — the "why Suede exists" in one editorial line (equal space above/below) */}
+      <Reveal as="section" className="sd-thesis" style={{ padding: '68px 20px', display: 'flex', justifyContent: 'center' }}>
+        <figure style={{ margin: 0, maxWidth: '100%', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 22 }}>
+          <span aria-hidden="true" style={{ fontFamily: 'var(--font-serif)', fontSize: 'clamp(30px, 3.6vw, 48px)', lineHeight: 0.4, color: 'var(--ink-300)' }}>&ldquo;</span>
+          <blockquote className="sd-thesis-q" style={{ margin: 0, whiteSpace: 'nowrap', fontFamily: 'var(--font-serif)', fontWeight: 300, fontSize: 'clamp(9px, 2.2vw, 28px)', lineHeight: 1.3, letterSpacing: '0.005em', color: 'var(--text-heading)' }}>
             For brands, the challenge is no longer simply to be seen, but to be vouched for.
           </blockquote>
-          <figcaption style={{ display: 'inline-flex', alignItems: 'center', gap: 12, fontFamily: 'var(--font-body)', fontSize: 12, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--text-muted)' }}>
+          <figcaption style={{ display: 'inline-flex', alignItems: 'center', gap: 12, fontFamily: 'var(--font-body)', fontSize: 'clamp(9px, 0.85vw, 12px)', letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--text-muted)' }}>
             <span style={{ width: 28, height: 1, background: 'var(--ink-300)' }} />
             Vogue Business
           </figcaption>
