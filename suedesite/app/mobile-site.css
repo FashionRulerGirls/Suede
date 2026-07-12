@@ -54,6 +54,8 @@ html, body { max-width: 100%; overflow-x: hidden; }
   #root .sd-hero-links .hero-dest:nth-child(4) { display: none !important; }
   #root .sd-hero-links .hero-dest [data-ul] { display: none !important; }
   #root .sd-hero-photo { background-size: auto 68% !important; background-position: center 30% !important; }
+  #root .sd-thesis { padding: 60px 22px 28px !important; }
+  #root .sd-thesis-q { font-size: 23px !important; }
 }
 
 /* AUTH CARDS */
