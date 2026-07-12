@@ -63,8 +63,8 @@ export function TermsScreen({ onRoute }: any) {
 
       {/* Sections */}
       <div className="sd-about-pad" style={{ maxWidth: 1240, margin: '0 auto', padding: '0 40px 40px' }}>
-        <TermsSection num="I · Who Can Use Suede" title="Eligibility and account basics.">
-          <P>You must be at least <B>16 years old</B> to use Suede. By using the service you confirm you meet that requirement and that the information you provide is accurate.</P>
+        <TermsSection num="I · Who Can Use Suede" title="Your account basics.">
+          <P>Suede is a general-audience service. By using it, you confirm that the information you provide is accurate and that you’ll use Suede in line with these Terms.</P>
           <P>You’re responsible for your account and for keeping your login secure. Let us know promptly if you believe someone has accessed your account without permission. You may close your account at any time from <B>Edit Profile → Account</B>.</P>
         </TermsSection>
 

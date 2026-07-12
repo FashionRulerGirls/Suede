@@ -159,8 +159,8 @@ export function PrivacyScreen() {
           <P>Suede may process and store information in countries other than your own, including the United States. Where we transfer personal information across borders, we use appropriate safeguards — such as standard contractual clauses — to keep it protected.</P>
         </PrivacySection>
 
-        <PrivacySection num="XI · Children’s Privacy" title="Suede is for grown-up wardrobes.">
-          <P>Suede is not intended for anyone under 16, and we do not knowingly collect information from children. If you believe a minor has provided us information, contact us and we’ll delete it.</P>
+        <PrivacySection num="XI · Children’s Privacy" title="A general-audience service.">
+          <P>Suede is a general-audience service and isn’t directed at children. We don’t knowingly collect personal information from children under 13. If you believe a child has provided us their information, contact us and we’ll delete it.</P>
         </PrivacySection>
 
         <PrivacySection num="XII · Changes to This Policy" title="We’ll tell you when things change.">

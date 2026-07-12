@@ -38,7 +38,9 @@ Client libraries: `@supabase/supabase-js` + `@supabase/ssr` (for Next.js App Rou
   dev credentials from the provider — a setup step, not code).
 - Every auth user gets a matching row in **`profiles`** (1-to-1, same id). A trigger
   creates the profile automatically on sign-up.
-- **Age gate (16+)** and the Terms/Privacy acceptance are recorded at sign-up.
+- **No age minimum** — Suede is general-audience. We record Terms/Privacy acceptance at
+  sign-up and still honor COPPA deletion requests for anyone under 13.
+- **Google + Apple OAuth at launch** (Apple requires a paid Apple Developer account).
 - An **`is_admin`** flag on `profiles` (or a custom JWT claim) gates the admin dashboard.
 
 ---
@@ -65,7 +67,6 @@ create table profiles (
   measurements_public boolean not null default true,   -- Suede shows them unless hidden
   email_notifications boolean not null default true,
   show_in_collective  boolean not null default true,
-  age_confirmed boolean not null default false,
   accepted_terms_at timestamptz,
   created_at    timestamptz not null default now()
 );
@@ -131,9 +132,11 @@ create table reviews (
   -- snapshot the reviewer's measurements at post time (so later edits don't rewrite history)
   measurements_snapshot jsonb,
   size_satisfaction jsonb,   -- {would_order:"L", tailoring:"no"} when sizing < 5
-  status        text not null default 'published',  -- published | removed (moderation)
+  status        text not null default 'published',  -- published | removed
   created_at    timestamptz not null default now()
 );
+-- NOTE: reviews publish instantly. Suspicious ones stay visible but get a
+-- moderation_flags row (see below) so they surface in the admin queue.
 
 create table inquiries (
   id            uuid primary key default gen_random_uuid(),
@@ -192,6 +195,40 @@ create table reactions (
   primary key (user_id, entity_type, entity_id)
 );
 ```
+
+### Moderation (instant-publish + auto-flag)
+
+Reviews and inquiries go live immediately. On insert, a **trigger or Edge Function**
+runs cheap checks and, if anything looks off, writes a `moderation_flags` row — the
+item **stays visible** but appears in the admin queue.
+
+```sql
+create table moderation_flags (
+  id          uuid primary key default gen_random_uuid(),
+  entity_type text not null,   -- 'review' | 'inquiry' | 'review_comment' | 'inquiry_response'
+  entity_id   uuid not null,
+  reason      text not null,   -- profanity | spam_links | all_caps | too_short
+                               -- | possible_brand_misspelling | user_report
+  source      text not null default 'auto',   -- 'auto' | 'user'
+  detail      jsonb,           -- e.g. {suggested_brand:"Kai Collective", similarity:0.82}
+  status      text not null default 'open',    -- open | resolved | dismissed
+  raised_by   uuid references profiles(id),
+  resolved_by uuid references profiles(id),
+  created_at  timestamptz not null default now()
+);
+```
+
+Auto-flag checks at launch:
+
+- **Content** — a profanity/hate keyword list, obvious spam links, all-caps, or
+  suspiciously short bodies.
+- **Brand misspelling** — when a free-text `brand_name` is entered (non-capsule),
+  fuzzy-match it against existing `brands` using the **`pg_trgm`** extension
+  (`similarity()`); a close-but-not-exact match flags it as a possible misspelling so
+  an admin can merge it into the right brand or add a new one.
+
+Admins resolve or dismiss flags; resolving can remove the item (`status='removed'`) or
+reconcile the brand. This list is easy to grow later (image checks, rate-limits, etc.).
 
 ### Social graph
 
@@ -297,6 +334,7 @@ RLS is ON for every table. Summary of who can do what:
 | `media` | everyone | author of the parent |
 | `reactions`, `*_follows` | everyone (for counts) | the acting user |
 | `brand_applications`, `brand_suggestions` | admin only | insert = anyone; status changes = admin |
+| `moderation_flags` | admin only | insert = system (auto) or reporter; resolve = admin |
 | `quiz_results` | owner | owner |
 | `notifications` | recipient only | system (service role) creates; recipient marks read |
 | `newsletter_subscribers` | admin only | insert = anyone |
@@ -398,7 +436,8 @@ Every admin action already has a home in the schema — the dashboard is thin CR
 - **Applications** → list `brand_applications`, approve (creates a `brands` row) / reject.
 - **Suggestions** → list `brand_suggestions`, mark reviewed / added.
 - **Capsule curation** → toggle `brands.is_capsule` / `brands.status`, edit brand fields, upload cutouts.
-- **Moderation** → set `reviews.status`/`inquiries.status` = 'removed'; handle reports.
+- **Moderation queue** → work `moderation_flags` (auto-flagged reviews, possible brand
+  misspellings, user reports); remove an item or reconcile the brand.
 - **Members** → view profiles, flag/suspend.
 - **Metrics** → counts from the views.
 
@@ -411,7 +450,7 @@ dashboard becomes a couple days of UI over tables that already enforce the rules
 
 1. **Foundation** — create schema, RLS, storage buckets; seed `brands` from `lib/data.ts`; add Supabase client + env vars.
 2. **Auth & profile** — email/password + Google/Apple; profile auto-create; wire Edit Profile + measurements to persist. Replace `setAuthed()` mock with real sessions.
-3. **Reviews & inquiries** — write path + media upload + comments/responses + reactions; read The Lookbook/brand pages from DB.
+3. **Reviews & inquiries** — write path + media upload + comments/responses + reactions; read The Lookbook/brand pages from DB. Add the auto-flag trigger (`moderation_flags`) so bad content / brand misspellings queue for review.
 4. **Social & match** — follows, feeds, `suede_match` on cards/collective.
 5. **Intake & notifications** — Apply / Suggest / Quiz persist; notifications table + (optional) realtime.
 6. **Admin dashboard.**
@@ -421,18 +460,26 @@ Each step is shippable on its own; the app keeps working on mock data for anythi
 
 ---
 
-## 10. Open decisions (need your call)
+## 10. Decisions
 
-1. **Minimum age** — Privacy/Terms currently say **16**. Keep it, or 13/18?
-2. **Measurements input** — store canonical **inches** for matching; keep the letter/numeric size scales as "usual sizes." OK?
-3. **Media limits** — enforce ≤5 photos / ≤2 videos / ≤60s server-side. Confirm.
-4. **Brand Portal** — rebuild in-app, or keep the static bundle + add auth?
-5. **Notifications** — live (Realtime) from day one, or simple on-load fetch first?
-6. **OAuth** — do you want Google **and** Apple at launch? (Apple requires a paid Apple Developer account.)
-7. **Moderation** — publish reviews instantly (post-moderate), or hold for approval? (Recommend post-moderate.)
-8. **Match formula** — fine to launch with the simple distance above and tune later?
+### Locked ✅
+- **No age minimum** — general-audience; COPPA under-13 deletion honored. (Terms & Privacy updated.)
+- **OAuth** — Google **and** Apple at launch (Apple needs a paid Apple Developer account).
+- **Moderation** — reviews **publish instantly**; auto-flag suspicious ones (bad content,
+  possible brand misspellings) into an admin queue via `moderation_flags`.
+- **Brand Portal** — rebuild in-app, but **deferred** (last phase / after launch).
+
+### Still open ❓
+1. **Media limits** — enforce ≤5 photos / ≤2 videos / ≤60s server-side. Confirm the numbers.
+2. **Measurements input** — store canonical **inches** for matching, keep letter/numeric
+   size scales as "usual sizes." OK?
+3. **Notifications** — live (Realtime) from day one, or simple on-load fetch first?
+4. **Match formula** — launch with the simple measurement-distance function above and tune
+   once real data exists?
+5. **Auto-flag keyword list** — do you want to provide the profanity/blocklist, or should we
+   start from a standard open-source list and you refine it?
 
 ---
 
-*Once you've answered §10, the natural next step is **Phase 1 (Foundation)**: I can
-generate the actual migration SQL files and wire the Supabase client into the app.*
+*Next step once the "still open" items are settled: **Phase 1 (Foundation)** — generate the
+migration SQL files, wire the Supabase client into the app, and seed brands from `lib/data.ts`.*
