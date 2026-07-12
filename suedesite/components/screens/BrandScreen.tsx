@@ -6,6 +6,9 @@ import { SUEDE_BRANDS, SUEDE_REVIEWS, SUEDE_INQUIRIES } from '@/lib/data';
 import { appState } from '@/lib/appState';
 import { SuedeControls } from '@/lib/listControls';
 import { InquiryCard } from '@/components/screens/LookbookScreen';
+import { useAuth } from '@/lib/auth';
+import { createClient } from '@/lib/supabase/client';
+import { loadBrandReviews, loadBrandInquiries } from '@/lib/contentData';
 
 function BrandStat({ value, label, icon, breakdown }: any) {
   const [hover, setHover] = React.useState(false);
@@ -70,13 +73,35 @@ function RatingRotator({ items }: any) {
 
 export function BrandScreen({ onRoute, authed = false }: any) {
   const brand = appState.brand || SUEDE_BRANDS[1];
+  const { user } = useAuth();
+  // Guests / demo see the sample feed; real signed-in members see this brand's
+  // live reviews & inquiries from the database.
+  const real = !!user;
+  const [dbReviews, setDbReviews] = React.useState<any[]>([]);
+  const [dbInq, setDbInq] = React.useState<any[]>([]);
+  React.useEffect(() => {
+    const sb = createClient();
+    if (!sb || !user || !brand?.name) { setDbReviews([]); setDbInq([]); return; }
+    let active = true;
+    loadBrandReviews(sb, brand.name).then((r) => { if (active) setDbReviews(r); }).catch(() => {});
+    loadBrandInquiries(sb, brand.name).then((q) => { if (active) setDbInq(q); }).catch(() => {});
+    return () => { active = false; };
+  }, [user?.id, brand?.name]);
   const [tab, setTab] = React.useState('reviews');
   const [bQuery, setBQuery] = React.useState('');
   const [bSort, setBSort] = React.useState('date');
   const reviews = SUEDE_REVIEWS;
   const inquiries = SUEDE_INQUIRIES || [];
-  const feed = [...reviews, ...reviews].slice(0, 2).map(r => ({ ...r, brand: brand.name }));
-  const inqFeed = [...inquiries, ...inquiries].slice(0, 2).map(r => ({ ...r, brand: brand.name }));
+  const reviewFeed = real ? dbReviews : [...reviews, ...reviews].slice(0, 2).map(r => ({ ...r, brand: brand.name }));
+  const inqFeed = real ? dbInq : [...inquiries, ...inquiries].slice(0, 2).map(r => ({ ...r, brand: brand.name }));
+  // Real-account stat values derive from the loaded feed; guests keep the
+  // brand's sample aggregates.
+  const ratedVals = dbReviews.map((r) => r.rating).filter((v) => v != null);
+  const rAvg = ratedVals.length ? ratedVals.reduce((a: number, b: number) => a + b, 0) / ratedVals.length : 0;
+  const statRating = real ? rAvg.toFixed(1) : ((brand.rating && brand.rating.toFixed ? brand.rating.toFixed(1) : brand.rating) || '0.0');
+  const statReviews = real ? String(dbReviews.length) : (brand.reviews || '0');
+  const statInquiries = real ? String(dbInq.length) : (brand.inquiries || '0');
+  const statFollowers = real ? '0' : (brand.followers || '0');
   const [flipped, setFlipped] = React.useState(false);
   const [docNote, setDocNote] = React.useState<string | null>(null);
   const [rateOpen, setRateOpen] = React.useState(false);
@@ -152,10 +177,10 @@ export function BrandScreen({ onRoute, authed = false }: any) {
       {/* Stats strip */}
       <div style={{ padding: '44px 0 8px' }}>
         <div className="sd-stats" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 24, maxWidth: 900, margin: '0 auto' }}>
-          {[[(brand.rating && brand.rating.toFixed ? brand.rating.toFixed(1) : brand.rating) || '0.0', 'Rating', 'star'], [brand.reviews || '0', 'Reviews', 'reviews'], [brand.inquiries || '0', 'Inquiries', 'message'], [brand.followers || '0', 'Followers', 'user']].map(([val, lbl, ic]: any) => {
+          {[[statRating, 'Rating', 'star'], [statReviews, 'Reviews', 'reviews'], [statInquiries, 'Inquiries', 'message'], [statFollowers, 'Followers', 'user']].map(([val, lbl, ic]: any) => {
             const isRating = lbl === 'Rating';
-            const base = brand.rating || 4.5;
-            const breakdown = isRating ? [
+            const base = real ? rAvg : (brand.rating || 4.5);
+            const breakdown = (isRating && base > 0) ? [
               ['Sizing accuracy', Math.max(1, Math.min(5, Math.round((base - 0.3) * 2) / 2))],
               ['Material quality', Math.max(1, Math.min(5, Math.round((base + 0.2) * 2) / 2))],
               ['Value for price', Math.max(1, Math.min(5, Math.round((base - 0.1) * 2) / 2))],
@@ -208,11 +233,25 @@ export function BrandScreen({ onRoute, authed = false }: any) {
       })()}
 
       {/* Feed */}
-      <div className="sd-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 28, marginTop: 28, paddingBottom: 20 }}>
-        {tab === 'reviews'
-          ? feed.filter(r => (r.product || '').toLowerCase().includes(bQuery.trim().toLowerCase())).slice().sort((a, b) => bSort === 'high' ? (b.rating || 0) - (a.rating || 0) : bSort === 'low' ? (a.rating || 0) - (b.rating || 0) : 0).map((r, i) => <ReviewCard key={i} {...r} onSeeFull={() => { appState.review = r; onRoute('review'); }} onReviewer={() => { appState.member = { name: r.reviewer.name, handle: r.reviewer.handle, avatar: r.reviewer.avatar, social: r.reviewer.handle, bio: "I love to explore the brands and Fashion. It's my hobbyy.", measurements: r.measurements, followers: '30', reviews: '24', inquiries: '12', brands: '8' }; onRoute('member'); }} />)
-          : inqFeed.filter(r => (r.product || '').toLowerCase().includes(bQuery.trim().toLowerCase())).map((r, i) => <InquiryCard key={i} {...r} onOpen={() => { appState.inquiry = r; onRoute('inquiry'); }} onAsker={() => { appState.member = { name: r.asker.name, handle: r.asker.handle, avatar: r.asker.avatar, social: r.asker.handle, bio: "I love to explore the brands and Fashion. It's my hobbyy.", measurements: r.measurements, followers: '30', reviews: '24', inquiries: '12', brands: '8' }; onRoute('member'); }} />)}
-      </div>
+      {(() => {
+        const activeFeed = (tab === 'reviews' ? reviewFeed : inqFeed).filter(r => (r.product || '').toLowerCase().includes(bQuery.trim().toLowerCase()));
+        if (activeFeed.length === 0) {
+          return (
+            <div style={{ textAlign: 'center', padding: '54px 0 28px' }}>
+              <p style={{ fontFamily: 'var(--font-serif)', fontSize: 22, color: 'var(--text-heading)', margin: '0 0 6px' }}>No {tab === 'reviews' ? 'reviews' : 'inquiries'} yet</p>
+              <p style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-muted)', margin: '0 0 20px' }}>Be the first to {tab === 'reviews' ? `review ${brand.name}` : `ask about ${brand.name}`}.</p>
+              <Button variant="primary" size="sm" onClick={() => onRoute(tab === 'reviews' ? 'createreview' : 'createinquiry')}>{tab === 'reviews' ? 'Write a Review' : 'Leave an Inquiry'}</Button>
+            </div>
+          );
+        }
+        return (
+          <div className="sd-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 28, marginTop: 28, paddingBottom: 20 }}>
+            {tab === 'reviews'
+              ? activeFeed.slice().sort((a, b) => bSort === 'high' ? (b.rating || 0) - (a.rating || 0) : bSort === 'low' ? (a.rating || 0) - (b.rating || 0) : 0).map((r, i) => <ReviewCard key={i} {...r} onSeeFull={() => { appState.review = r; onRoute('review'); }} onReviewer={() => { if (!r.reviewer) return; appState.member = { name: r.reviewer.name, handle: r.reviewer.handle, avatar: r.reviewer.avatar, social: r.reviewer.handle, bio: "I love to explore the brands and Fashion. It's my hobbyy.", measurements: r.measurements, followers: '30', reviews: '24', inquiries: '12', brands: '8' }; onRoute('member'); }} />)
+              : activeFeed.map((r, i) => <InquiryCard key={i} {...r} onOpen={() => { appState.inquiry = r; onRoute('inquiry'); }} onAsker={() => { if (!r.asker) return; appState.member = { name: r.asker.name, handle: r.asker.handle, avatar: r.asker.avatar, social: r.asker.handle, bio: "I love to explore the brands and Fashion. It's my hobbyy.", measurements: r.measurements, followers: '30', reviews: '24', inquiries: '12', brands: '8' }; onRoute('member'); }} />)}
+          </div>
+        );
+      })()}
       </div>
     </div>
   );

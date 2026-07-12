@@ -124,10 +124,20 @@ export async function createInquiry(sb: SupabaseClient, userId: string, q: NewIn
   return data;
 }
 
-// ── reads (member's own feed) ──────────────────────────────────────
+// ── reads ──────────────────────────────────────────────────────────
+function personFromAuthor(a: any) {
+  if (!a) return undefined;
+  return {
+    name: a.display_name || a.username || 'Member',
+    handle: '@' + (a.username || ''),
+    avatar: a.avatar_url || '',
+  };
+}
+
 export function reviewRowToCard(row: any) {
   return {
     _id: row.id,
+    reviewer: personFromAuthor(row.author),
     product: row.product_name,
     size: row.size_value || row.size_other || '',
     brand: row.brand_name || '',
@@ -143,6 +153,7 @@ export function reviewRowToCard(row: any) {
 export function inquiryRowToCard(row: any) {
   return {
     _id: row.id,
+    asker: personFromAuthor(row.author),
     product: row.product_name,
     size: row.size_value || row.size_other || '',
     brand: row.brand_name || '',
@@ -155,10 +166,13 @@ export function inquiryRowToCard(row: any) {
   };
 }
 
+const REVIEW_SELECT = '*, author:profiles!author_id(username, display_name, avatar_url)';
+const INQUIRY_SELECT = '*, author:profiles!author_id(username, display_name, avatar_url)';
+
 export async function loadUserReviews(sb: SupabaseClient, userId: string) {
   const { data } = await sb
     .from('reviews')
-    .select('*')
+    .select(REVIEW_SELECT)
     .eq('author_id', userId)
     .neq('status', 'removed')
     .order('created_at', { ascending: false });
@@ -168,9 +182,47 @@ export async function loadUserReviews(sb: SupabaseClient, userId: string) {
 export async function loadUserInquiries(sb: SupabaseClient, userId: string) {
   const { data } = await sb
     .from('inquiries')
-    .select('*')
+    .select(INQUIRY_SELECT)
     .eq('author_id', userId)
     .neq('status', 'removed')
     .order('created_at', { ascending: false });
+  return (data || []).map(inquiryRowToCard);
+}
+
+// Community-wide published feed (The Lookbook).
+export async function loadPublishedReviews(sb: SupabaseClient, limit = 48) {
+  const { data } = await sb
+    .from('reviews')
+    .select(REVIEW_SELECT)
+    .eq('status', 'published')
+    .order('created_at', { ascending: false })
+    .limit(limit);
+  return (data || []).map(reviewRowToCard);
+}
+
+export async function loadPublishedInquiries(sb: SupabaseClient, limit = 48) {
+  const { data } = await sb
+    .from('inquiries')
+    .select(INQUIRY_SELECT)
+    .neq('status', 'removed')
+    .order('created_at', { ascending: false })
+    .limit(limit);
+  return (data || []).map(inquiryRowToCard);
+}
+
+// Reviews / inquiries for a single brand (matched by id or free-text name).
+export async function loadBrandReviews(sb: SupabaseClient, brandName: string, brandId?: string | null) {
+  const id = brandId ?? (await resolveBrandId(sb, brandName));
+  let q = sb.from('reviews').select(REVIEW_SELECT).eq('status', 'published');
+  q = id ? q.or(`brand_id.eq.${id},brand_name.ilike.${brandName}`) : q.ilike('brand_name', brandName);
+  const { data } = await q.order('created_at', { ascending: false });
+  return (data || []).map(reviewRowToCard);
+}
+
+export async function loadBrandInquiries(sb: SupabaseClient, brandName: string, brandId?: string | null) {
+  const id = brandId ?? (await resolveBrandId(sb, brandName));
+  let q = sb.from('inquiries').select(INQUIRY_SELECT).neq('status', 'removed');
+  q = id ? q.or(`brand_id.eq.${id},brand_name.ilike.${brandName}`) : q.ilike('brand_name', brandName);
+  const { data } = await q.order('created_at', { ascending: false });
   return (data || []).map(inquiryRowToCard);
 }
