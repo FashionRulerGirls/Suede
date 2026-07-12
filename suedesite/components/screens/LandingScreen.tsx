@@ -206,20 +206,6 @@ export function LandingScreen({ onRoute, tweaks, authed = false }: any) {
           </div>
         </div>
 
-        {/* Thesis — the "why Suede exists" in one editorial line, below the carousel */}
-        <Reveal as="div" className="sd-thesis" style={{ display: 'flex', justifyContent: 'center', padding: '4px 24px 0' }}>
-          <figure className="sd-thesis-fig" style={{ margin: 0, maxWidth: '100%', display: 'inline-flex', alignItems: 'baseline', justifyContent: 'center', gap: 13 }}>
-            <span aria-hidden="true" style={{ fontFamily: 'var(--font-serif)', fontSize: 26, lineHeight: 1, color: 'var(--ink-300)' }}>&ldquo;</span>
-            <blockquote className="sd-thesis-q" style={{ margin: 0, whiteSpace: 'nowrap', fontFamily: 'var(--font-serif)', fontWeight: 300, fontSize: 19, lineHeight: 1.3, letterSpacing: '0.005em', color: 'var(--text-heading)' }}>
-              For brands, the challenge is no longer simply to be seen, but to be vouched for.
-            </blockquote>
-            <figcaption className="sd-thesis-cap" style={{ display: 'inline-flex', alignItems: 'center', gap: 10, whiteSpace: 'nowrap', fontFamily: 'var(--font-body)', fontSize: 11, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--text-muted)' }}>
-              <span style={{ width: 22, height: 1, background: 'var(--ink-300)' }} />
-              Vogue Business
-            </figcaption>
-          </figure>
-        </Reveal>
-
         {/* three destinations: Capsule left, Lookbook centered, Collective right */}
         <div className="sd-hero-dests" style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'start', paddingTop: 40, paddingLeft: 60, paddingRight: 60 }}>
           {[{ ic: 'search', label: 'The Capsule', r: 'capsule', js: 'start' },
@@ -234,8 +220,22 @@ export function LandingScreen({ onRoute, tweaks, authed = false }: any) {
         </div>
       </section>
 
-      <Reveal as="div" style={{ marginTop: 8 }}>
+      <Reveal as="div" style={{ marginTop: 35 }}>
         <EditorialBanner tone="ink" scroll>{(tweaks && tweaks.bannerText) || 'DISCOVER, REVIEW, & SHOP MINORITY-OWNED AND EMERGING BRANDS WITH CONFIDENCE'}</EditorialBanner>
+      </Reveal>
+
+      {/* Thesis — the "why Suede exists" in one editorial line */}
+      <Reveal as="section" className="sd-thesis" style={{ padding: '96px 24px 44px', display: 'flex', justifyContent: 'center' }}>
+        <figure style={{ margin: 0, maxWidth: 880, textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 28 }}>
+          <span aria-hidden="true" style={{ fontFamily: 'var(--font-serif)', fontSize: 70, lineHeight: 0.4, color: 'var(--ink-300)' }}>&ldquo;</span>
+          <blockquote className="sd-thesis-q" style={{ margin: 0, fontFamily: 'var(--font-serif)', fontWeight: 300, fontSize: 35, lineHeight: 1.3, letterSpacing: '0.005em', color: 'var(--text-heading)' }}>
+            For brands, the challenge is no longer simply to be seen, but to be vouched for.
+          </blockquote>
+          <figcaption style={{ display: 'inline-flex', alignItems: 'center', gap: 12, fontFamily: 'var(--font-body)', fontSize: 12, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--text-muted)' }}>
+            <span style={{ width: 28, height: 1, background: 'var(--ink-300)' }} />
+            Vogue Business
+          </figcaption>
+        </figure>
       </Reveal>
 
       {/* How it works — two-slide slider: The Lookbook + The Collective */}
