@@ -121,12 +121,20 @@ export function CreateReviewScreen({ onRoute, authed = false }: any) {
   const [reviewText, setReviewText] = React.useState(editing ? (editReview.body || '') : '');
   const [otherSize, setOtherSize] = React.useState(editing ? (editReview.size_other || '') : '');
   const [contentLink, setContentLink] = React.useState('');
-  const [photos, setPhotos] = React.useState<{ url: string; file: File }[]>([]);
+  const [photos, setPhotos] = React.useState<{ url: string; file: File; poster?: File; posterUrl?: string }[]>([]);
+  const posterForRef = React.useRef<number | null>(null);
+  const posterInputRef = React.useRef<HTMLInputElement | null>(null);
+  const pickPosterFor = (i: number) => { posterForRef.current = i; posterInputRef.current?.click(); };
+  const onPosterPick = (e: any) => {
+    const f = e.target.files?.[0]; const i = posterForRef.current;
+    if (f && i != null) setPhotos((p) => p.map((ph, j) => j === i ? { ...ph, poster: f, posterUrl: URL.createObjectURL(f) } : ph));
+    e.target.value = '';
+  };
   const [errors, setErrors] = React.useState<string[]>([]);
   const [submitted, setSubmitted] = React.useState(false);
   const [saving, setSaving] = React.useState(false);
   const [lb, setLb] = React.useState<number | null>(null);
-  const gallery = photos.map((p) => ({ url: p.url, kind: (p.file.type || '').startsWith('video') ? 'video' : 'image' }));
+  const gallery = photos.map((p) => ({ url: p.url, kind: (p.file.type || '').startsWith('video') ? 'video' : 'image', poster: p.posterUrl }));
   const onPhotos = (e: any) => {
     const files = Array.from(e.target.files || []) as File[];
     if (!files.length) return;
@@ -167,11 +175,11 @@ export function CreateReviewScreen({ onRoute, authed = false }: any) {
         };
         if (editing && editId) {
           await updateReview(sb, user.id, editId, payload);
-          if (photos.length) await uploadReviewMedia(sb, user.id, editId, photos.map((p) => p.file));
+          if (photos.length) await uploadReviewMedia(sb, user.id, editId, photos.map((p) => ({ file: p.file, poster: p.poster })));
         } else {
           const created = await createReview(sb, user.id, payload);
           if (created?.id && photos.length) {
-            await uploadReviewMedia(sb, user.id, created.id, photos.map((p) => p.file));
+            await uploadReviewMedia(sb, user.id, created.id, photos.map((p) => ({ file: p.file, poster: p.poster })));
           }
         }
       } catch (err: any) {
@@ -375,20 +383,29 @@ export function CreateReviewScreen({ onRoute, authed = false }: any) {
         </SectionCard>
 
         <SectionCard title="Add Photos & Videos">
-          <div style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-muted)', marginBottom: 14, marginTop: -8 }}>Up to 5 photos • Up to 2 videos • Video max length 60 seconds</div>
+          <div style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-muted)', marginBottom: 14, marginTop: -8 }}>Up to 5 photos • Up to 2 videos • Video max length 60 seconds • Tap “Set preview” on a video to choose its thumbnail</div>
           {photos.length > 0 && (
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginBottom: 14 }}>
               {photos.map((ph, i) => (
                 <span key={i} style={{ position: 'relative', width: 84, height: 104, background: 'var(--linen)', overflow: 'hidden' }}>
-                  {gallery[i]?.kind === 'video'
-                    ? <span onClick={() => setLb(i)} style={{ position: 'absolute', inset: 0, background: 'var(--ink-900)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Icon name="play" size={20} color="#fff" /></span>
-                    : <img src={ph.url} alt="" onClick={() => setLb(i)} style={{ width: '100%', height: '100%', objectFit: 'cover', cursor: 'zoom-in' }} />}
+                  {gallery[i]?.kind === 'video' ? (
+                    <React.Fragment>
+                      <span onClick={() => setLb(i)} style={{ position: 'absolute', inset: 0, background: ph.posterUrl ? 'transparent' : 'var(--ink-900)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        {ph.posterUrl && <img src={ph.posterUrl} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />}
+                        <Icon name="play" size={20} color="#fff" />
+                      </span>
+                      <button type="button" onClick={() => pickPosterFor(i)} style={{ position: 'absolute', left: 0, right: 0, bottom: 0, background: 'rgba(20,18,15,0.72)', color: 'var(--white)', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: 10, padding: '4px 0' }}>{ph.posterUrl ? 'Change preview' : 'Set preview'}</button>
+                    </React.Fragment>
+                  ) : (
+                    <img src={ph.url} alt="" onClick={() => setLb(i)} style={{ width: '100%', height: '100%', objectFit: 'cover', cursor: 'zoom-in' }} />
+                  )}
                   <button type="button" onClick={() => setPhotos(p => p.filter((_, j) => j !== i))} aria-label="Remove photo"
                     style={{ position: 'absolute', top: 4, right: 4, width: 22, height: 22, borderRadius: '50%', border: 'none', background: 'rgba(20,18,15,0.7)', color: 'var(--white)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <Icon name="close" size={13} color="var(--white)" />
                   </button>
                 </span>
               ))}
+              <input ref={posterInputRef} type="file" accept="image/*" onChange={onPosterPick} style={{ display: 'none' }} />
             </div>
           )}
           {photos.length < 5 && (

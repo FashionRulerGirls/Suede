@@ -215,7 +215,7 @@ async function attachReviewMedia(sb: SupabaseClient, cards: any[]) {
   if (!ids.length) return cards;
   const { data } = await sb
     .from('media')
-    .select('parent_id, url, kind, position')
+    .select('parent_id, url, kind, position, poster_url')
     .eq('parent_type', 'review')
     .in('parent_id', ids)
     .order('position', { ascending: true });
@@ -223,19 +223,22 @@ async function attachReviewMedia(sb: SupabaseClient, cards: any[]) {
   (data || []).forEach((m: any) => { (byId[m.parent_id] = byId[m.parent_id] || []).push(m); });
   return cards.map((c) => {
     const ms = byId[c._id] || [];
-    const first = ms.find((m: any) => m.kind === 'image') || ms[0];
-    return { ...c, image: first?.url || c.image, extraCount: ms.length > 1 ? ms.length - 1 : undefined };
+    // Prefer a real photo for the thumbnail; otherwise a video's chosen poster.
+    const firstImage = ms.find((m: any) => m.kind === 'image');
+    const firstPoster = ms.find((m: any) => m.poster_url)?.poster_url;
+    const thumb = firstImage?.url || firstPoster || ms[0]?.url;
+    return { ...c, image: thumb || c.image, extraCount: ms.length > 1 ? ms.length - 1 : undefined };
   });
 }
 
-export async function loadReviewMedia(sb: SupabaseClient, reviewId: string): Promise<{ url: string; kind: string }[]> {
+export async function loadReviewMedia(sb: SupabaseClient, reviewId: string): Promise<{ url: string; kind: string; poster?: string | null }[]> {
   const { data } = await sb
     .from('media')
-    .select('url, kind, position')
+    .select('url, kind, position, poster_url')
     .eq('parent_type', 'review')
     .eq('parent_id', reviewId)
     .order('position', { ascending: true });
-  return (data || []).map((m: any) => ({ url: m.url, kind: m.kind }));
+  return (data || []).map((m: any) => ({ url: m.url, kind: m.kind, poster: m.poster_url }));
 }
 
 export async function loadUserReviews(sb: SupabaseClient, userId: string) {

@@ -28,7 +28,7 @@ export function Lightbox({ items = [], index = 0, onClose, onIndex }: any) {
       {multi && <button onClick={go(-1)} aria-label="Previous" style={arrow('left')}><Icon name="arrow-left" size={24} color="#fff" /></button>}
       <div onClick={(e) => e.stopPropagation()} style={{ maxWidth: '92vw', maxHeight: '88vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         {cur.kind === 'video'
-          ? <video src={cur.url} controls autoPlay playsInline style={{ maxWidth: '92vw', maxHeight: '88vh', borderRadius: 2 }} />
+          ? <video src={cur.url} poster={cur.poster || undefined} controls autoPlay playsInline style={{ maxWidth: '92vw', maxHeight: '88vh', borderRadius: 2 }} />
           : <img src={cur.url} alt="" style={{ maxWidth: '92vw', maxHeight: '88vh', objectFit: 'contain', borderRadius: 2 }} />}
       </div>
       {multi && <button onClick={go(1)} aria-label="Next" style={arrow('right')}><Icon name="arrow-right" size={24} color="#fff" /></button>}

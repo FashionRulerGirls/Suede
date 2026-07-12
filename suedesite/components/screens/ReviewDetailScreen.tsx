@@ -41,7 +41,7 @@ export function ReviewDetailScreen({ onRoute, authed = false }: any) {
   const real = !!r._id; // came from the database (vs. the guest/demo sample)
   const { user, profile } = useAuth();
   const [full, setFull] = React.useState<any>(null);
-  const [media, setMedia] = React.useState<{ url: string; kind: string }[]>([]);
+  const [media, setMedia] = React.useState<{ url: string; kind: string; poster?: string | null }[]>([]);
   const [lb, setLb] = React.useState<number | null>(null);
   const [comments, setComments] = React.useState<any[]>(real ? [] : [
     { avatar: '/assets/avatars/avatar-rose.jpg', name: 'Sophie L.', when: '2 days ago', likes: 3, body: "These look amazing! How do they compare to your usual size? I'm between sizes too." },
@@ -149,10 +149,11 @@ export function ReviewDetailScreen({ onRoute, authed = false }: any) {
             {thumbs.map((t: any, i: number) => {
               const url = typeof t === 'string' ? t : t.url;
               const isVideo = typeof t !== 'string' && t.kind === 'video';
+              const poster = typeof t !== 'string' ? t.poster : null;
               return (
                 <div key={i} onClick={() => openLightbox(real ? i : 0)} style={{ position: 'relative', aspectRatio: '1/1', overflow: 'hidden', background: isVideo ? 'var(--ink-900)' : 'var(--linen)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   {isVideo
-                    ? <><video src={url} muted playsInline preload="metadata" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.75 }} /><span style={{ position: 'absolute', display: 'inline-flex' }}><Icon name="play" size={22} color="#fff" /></span></>
+                    ? <>{poster ? <img src={poster} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} /> : <video src={url} muted playsInline preload="metadata" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.75 }} />}<span style={{ position: 'absolute', display: 'inline-flex' }}><Icon name="play" size={22} color="#fff" /></span></>
                     : <img src={url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
                 </div>
               );
