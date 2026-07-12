@@ -31,12 +31,14 @@ export async function uploadReviewMedia(
   userId: string,
   reviewId: string,
   items: ReviewMediaItem[],
+  startPosition = 0,
 ): Promise<string[]> {
   const urls: string[] = [];
+  const stamp = Date.now(); // unique token so edits never overwrite existing files
   for (let i = 0; i < items.length; i++) {
     const { file, poster } = items[i];
     const kind = (file.type || '').startsWith('video') ? 'video' : 'image';
-    const path = `${userId}/${reviewId}/${i}.${extOf(file)}`;
+    const path = `${userId}/${reviewId}/${stamp}-${i}.${extOf(file)}`;
     const { error } = await sb.storage.from('review-media').upload(path, file, {
       upsert: true, contentType: file.type || undefined, cacheControl: '3600',
     });
@@ -46,7 +48,7 @@ export async function uploadReviewMedia(
 
     let poster_url: string | null = null;
     if (kind === 'video' && poster) {
-      const pPath = `${userId}/${reviewId}/${i}-poster.${extOf(poster)}`;
+      const pPath = `${userId}/${reviewId}/${stamp}-${i}-poster.${extOf(poster)}`;
       const { error: pErr } = await sb.storage.from('review-media').upload(pPath, poster, {
         upsert: true, contentType: poster.type || undefined, cacheControl: '3600',
       });
@@ -58,7 +60,7 @@ export async function uploadReviewMedia(
       parent_id: reviewId,
       url: data.publicUrl,
       kind,
-      position: i,
+      position: startPosition + i,
       poster_url,
     });
   }

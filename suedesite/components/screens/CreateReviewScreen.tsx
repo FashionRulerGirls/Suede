@@ -9,7 +9,7 @@ import { SignInGate } from '@/components/screens/SignInGate';
 import { ProductFetch } from '@/components/screens/ProductFetch';
 import { useAuth } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/client';
-import { createReview, updateReview } from '@/lib/contentData';
+import { createReview, updateReview, loadReviewMedia, deleteReviewMedia } from '@/lib/contentData';
 import { uploadReviewMedia } from '@/lib/storage';
 
 function StarRow({ label, value, onChange }: any) {
@@ -122,6 +122,18 @@ export function CreateReviewScreen({ onRoute, authed = false }: any) {
   const [otherSize, setOtherSize] = React.useState(editing ? (editReview.size_other || '') : '');
   const [contentLink, setContentLink] = React.useState('');
   const [photos, setPhotos] = React.useState<{ url: string; file: File; poster?: File; posterUrl?: string }[]>([]);
+  // Existing media (edit mode): shown with remove buttons; removals apply on save.
+  const [existingMedia, setExistingMedia] = React.useState<any[]>([]);
+  const [removedIds, setRemovedIds] = React.useState<string[]>([]);
+  React.useEffect(() => {
+    if (!editing || !editId) return;
+    const sb = createClient();
+    if (!sb) return;
+    let active = true;
+    loadReviewMedia(sb, editId).then((m) => { if (active) setExistingMedia(m); }).catch(() => {});
+    return () => { active = false; };
+  }, [editing, editId]);
+  const visibleExisting = existingMedia.filter((m) => !removedIds.includes(m.id));
   const posterForRef = React.useRef<number | null>(null);
   const posterInputRef = React.useRef<HTMLInputElement | null>(null);
   const pickPosterFor = (i: number) => { posterForRef.current = i; posterInputRef.current?.click(); };
@@ -134,6 +146,7 @@ export function CreateReviewScreen({ onRoute, authed = false }: any) {
   const [submitted, setSubmitted] = React.useState(false);
   const [saving, setSaving] = React.useState(false);
   const [lb, setLb] = React.useState<number | null>(null);
+  const [exPreview, setExPreview] = React.useState<any>(null);
   const gallery = photos.map((p) => ({ url: p.url, kind: (p.file.type || '').startsWith('video') ? 'video' : 'image', poster: p.posterUrl }));
   const onPhotos = (e: any) => {
     const files = Array.from(e.target.files || []) as File[];
@@ -175,7 +188,11 @@ export function CreateReviewScreen({ onRoute, authed = false }: any) {
         };
         if (editing && editId) {
           await updateReview(sb, user.id, editId, payload);
-          if (photos.length) await uploadReviewMedia(sb, user.id, editId, photos.map((p) => ({ file: p.file, poster: p.poster })));
+          for (const id of removedIds) { try { await deleteReviewMedia(sb, id); } catch { /* ignore */ } }
+          if (photos.length) {
+            const startPos = existingMedia.filter((m) => !removedIds.includes(m.id)).length;
+            await uploadReviewMedia(sb, user.id, editId, photos.map((p) => ({ file: p.file, poster: p.poster })), startPos);
+          }
         } else {
           const created = await createReview(sb, user.id, payload);
           if (created?.id && photos.length) {
@@ -246,7 +263,7 @@ export function CreateReviewScreen({ onRoute, authed = false }: any) {
       <div style={{ position: 'relative', textAlign: 'center', padding: '60px 24px 36px' }}>
         <div style={{ position: 'relative' }}>
           <h1 style={{ fontFamily: 'var(--font-serif)', fontWeight: 500, fontSize: 40, color: 'var(--text-heading)', margin: 0 }}>{editing ? 'Edit Review' : 'Submit a Review'}</h1>
-          <p style={{ fontFamily: 'var(--font-body)', fontSize: 15, color: 'var(--text-muted)', marginTop: 10 }}>{editing ? 'Update your review. Photos you add here are appended to the existing ones.' : 'Share how clothing fits on your body and help others shop with confidence.'}</p>
+          <p style={{ fontFamily: 'var(--font-body)', fontSize: 15, color: 'var(--text-muted)', marginTop: 10 }}>{editing ? 'Update your review — edit the details and add or remove photos and videos below.' : 'Share how clothing fits on your body and help others shop with confidence.'}</p>
         </div>
       </div>
 
@@ -384,6 +401,30 @@ export function CreateReviewScreen({ onRoute, authed = false }: any) {
 
         <SectionCard title="Add Photos & Videos">
           <div style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-muted)', marginBottom: 14, marginTop: -8 }}>Up to 5 photos • Up to 2 videos • Video max length 60 seconds • Tap “Set preview” on a video to choose its thumbnail</div>
+          {editing && visibleExisting.length > 0 && (
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ fontFamily: 'var(--font-body)', fontSize: 11, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 10 }}>Current media</div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
+                {visibleExisting.map((m) => (
+                  <span key={m.id} style={{ position: 'relative', width: 84, height: 104, background: m.kind === 'video' && !m.poster ? 'var(--ink-900)' : 'var(--linen)', overflow: 'hidden' }}>
+                    {m.kind === 'video' ? (
+                      <span onClick={() => setExPreview({ url: m.url, kind: 'video', poster: m.poster })} style={{ position: 'absolute', inset: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        {m.poster && <img src={m.poster} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />}
+                        <Icon name="play" size={20} color="#fff" />
+                      </span>
+                    ) : (
+                      <img src={m.url} alt="" onClick={() => setExPreview({ url: m.url, kind: 'image' })} style={{ width: '100%', height: '100%', objectFit: 'cover', cursor: 'zoom-in' }} />
+                    )}
+                    <button type="button" onClick={() => setRemovedIds((prev) => [...prev, m.id])} aria-label="Remove media"
+                      style={{ position: 'absolute', top: 4, right: 4, width: 22, height: 22, borderRadius: '50%', border: 'none', background: 'rgba(20,18,15,0.7)', color: 'var(--white)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Icon name="close" size={13} color="var(--white)" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+              <div style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: 'var(--text-muted)', marginTop: 10 }}>Add more below. Removals apply when you save.</div>
+            </div>
+          )}
           {photos.length > 0 && (
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginBottom: 14 }}>
               {photos.map((ph, i) => (
@@ -408,7 +449,7 @@ export function CreateReviewScreen({ onRoute, authed = false }: any) {
               <input ref={posterInputRef} type="file" accept="image/*" onChange={onPosterPick} style={{ display: 'none' }} />
             </div>
           )}
-          {photos.length < 5 && (
+          {(visibleExisting.length + photos.length) < 5 && (
             <label style={{ border: '1px dashed var(--border-default)', padding: '44px 0', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
               <input type="file" accept="image/*,video/*" multiple onChange={onPhotos} style={{ display: 'none' }} />
               <Icon name="plus" size={22} color="var(--text-muted)" />
@@ -470,6 +511,7 @@ export function CreateReviewScreen({ onRoute, authed = false }: any) {
 
       <SizeSatisfactionModal open={modal} onClose={() => setModal(false)} onContinue={(s: any) => void finalize(s)} />
       {lb !== null && <Lightbox items={gallery} index={lb} onClose={() => setLb(null)} onIndex={setLb} />}
+      {exPreview && <Lightbox items={[exPreview]} index={0} onClose={() => setExPreview(null)} onIndex={() => {}} />}
       </React.Fragment>}
     </div>
   );

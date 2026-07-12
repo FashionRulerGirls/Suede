@@ -231,14 +231,20 @@ async function attachReviewMedia(sb: SupabaseClient, cards: any[]) {
   });
 }
 
-export async function loadReviewMedia(sb: SupabaseClient, reviewId: string): Promise<{ url: string; kind: string; poster?: string | null }[]> {
+export async function loadReviewMedia(sb: SupabaseClient, reviewId: string): Promise<{ id: string; url: string; kind: string; position: number; poster?: string | null }[]> {
   const { data } = await sb
     .from('media')
-    .select('url, kind, position, poster_url')
+    .select('id, url, kind, position, poster_url')
     .eq('parent_type', 'review')
     .eq('parent_id', reviewId)
     .order('position', { ascending: true });
-  return (data || []).map((m: any) => ({ url: m.url, kind: m.kind, poster: m.poster_url }));
+  return (data || []).map((m: any) => ({ id: m.id, url: m.url, kind: m.kind, position: m.position, poster: m.poster_url }));
+}
+
+// Remove a media row (RLS restricts this to the parent review's author).
+export async function deleteReviewMedia(sb: SupabaseClient, mediaId: string) {
+  const { error } = await sb.from('media').delete().eq('id', mediaId);
+  if (error) throw error;
 }
 
 export async function loadUserReviews(sb: SupabaseClient, userId: string) {

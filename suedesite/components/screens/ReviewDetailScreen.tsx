@@ -66,7 +66,8 @@ export function ReviewDetailScreen({ onRoute, authed = false }: any) {
   const image = real ? firstImage : (r.image || '/assets/imagery/fit-bomber.png');
   // Everything the lightbox can page through (all photos/videos for a real
   // review; the single sample image otherwise).
-  const gallery = real ? media : (image ? [{ url: image, kind: 'image' }] : []);
+  const gallery: any[] = real ? media : (image ? [{ url: image, kind: 'image' }] : []);
+  const primary = gallery[0]; // the main preview (may be a video)
   const openLightbox = (i: number) => { if (gallery.length) setLb(Math.max(0, Math.min(i, gallery.length - 1))); };
   const product = (real ? (full?.product_name || r.product) : r.product) || 'Tailored Wide-Leg Trouser';
   const brand = (real ? (full?.brand_name || r.brand) : r.brand) || 'Nadi';
@@ -141,8 +142,17 @@ export function ReviewDetailScreen({ onRoute, authed = false }: any) {
       <div className="sd-rev-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 60, alignItems: 'start' }}>
         {/* Left — gallery */}
         <div>
-          <div onClick={() => image && openLightbox(gallery.findIndex((g) => g.kind === 'image'))} style={{ position: 'relative', aspectRatio: '1/1', overflow: 'hidden', background: 'var(--linen)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: image ? 'zoom-in' : 'default' }}>
-            {image ? <img src={image} alt={product} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <Icon name="image" size={40} color="var(--text-muted)" />}
+          <div onClick={() => primary && openLightbox(0)} style={{ position: 'relative', aspectRatio: '1/1', overflow: 'hidden', background: primary?.kind === 'video' && !primary?.poster ? 'var(--ink-900)' : 'var(--linen)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: primary ? 'zoom-in' : 'default' }}>
+            {!primary
+              ? <Icon name="image" size={40} color="var(--text-muted)" />
+              : primary.kind === 'video'
+                ? <React.Fragment>
+                    {primary.poster
+                      ? <img src={primary.poster} alt={product} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      : <video src={primary.url} muted playsInline preload="metadata" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.8 }} />}
+                    <span style={{ position: 'absolute', width: 66, height: 66, borderRadius: '50%', background: 'rgba(20,18,15,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Icon name="play" size={28} color="#fff" /></span>
+                  </React.Fragment>
+                : <img src={primary.url} alt={product} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
           </div>
           {thumbs.length > 0 && (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14, marginTop: 14 }}>
