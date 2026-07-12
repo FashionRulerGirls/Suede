@@ -7,6 +7,9 @@ import { SUEDE_BRANDS } from '@/lib/data';
 import { appState } from '@/lib/appState';
 import { SignInGate } from '@/components/screens/SignInGate';
 import { ProductFetch } from '@/components/screens/ProductFetch';
+import { useAuth } from '@/lib/auth';
+import { createClient } from '@/lib/supabase/client';
+import { createReview } from '@/lib/contentData';
 
 function StarRow({ label, value, onChange }: any) {
   const [hover, setHover] = React.useState(0);
@@ -70,7 +73,7 @@ function SizeSatisfactionModal({ open, onClose, onContinue }: any) {
           <button type="button" onClick={() => setTailoring('no')} style={{ ...chip(tailoring === 'no'), padding: '18px 0' }}>No</button>
         </div>
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 32 }}>
-          <Button variant="primary" onClick={onContinue || onClose}>Continue review</Button>
+          <Button variant="primary" onClick={() => (onContinue ? onContinue({ scale, size, other, tailoring }) : onClose())}>Continue review</Button>
         </div>
       </div>
     </div>
@@ -90,6 +93,7 @@ function SectionCard({ title, action, children, headClass }: any) {
 }
 
 export function CreateReviewScreen({ onRoute, authed = false }: any) {
+  const { user } = useAuth();
   const brands = SUEDE_BRANDS || [];
   // When arriving from a brand page, that brand is pre-selected.
   const presetBrand = appState.reviewBrand;
@@ -113,6 +117,7 @@ export function CreateReviewScreen({ onRoute, authed = false }: any) {
   const [photos, setPhotos] = React.useState<string[]>([]);
   const [errors, setErrors] = React.useState<string[]>([]);
   const [submitted, setSubmitted] = React.useState(false);
+  const [saving, setSaving] = React.useState(false);
   const onPhotos = (e: any) => {
     const files = Array.from(e.target.files || []) as any[];
     if (!files.length) return;
@@ -131,12 +136,43 @@ export function CreateReviewScreen({ onRoute, authed = false }: any) {
     if (!reviewText.trim()) e.push('Write your review');
     return e;
   };
+  // Persist to Supabase (when configured + a real user), then show success.
+  // In demo/unconfigured mode this just advances to the success state.
+  const finalize = async (satisfaction?: any) => {
+    const sb = createClient();
+    if (sb && user) {
+      setSaving(true);
+      try {
+        await createReview(sb, user.id, {
+          brandName: brandType === 'Capsule Brand' ? brandSel : nonCapsuleBrand.trim(),
+          productName: productSel.trim(),
+          contentLink: contentLink.trim() || undefined,
+          sizeScale: scale,
+          sizeValue: size,
+          sizeOther: otherSize.trim(),
+          ratings,
+          body: reviewText,
+          recommend: rec === 'yes' ? true : rec === 'no' ? false : null,
+          hideMeasurements: hideMeasure,
+          sizeSatisfaction: satisfaction ?? null,
+        });
+      } catch (err: any) {
+        setSaving(false);
+        setErrors([err?.message || 'Something went wrong saving your review. Please try again.']);
+        return;
+      }
+      setSaving(false);
+    }
+    setModal(false);
+    setSubmitted(true);
+  };
+
   const submitReview = () => {
     const e = validate();
     setErrors(e);
     if (e.length) return;
     if (ratings.sizing > 0 && ratings.sizing < 5) setModal(true);
-    else setSubmitted(true);
+    else void finalize();
   };
   const resetForm = () => {
     setSubmitted(false); setErrors([]); setReviewText(''); setProductSel(''); setNonCapsuleBrand('');
@@ -390,10 +426,10 @@ export function CreateReviewScreen({ onRoute, authed = false }: any) {
             </ul>
           </div>
         )}
-        <Button variant="primary" fullWidth size="lg" onClick={submitReview}>Submit Review</Button>
+        <Button variant="primary" fullWidth size="lg" disabled={saving} onClick={submitReview}>{saving ? 'Submitting…' : 'Submit Review'}</Button>
       </div>
 
-      <SizeSatisfactionModal open={modal} onClose={() => setModal(false)} onContinue={() => { setModal(false); setSubmitted(true); }} />
+      <SizeSatisfactionModal open={modal} onClose={() => setModal(false)} onContinue={(s: any) => void finalize(s)} />
       </React.Fragment>}
     </div>
   );

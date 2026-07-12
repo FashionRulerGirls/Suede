@@ -57,7 +57,7 @@ export function InquiryCard({ asker = {}, measurements = {}, product, size, bran
           </div>
         </div>
         <div style={{ borderRadius: 0, overflow: 'hidden', aspectRatio: '3/4', background: 'var(--linen)' }}>
-          <img className="sd-iq-img" src={image} alt={product} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          {image && <img className="sd-iq-img" src={image} alt={product} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
         </div>
       </div>
     </article>

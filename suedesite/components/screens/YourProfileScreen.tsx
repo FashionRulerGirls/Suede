@@ -10,6 +10,7 @@ import { InquiryCard } from '@/components/screens/LookbookScreen';
 import { useAuth } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/client';
 import { loadProfileData, inchesToHeight, inchesDisplay } from '@/lib/profileData';
+import { loadUserReviews, loadUserInquiries } from '@/lib/contentData';
 
 function YProfStat({ value, label, links }: any) {
   return (
@@ -31,11 +32,15 @@ function YProfStat({ value, label, links }: any) {
 export function YourProfileScreen({ onRoute }: any) {
   const { user } = useAuth();
   const [db, setDb] = React.useState<any>(null);
+  const [dbReviews, setDbReviews] = React.useState<any[]>([]);
+  const [dbInquiries, setDbInquiries] = React.useState<any[]>([]);
   React.useEffect(() => {
     const sb = createClient();
-    if (!sb || !user) { setDb(null); return; }
+    if (!sb || !user) { setDb(null); setDbReviews([]); setDbInquiries([]); return; }
     let active = true;
     loadProfileData(sb, user.id).then((d) => { if (active) setDb(d); }).catch(() => {});
+    loadUserReviews(sb, user.id).then((r) => { if (active) setDbReviews(r); }).catch(() => {});
+    loadUserInquiries(sb, user.id).then((q) => { if (active) setDbInquiries(q); }).catch(() => {});
     return () => { active = false; };
   }, [user?.id]);
 
@@ -69,7 +74,7 @@ export function YourProfileScreen({ onRoute }: any) {
       'Torso Length': inchesDisplay(ms?.torso_in) || undefined,
     },
     usualSizes: ms?.usual_sizes || {},
-    followers: '0', reviews: '0', inquiries: '0', brands: '0',
+    followers: '0', reviews: String(dbReviews.length), inquiries: String(dbInquiries.length), brands: '0',
   } : MOCK;
   const [tab, setTab] = React.useState('reviews');
   const [view, setView] = React.useState(appState.profileView || 'profile'); // profile | brands | followers
@@ -84,8 +89,12 @@ export function YourProfileScreen({ onRoute }: any) {
   const [feedSort, setFeedSort] = React.useState('date');
   const reviews = real ? [] : (SUEDE_REVIEWS || []);
   const meReviewer = { name: m.name, handle: m.handle, avatar: m.avatar };
-  const feed = real ? [] : [...reviews, ...reviews].slice(0, 2).map(r => ({ ...r, reviewer: meReviewer }));
-  const inquiries = real ? [] : (SUEDE_INQUIRIES || []).slice(0, 2).map(it => ({ ...it, asker: meReviewer }));
+  const feed = real
+    ? dbReviews.map(r => ({ ...r, reviewer: meReviewer }))
+    : [...reviews, ...reviews].slice(0, 2).map(r => ({ ...r, reviewer: meReviewer }));
+  const inquiries = real
+    ? dbInquiries.map(it => ({ ...it, asker: meReviewer }))
+    : (SUEDE_INQUIRIES || []).slice(0, 2).map(it => ({ ...it, asker: meReviewer }));
   const openReview = (r: any) => { appState.review = r; onRoute('review'); };
 
   if (view !== 'profile') {

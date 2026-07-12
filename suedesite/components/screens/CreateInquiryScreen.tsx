@@ -5,6 +5,9 @@ import { Button, Field, Input, Icon, Select } from '@/components/ds';
 import { appState } from '@/lib/appState';
 import { SignInGate } from '@/components/screens/SignInGate';
 import { ProductFetch } from '@/components/screens/ProductFetch';
+import { useAuth } from '@/lib/auth';
+import { createClient } from '@/lib/supabase/client';
+import { createInquiry } from '@/lib/contentData';
 
 function CISectionCard({ title, children }: any) {
   return (
@@ -16,13 +19,16 @@ function CISectionCard({ title, children }: any) {
 }
 
 export function CreateInquiryScreen({ onRoute, authed = false }: any) {
+  const { user } = useAuth();
   const [scale, setScale] = React.useState('Letter');
   const [size, setSize] = React.useState('');
   const [otherSize, setOtherSize] = React.useState('');
   const [detail, setDetail] = React.useState('');
   const [product, setProduct] = React.useState('');
+  const [category, setCategory] = React.useState('');
   const [errors, setErrors] = React.useState<string[]>([]);
   const [submitted, setSubmitted] = React.useState(false);
+  const [saving, setSaving] = React.useState(false);
   const validate = () => {
     const e: string[] = [];
     if (!product.trim()) e.push('Add the product link and tap Fetch');
@@ -30,13 +36,32 @@ export function CreateInquiryScreen({ onRoute, authed = false }: any) {
     if (!detail.trim()) e.push('Describe your inquiry');
     return e;
   };
-  const submitInquiry = () => {
+  const submitInquiry = async () => {
     const e = validate();
     setErrors(e);
     if (e.length) return;
+    const sb = createClient();
+    if (sb && user) {
+      setSaving(true);
+      try {
+        await createInquiry(sb, user.id, {
+          productName: product.trim(),
+          category: category || undefined,
+          sizeScale: scale,
+          sizeValue: size,
+          sizeOther: otherSize.trim(),
+          body: detail,
+        });
+      } catch (err: any) {
+        setSaving(false);
+        setErrors([err?.message || 'Something went wrong posting your inquiry. Please try again.']);
+        return;
+      }
+      setSaving(false);
+    }
     setSubmitted(true);
   };
-  const resetForm = () => { setSubmitted(false); setErrors([]); setProduct(''); setSize(''); setOtherSize(''); setDetail(''); };
+  const resetForm = () => { setSubmitted(false); setErrors([]); setProduct(''); setSize(''); setOtherSize(''); setDetail(''); setCategory(''); };
   const chip = (active: any) => ({
     padding: '13px 0', textAlign: 'center' as any, cursor: 'pointer',
     border: `1px solid ${active ? 'var(--ink-900)' : 'var(--border-default)'}`,
@@ -73,7 +98,7 @@ export function CreateInquiryScreen({ onRoute, authed = false }: any) {
           <Field label="Paste the product link">
             <ProductFetch placeholder="https://example.com/product" onFetched={(p: any) => setProduct(p.title || 'Product')} />
           </Field>
-          <Field label="Category (Optional)"><Select variant="outline" defaultValue=""><option value="" disabled>Select a category</option>{['Tops', 'Bottoms', 'Dresses', 'Outerwear'].map(c => <option key={c}>{c}</option>)}</Select></Field>
+          <Field label="Category (Optional)"><Select variant="outline" value={category} onChange={(e: any) => setCategory(e.target.value)}><option value="">Select a category</option>{['Tops', 'Bottoms', 'Dresses', 'Outerwear'].map(c => <option key={c}>{c}</option>)}</Select></Field>
         </CISectionCard>
 
         <CISectionCard title="What size(s) are you looking for?">
@@ -129,7 +154,7 @@ export function CreateInquiryScreen({ onRoute, authed = false }: any) {
             </ul>
           </div>
         )}
-        <Button variant="primary" fullWidth size="lg" onClick={submitInquiry}>Submit Inquiry</Button>
+        <Button variant="primary" fullWidth size="lg" disabled={saving} onClick={submitInquiry}>{saving ? 'Posting…' : 'Submit Inquiry'}</Button>
       </div>
     </div>
   );
