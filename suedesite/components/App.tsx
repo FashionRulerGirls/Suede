@@ -61,7 +61,7 @@ const TWEAK_DEFAULTS = {
 };
 
 function AppInner() {
-  const { user, signOut } = useAuth();
+  const { user, signOut, recovery } = useAuth();
   const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
   const [route, setRouteRaw] = React.useState('landing');
   // Real auth drives `authed`; the test override lets the QA harness (and any
@@ -150,20 +150,11 @@ function AppInner() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Handle where /auth/callback sends people: recovery links → reset screen,
-  // failed links → sign-in (so they can retry), then clean the URL.
+  // A password-recovery link signs the user into a recovery session; send them
+  // to the reset-password screen so they can set a new password.
   React.useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('recovery') === '1') {
-      setRouteRaw('reset');
-      window.history.replaceState({}, '', window.location.pathname);
-    } else if (params.get('auth_error')) {
-      setRouteRaw('signin');
-      window.history.replaceState({}, '', window.location.pathname);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    if (recovery) setRouteRaw('reset');
+  }, [recovery]);
 
   const screens: Record<string, any> = {
     landing: LandingScreen,

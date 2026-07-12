@@ -20,6 +20,8 @@ type AuthValue = {
   session: Session | null;
   user: User | null;
   profile: Profile;
+  recovery: boolean;
+  clearRecovery: () => void;
   reloadProfile: () => Promise<void>;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
   signUp: (
@@ -40,6 +42,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = React.useState<Session | null>(null);
   const [profile, setProfile] = React.useState<Profile>(null);
   const [ready, setReady] = React.useState(false);
+  const [recovery, setRecovery] = React.useState(false);
 
   React.useEffect(() => {
     if (!supabase) { setReady(true); return; }
@@ -47,8 +50,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     supabase.auth.getSession().then(({ data }) => {
       if (active) { setSession(data.session); setReady(true); }
     });
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => {
+    // The browser client processes the URL after email/OAuth redirects
+    // (detectSessionInUrl) and emits the event that signs the user in.
+    const { data: sub } = supabase.auth.onAuthStateChange((event, s) => {
       setSession(s);
+      if (event === 'PASSWORD_RECOVERY') setRecovery(true);
     });
     return () => { active = false; sub.subscription.unsubscribe(); };
   }, [supabase]);
@@ -71,6 +77,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     session,
     user: session?.user ?? null,
     profile,
+    recovery,
+    clearRecovery: () => setRecovery(false),
     reloadProfile: loadProfile,
     async signIn(email, password) {
       if (!supabase) return { error: 'Sign-in is not available yet.' };
@@ -84,7 +92,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         password,
         options: {
           data: meta,
-          emailRedirectTo: typeof window !== 'undefined' ? `${window.location.origin}/auth/callback` : undefined,
+          emailRedirectTo: typeof window !== 'undefined' ? `${window.location.origin}/` : undefined,
         },
       });
       if (error) return { error: error.message, needsConfirm: false };
@@ -95,14 +103,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!supabase) return { error: 'Sign-in is not available yet.' };
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
-        options: { redirectTo: typeof window !== 'undefined' ? `${window.location.origin}/auth/callback` : undefined },
+        options: { redirectTo: typeof window !== 'undefined' ? `${window.location.origin}/` : undefined },
       });
       return { error: error?.message ?? null };
     },
     async resetPassword(email) {
       if (!supabase) return { error: 'Not available yet.' };
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: typeof window !== 'undefined' ? `${window.location.origin}/auth/callback?type=recovery` : undefined,
+        redirectTo: typeof window !== 'undefined' ? `${window.location.origin}/` : undefined,
       });
       return { error: error?.message ?? null };
     },
