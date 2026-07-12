@@ -84,7 +84,8 @@ create table measurements (
   torso_in      numeric,
   usual_sizes   jsonb default '{}'::jsonb,  -- {tops_letter:"M", tops_num:"8", waist:"28", plus:null}
   -- how these numbers were produced → feeds the Match confidence level
-  source        text,   -- 'tape' (self-guided consultation) | 'quiz' (AI estimate) | 'manual' (typed)
+  source        text,     -- 'tape' (self-guided consultation) | 'quiz' (AI estimate) | 'manual' (typed)
+  source_confidence numeric,  -- 0–1 trust in the numbers themselves (see below)
   updated_at    timestamptz not null default now()
 );
 -- Note: values are stored as numeric INCHES (5'6" → 66) so Match can compare them;
@@ -287,9 +288,12 @@ create table quiz_results (            -- AI Measurement Quiz
   id         uuid primary key default gen_random_uuid(),
   user_id    uuid references profiles(id) on delete cascade,  -- null if anonymous
   answers    jsonb not null,
-  derived    jsonb,   -- measurement estimates the quiz produced
+  derived    jsonb,       -- measurement estimates the quiz produced
+  confidence numeric,     -- quiz's own 0–1 score from answer quality/consistency
   created_at timestamptz not null default now()
 );
+-- When a quiz result is saved to `measurements`: source='quiz',
+-- source_confidence = quiz.confidence × quiz_ceiling (a quiz never beats a tape measure).
 
 create table notifications (
   id          uuid primary key default gen_random_uuid(),
@@ -310,18 +314,23 @@ create table newsletter_subscribers (
 );
 ```
 
-**Notifications — live vs. on-load (hybrid).** Without Realtime you'd only see new
-notifications after a reload. Rather than make *everything* live, a small set of
-**time-sensitive** types stream in instantly via Supabase Realtime; the rest are simply
-fetched when you open the app or the notifications page.
+**Notifications — working framework (under discussion).** Two questions per type:
+*how much does the user act on it* and *how time-sensitive is it?* That decides the tier
+and the channel (in-app bell / live / email). Draft below — to be finalized before build.
 
-| Priority (LIVE at launch) | Fetched on load |
-|---|---|
-| Someone **responds to your inquiry** | New follower |
-| A **measurement-matched review** you'd want (your size/silhouette) | Comment on your review |
-| — | "A brand you follow joined The Capsule" |
+| Notification | Acts on it? | Time-sensitive? | Proposed tier & channel |
+|---|---|---|---|
+| Response to **your inquiry** | High | High | **Tier 1 — live** + email |
+| Security (new login, password change) | High | High | **Tier 1 — email** (transactional) |
+| New **matched review** in your size/silhouette | High | Med | **Tier 1 — live or daily digest** |
+| Comment/reply on **your** review or response | Med | Med | Tier 2 — in-app (fetched) |
+| New follower | Med | Low | Tier 2 — in-app (fetched) |
+| Someone you follow posted a review/inquiry | Med | Low | Tier 3 — feed, no notification |
+| Brand you follow: new review / joined Capsule | Med | Low | Tier 3 — fetched or weekly digest |
+| Someone found your review **helpful** (like) | Low | Low | Tier 4 — batched/off by default |
 
-*(This split is a proposal — easy to move a type from one column to the other.)*
+Open calls: (a) is a matched-review **live** or a **daily digest** (live could get noisy)?
+(b) which are **email** vs. in-app only at launch? (c) anything here that shouldn't exist yet?
 
 ---
 
@@ -379,10 +388,16 @@ Match has **two ingredients** (per your call):
 
 1. **Proximity** — how close two people's measurements are (waist vs. waist, etc.),
    as a 0–100 `score`.
-2. **Confidence** — how much to trust that score, based on **how each person's
-   measurements were generated** (`measurements.source`). Tape-measured
-   (consultation) or carefully typed = high trust; an AI-quiz estimate = lower. The
-   pair's confidence is capped by the *less certain* of the two people.
+2. **Confidence** — how much to trust that score, stored per member as
+   `measurements.source_confidence` (0–1), derived from **how the numbers were made**:
+   - `tape` (consultation) → ~**1.0** (measured with a tape)
+   - `manual` (typed in) → ~**0.9** (self-reported)
+   - `quiz` → the quiz **emits its own confidence** from how the questions were answered
+     (completeness/consistency), and we then **layer the quiz discount on top** —
+     `source_confidence = quiz_self_confidence × quiz_ceiling` (e.g. ceiling ≈ 0.75). So a
+     thorough quiz beats a sloppy one, but a quiz never outranks a real tape measurement.
+
+   The pair's confidence is capped by the *less certain* of the two people.
 
 The displayed **High / Medium / Low** indicator blends both — a close match between
 two tape-measured members reads "High"; an equally close match where one side is a
@@ -407,12 +422,10 @@ language sql security definer stable as $$
     ))::int as score
     from a, b
   ),
-  -- source → trust weight; the pair is only as certain as its weaker source
+  -- the pair is only as certain as its weaker source_confidence (0–1)
   conf as (
-    select least(
-      case a.source when 'quiz' then 0.7 else 1.0 end,
-      case b.source when 'quiz' then 0.7 else 1.0 end
-    ) as w
+    select least(coalesce(a.source_confidence, 0.9),
+                 coalesce(b.source_confidence, 0.9)) as w
     from a, b
   )
   select p.score,
@@ -507,15 +520,18 @@ Each step is shippable on its own; the app keeps working on mock data for anythi
 - **Brand Portal** — rebuild in-app, but **deferred** (last phase / after launch).
 - **Media limits** — ≤5 photos / ≤2 videos / ≤60s, enforced server-side.
 - **Measurements** — stored as numeric **inches** for matching; feet/inches shown to users;
-  "usual sizes" stay as labels.
-- **Suede Match** — **proximity + confidence**, where confidence factors how each person's
-  measurements were made (`measurements.source`: tape / manual = high, quiz = lower). Launch
-  with the starting formula and tune with real data.
-- **Notifications** — hybrid: inquiry responses + measurement-matched reviews are **live**
-  (Realtime); the rest fetched on load.
+  "usual sizes" stay as labels. ✅ confirmed
+- **Suede Match** — **proximity + confidence**. Confidence = per-member
+  `source_confidence` (tape ≈1.0, manual ≈0.9, quiz = its own answer-quality score ×
+  a quiz ceiling), pair capped by the weaker side. Launch with this and tune on real data.
 - **Auto-flag list** — start from a standard open-source blocklist, refine over time.
+
+### Still thinking 🤔
+- **Notifications** — stepping back to decide which notification types matter most, which are
+  live vs. fetched vs. email-digest, before building. See the working tiers below.
 
 ---
 
-*Everything's settled. Next step: **Phase 1 (Foundation)** — generate the migration SQL
-files, wire the Supabase client into the app, and seed brands from `lib/data.ts`.*
+*Next once notifications are settled: **Phase 1 (Foundation)** — migration SQL, Supabase
+client wired in, brands seeded from `lib/data.ts`. (Foundation doesn't depend on the
+notification decision, so we can start it in parallel whenever you're ready.)*
