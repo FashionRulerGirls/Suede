@@ -12,10 +12,14 @@ import { createClient } from '@/lib/supabase/client';
 import { loadProfileData, inchesToHeight, inchesDisplay } from '@/lib/profileData';
 import { loadUserReviews, loadUserInquiries } from '@/lib/contentData';
 
-function YProfStat({ value, label, links }: any) {
+function YProfStat({ value, label, links, onValue }: any) {
+  const valueStyle = { fontFamily: 'var(--font-meta)', fontWeight: 500, fontSize: 30, lineHeight: 1, color: 'var(--text-heading)' } as const;
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, minWidth: 130 }}>
-      <span style={{ fontFamily: 'var(--font-meta)', fontWeight: 500, fontSize: 30, lineHeight: 1, color: 'var(--text-heading)' }}>{value}</span>
+      {onValue
+        ? <button onClick={onValue} style={{ ...valueStyle, background: 'none', border: 'none', padding: 0, cursor: 'pointer', transition: 'opacity var(--dur-fast) var(--ease-out)' }}
+            onMouseEnter={(e) => e.currentTarget.style.opacity = '0.6'} onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}>{value}</button>
+        : <span style={valueStyle}>{value}</span>}
       <span style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-secondary)' }}>{label}</span>
       {links && links.length > 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5, marginTop: 2 }}>
@@ -238,8 +242,8 @@ export function YourProfileScreen({ onRoute }: any) {
             <div className="sd-yprof-statrow" style={{ display: 'flex', justifyContent: 'center', gap: 64, paddingTop: 28, borderTop: '1px solid var(--border-subtle)', textAlign: 'center', width: '100%' }}>
               <YProfStat value={m.reviews} label="Reviews" />
               <YProfStat value={m.inquiries} label="Inquiries" />
-              <YProfStat value={m.brands} label="Brands Followed" links={[{ label: 'Capsule Feed', onClick: () => setView('capsulefeed') }, { label: 'See all brands', onClick: () => setView('brands') }]} />
-              <YProfStat value={m.followers} label="Followers" links={[{ label: 'Collective Feed', onClick: () => setView('collectivefeed') }, { label: 'See all followers', onClick: () => setView('followers') }]} />
+              <YProfStat value={m.brands} label="Brands Followed" onValue={() => setView('brands')} links={[{ label: 'Capsule Feed', onClick: () => setView('capsulefeed') }]} />
+              <YProfStat value={m.followers} label="Followers" onValue={() => setView('followers')} links={[{ label: 'Collective Feed', onClick: () => setView('collectivefeed') }]} />
             </div>
           </div>
         </div>
