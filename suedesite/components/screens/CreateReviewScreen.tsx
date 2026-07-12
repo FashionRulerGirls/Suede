@@ -10,6 +10,7 @@ import { ProductFetch } from '@/components/screens/ProductFetch';
 import { useAuth } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/client';
 import { createReview } from '@/lib/contentData';
+import { uploadReviewMedia } from '@/lib/storage';
 
 function StarRow({ label, value, onChange }: any) {
   const [hover, setHover] = React.useState(0);
@@ -114,14 +115,14 @@ export function CreateReviewScreen({ onRoute, authed = false }: any) {
   const [reviewText, setReviewText] = React.useState('');
   const [otherSize, setOtherSize] = React.useState('');
   const [contentLink, setContentLink] = React.useState('');
-  const [photos, setPhotos] = React.useState<string[]>([]);
+  const [photos, setPhotos] = React.useState<{ url: string; file: File }[]>([]);
   const [errors, setErrors] = React.useState<string[]>([]);
   const [submitted, setSubmitted] = React.useState(false);
   const [saving, setSaving] = React.useState(false);
   const onPhotos = (e: any) => {
-    const files = Array.from(e.target.files || []) as any[];
+    const files = Array.from(e.target.files || []) as File[];
     if (!files.length) return;
-    setPhotos(p => [...p, ...files.slice(0, Math.max(0, 5 - p.length)).map((f) => URL.createObjectURL(f))]);
+    setPhotos(p => [...p, ...files.slice(0, Math.max(0, 5 - p.length)).map((f) => ({ url: URL.createObjectURL(f), file: f }))]);
   };
 
   const setRating = (k: any, v: any) => {
@@ -143,7 +144,7 @@ export function CreateReviewScreen({ onRoute, authed = false }: any) {
     if (sb && user) {
       setSaving(true);
       try {
-        await createReview(sb, user.id, {
+        const created = await createReview(sb, user.id, {
           brandName: brandType === 'Capsule Brand' ? brandSel : nonCapsuleBrand.trim(),
           productName: productSel.trim(),
           contentLink: contentLink.trim() || undefined,
@@ -156,6 +157,9 @@ export function CreateReviewScreen({ onRoute, authed = false }: any) {
           hideMeasurements: hideMeasure,
           sizeSatisfaction: satisfaction ?? null,
         });
+        if (created?.id && photos.length) {
+          await uploadReviewMedia(sb, user.id, created.id, photos.map((p) => p.file));
+        }
       } catch (err: any) {
         setSaving(false);
         setErrors([err?.message || 'Something went wrong saving your review. Please try again.']);
@@ -358,9 +362,9 @@ export function CreateReviewScreen({ onRoute, authed = false }: any) {
           <div style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-muted)', marginBottom: 14, marginTop: -8 }}>Up to 5 photos • Up to 2 videos • Video max length 60 seconds</div>
           {photos.length > 0 && (
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginBottom: 14 }}>
-              {photos.map((src, i) => (
+              {photos.map((ph, i) => (
                 <span key={i} style={{ position: 'relative', width: 84, height: 104, background: 'var(--linen)', overflow: 'hidden' }}>
-                  <img src={src} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  <img src={ph.url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   <button type="button" onClick={() => setPhotos(p => p.filter((_, j) => j !== i))} aria-label="Remove photo"
                     style={{ position: 'absolute', top: 4, right: 4, width: 22, height: 22, borderRadius: '50%', border: 'none', background: 'rgba(20,18,15,0.7)', color: 'var(--white)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <Icon name="close" size={13} color="var(--white)" />

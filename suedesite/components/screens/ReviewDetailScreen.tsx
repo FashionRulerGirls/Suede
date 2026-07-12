@@ -6,7 +6,7 @@ import { SUEDE_BRANDS } from '@/lib/data';
 import { appState } from '@/lib/appState';
 import { useAuth } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/client';
-import { loadReviewById, loadReviewComments, postReviewComment, formatDate } from '@/lib/contentData';
+import { loadReviewById, loadReviewComments, postReviewComment, loadReviewMedia, formatDate } from '@/lib/contentData';
 
 function SubRating({ label, value }: any) {
   return (
@@ -41,6 +41,7 @@ export function ReviewDetailScreen({ onRoute, authed = false }: any) {
   const real = !!r._id; // came from the database (vs. the guest/demo sample)
   const { user, profile } = useAuth();
   const [full, setFull] = React.useState<any>(null);
+  const [mediaUrls, setMediaUrls] = React.useState<string[]>([]);
   const [comments, setComments] = React.useState<any[]>(real ? [] : [
     { avatar: '/assets/avatars/avatar-rose.jpg', name: 'Sophie L.', when: '2 days ago', likes: 3, body: "These look amazing! How do they compare to your usual size? I'm between sizes too." },
     { avatar: '/assets/avatars/avatar-blue.jpg', name: 'Maria T.', when: '1 day ago', likes: 1, body: 'The drape on these is beautiful. Do they stretch at all in the waist?' },
@@ -53,20 +54,21 @@ export function ReviewDetailScreen({ onRoute, authed = false }: any) {
     let active = true;
     loadReviewById(sb, r._id).then((f) => { if (active) setFull(f); }).catch(() => {});
     loadReviewComments(sb, r._id).then((c) => { if (active) setComments(c); }).catch(() => {});
+    loadReviewMedia(sb, r._id).then((u) => { if (active) setMediaUrls(u); }).catch(() => {});
     return () => { active = false; };
   }, [r._id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const reviewer = r.reviewer || { name: 'Kikiola Akanbi', handle: '@kikiolaakanbi', avatar: '/assets/avatars/avatar-asaya.jpg' };
   const hideMeas = real ? !!full?.hide_measurements : false;
   const m = r.measurements || { height: "5'5\"", bust: '33"', waist: '29"', hips: '40"' };
-  const image = real ? '' : (r.image || '/assets/imagery/fit-bomber.png');
+  const image = real ? (mediaUrls[0] || '') : (r.image || '/assets/imagery/fit-bomber.png');
   const product = (real ? (full?.product_name || r.product) : r.product) || 'Tailored Wide-Leg Trouser';
   const brand = (real ? (full?.brand_name || r.brand) : r.brand) || 'Nadi';
   const body = (real ? (full?.body || r.excerpt) : r.full) || r.excerpt || "These trousers are everything. The wide leg is flattering without being overwhelming, and they hit at just the right length for my height. True to size for my measurements—I ordered a medium and it fits perfectly at the waist and hips. The fabric has a beautiful drape with a subtle sheen that elevates any outfit. I've worn them to work with a silk blouse and also dressed them down with sneakers on the weekend. The tailoring is impeccable—you can tell these are made to last. The only minor note is that they do wrinkle easily, so steaming before wear is recommended. Overall, absolutely worth the investment for a versatile wardrobe staple.";
   const dateStr = real ? (full ? formatDate(full.created_at) : '') : '01 February 2026';
   const size = real ? (full?.size_value || full?.size_other || '') : (r.size || '');
   const productUrl = real ? full?.product_url : null;
-  const thumbs = real ? [] : [image, image, image, image];
+  const thumbs = real ? mediaUrls : [image, image, image, image];
   const subRatings = real
     ? ([['Sizing Accuracy', 'rating_sizing'], ['Material Quality', 'rating_material'], ['Value for Price', 'rating_value'], ['True to Photos', 'rating_photos'], ['Customer service', 'rating_service']] as const)
         .map(([label, key]) => ({ label, value: full?.[key] })).filter((s) => s.value != null)

@@ -169,6 +169,36 @@ export function inquiryRowToCard(row: any) {
 const REVIEW_SELECT = '*, author:profiles!author_id(username, display_name, avatar_url)';
 const INQUIRY_SELECT = '*, author:profiles!author_id(username, display_name, avatar_url)';
 
+// media has a polymorphic parent (no FK to embed), so fetch it in one batch and
+// attach the first image + an "extra" count to each card.
+async function attachReviewMedia(sb: SupabaseClient, cards: any[]) {
+  const ids = cards.map((c) => c._id).filter(Boolean);
+  if (!ids.length) return cards;
+  const { data } = await sb
+    .from('media')
+    .select('parent_id, url, kind, position')
+    .eq('parent_type', 'review')
+    .in('parent_id', ids)
+    .order('position', { ascending: true });
+  const byId: Record<string, any[]> = {};
+  (data || []).forEach((m: any) => { (byId[m.parent_id] = byId[m.parent_id] || []).push(m); });
+  return cards.map((c) => {
+    const ms = byId[c._id] || [];
+    const first = ms.find((m: any) => m.kind === 'image') || ms[0];
+    return { ...c, image: first?.url || c.image, extraCount: ms.length > 1 ? ms.length - 1 : undefined };
+  });
+}
+
+export async function loadReviewMedia(sb: SupabaseClient, reviewId: string): Promise<string[]> {
+  const { data } = await sb
+    .from('media')
+    .select('url, kind, position')
+    .eq('parent_type', 'review')
+    .eq('parent_id', reviewId)
+    .order('position', { ascending: true });
+  return (data || []).filter((m: any) => m.kind === 'image').map((m: any) => m.url);
+}
+
 export async function loadUserReviews(sb: SupabaseClient, userId: string) {
   const { data } = await sb
     .from('reviews')
@@ -176,7 +206,7 @@ export async function loadUserReviews(sb: SupabaseClient, userId: string) {
     .eq('author_id', userId)
     .neq('status', 'removed')
     .order('created_at', { ascending: false });
-  return (data || []).map(reviewRowToCard);
+  return attachReviewMedia(sb, (data || []).map(reviewRowToCard));
 }
 
 export async function loadUserInquiries(sb: SupabaseClient, userId: string) {
@@ -197,7 +227,7 @@ export async function loadPublishedReviews(sb: SupabaseClient, limit = 48) {
     .eq('status', 'published')
     .order('created_at', { ascending: false })
     .limit(limit);
-  return (data || []).map(reviewRowToCard);
+  return attachReviewMedia(sb, (data || []).map(reviewRowToCard));
 }
 
 export async function loadPublishedInquiries(sb: SupabaseClient, limit = 48) {
@@ -216,7 +246,7 @@ export async function loadBrandReviews(sb: SupabaseClient, brandName: string, br
   let q = sb.from('reviews').select(REVIEW_SELECT).eq('status', 'published');
   q = id ? q.or(`brand_id.eq.${id},brand_name.ilike.${brandName}`) : q.ilike('brand_name', brandName);
   const { data } = await q.order('created_at', { ascending: false });
-  return (data || []).map(reviewRowToCard);
+  return attachReviewMedia(sb, (data || []).map(reviewRowToCard));
 }
 
 export async function loadBrandInquiries(sb: SupabaseClient, brandName: string, brandId?: string | null) {

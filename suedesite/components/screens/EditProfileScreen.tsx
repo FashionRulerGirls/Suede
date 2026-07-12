@@ -13,6 +13,7 @@ import {
   heightToInches, inchesToHeight, toInches, inchesDisplay,
   buildUsualSizes, splitUsualSizes,
 } from '@/lib/profileData';
+import { uploadAvatar } from '@/lib/storage';
 
 const EP_STEPS = [
   { id: 'personal', label: 'Personal Info', icon: 'user' },
@@ -202,9 +203,10 @@ const BLANK = {
 };
 
 export function EditProfileScreen({ onRoute, authed = false }: any) {
-  const { user } = useAuth();
+  const { user, reloadProfile } = useAuth();
   const [step, setStep] = React.useState(0);
   const [avatarSrc, setAvatarSrc] = React.useState('');
+  const [avatarFile, setAvatarFile] = React.useState<File | null>(null);
   const [f, setF] = React.useState<any>({ ...BLANK });
   const set = (k: string, v: any) => setF((p: any) => ({ ...p, [k]: v }));
   const [sizes, setSizes] = React.useState<any>({ topsLetter: '', topsNum: '', botLetter: '', botNum: '', waist: '', plus: '' });
@@ -215,7 +217,7 @@ export function EditProfileScreen({ onRoute, authed = false }: any) {
 
   const onAvatarPick = (e: any) => {
     const file = e.target.files?.[0];
-    if (file) setAvatarSrc(URL.createObjectURL(file));
+    if (file) { setAvatarFile(file); setAvatarSrc(URL.createObjectURL(file)); }
   };
 
   // Load the signed-in member's profile + measurements
@@ -263,6 +265,11 @@ export function EditProfileScreen({ onRoute, authed = false }: any) {
     if (!sb || !user) return true; // demo mode (no backend) — just advance
     if (!f.username.trim()) { setSaveErr('Username is required.'); return false; }
     setSaving(true); setSaveErr(null);
+    let avatar_url: string | undefined;
+    if (avatarFile) {
+      try { avatar_url = await uploadAvatar(sb, user.id, avatarFile); }
+      catch { setSaving(false); setSaveErr('Photo upload failed. Please try again.'); return false; }
+    }
     const [{ error: e1 }, { error: e2 }] = await Promise.all([
       saveProfileFields(sb, user.id, {
         display_name: f.display_name.trim() || f.username.trim(),
@@ -274,6 +281,7 @@ export function EditProfileScreen({ onRoute, authed = false }: any) {
         measurements_public: !f.private_measurements,
         email_notifications: f.email_notifications,
         show_in_collective: f.show_in_collective,
+        ...(avatar_url ? { avatar_url } : {}),
       } as any),
       saveMeasurements(sb, user.id, {
         height_in: heightToInches(f.height),
@@ -296,6 +304,8 @@ export function EditProfileScreen({ onRoute, authed = false }: any) {
     ]);
     setSaving(false);
     if (e1 || e2) { setSaveErr((e1 || e2)!.message); return false; }
+    setAvatarFile(null);
+    if (reloadProfile) void reloadProfile();
     if (typeof window !== 'undefined') window.dispatchEvent(new Event('suede-profile-updated'));
     return true;
   };
