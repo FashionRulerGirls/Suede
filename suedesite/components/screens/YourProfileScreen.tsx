@@ -7,6 +7,9 @@ import { appState } from '@/lib/appState';
 import { SuedeControls } from '@/lib/listControls';
 import { FullMeasureRow } from '@/components/screens/FullMeasureRow';
 import { InquiryCard } from '@/components/screens/LookbookScreen';
+import { useAuth } from '@/lib/auth';
+import { createClient } from '@/lib/supabase/client';
+import { loadProfileData, inchesToHeight, inchesDisplay } from '@/lib/profileData';
 
 function YProfStat({ value, label, links }: any) {
   return (
@@ -26,7 +29,17 @@ function YProfStat({ value, label, links }: any) {
 }
 
 export function YourProfileScreen({ onRoute }: any) {
-  const m = {
+  const { user } = useAuth();
+  const [db, setDb] = React.useState<any>(null);
+  React.useEffect(() => {
+    const sb = createClient();
+    if (!sb || !user) { setDb(null); return; }
+    let active = true;
+    loadProfileData(sb, user.id).then((d) => { if (active) setDb(d); }).catch(() => {});
+    return () => { active = false; };
+  }, [user?.id]);
+
+  const MOCK = {
     name: 'Kikiola Kanbi', handle: '@kikiolakanbi', avatar: '/assets/avatars/avatar-rose.jpg',
     social: '@kikiola_kanbi', bio: "I love to explore the brands and Fashion. It's my hobbyy.",
     measurements: { height: "5'7\"", bust: '34"', waist: '26"', hips: '36"' },
@@ -34,6 +47,30 @@ export function YourProfileScreen({ onRoute }: any) {
     usualSizes: { 'Tops': ['M', '8'], 'Bottoms': ['M', '8'], 'Waist': ['28"'] },
     followers: '30', reviews: '24', inquiries: '12', brands: '8',
   };
+  const p = db?.profile;
+  const ms = db?.measurements;
+  const real = !!p;   // a real signed-in account; otherwise fall back to the demo
+  const m = real ? {
+    name: p.display_name || p.username,
+    handle: '@' + p.username,
+    avatar: p.avatar_url || '/assets/avatars/avatar-rose.jpg',
+    social: p.instagram || p.tiktok || ('@' + p.username),
+    bio: p.bio || '',
+    measurements: {
+      height: inchesToHeight(ms?.height_in) || undefined,
+      bust: inchesDisplay(ms?.bust_in) || undefined,
+      waist: inchesDisplay(ms?.waist_in) || undefined,
+      hips: inchesDisplay(ms?.hips_in) || undefined,
+    },
+    fullMeasurements: {
+      'Inseam': inchesDisplay(ms?.inseam_in) || undefined,
+      'Shoulder Width': inchesDisplay(ms?.shoulder_in) || undefined,
+      'Arm Length': inchesDisplay(ms?.arm_in) || undefined,
+      'Torso Length': inchesDisplay(ms?.torso_in) || undefined,
+    },
+    usualSizes: ms?.usual_sizes || {},
+    followers: '0', reviews: '0', inquiries: '0', brands: '0',
+  } : MOCK;
   const [tab, setTab] = React.useState('reviews');
   const [view, setView] = React.useState(appState.profileView || 'profile'); // profile | brands | followers
   React.useEffect(() => {
@@ -45,10 +82,10 @@ export function YourProfileScreen({ onRoute }: any) {
   const [feedTab, setFeedTab] = React.useState('reviews');
   const [feedQuery, setFeedQuery] = React.useState('');
   const [feedSort, setFeedSort] = React.useState('date');
-  const reviews = SUEDE_REVIEWS || [];
+  const reviews = real ? [] : (SUEDE_REVIEWS || []);
   const meReviewer = { name: m.name, handle: m.handle, avatar: m.avatar };
-  const feed = [...reviews, ...reviews].slice(0, 2).map(r => ({ ...r, reviewer: meReviewer }));
-  const inquiries = (SUEDE_INQUIRIES || []).slice(0, 2).map(it => ({ ...it, asker: meReviewer }));
+  const feed = real ? [] : [...reviews, ...reviews].slice(0, 2).map(r => ({ ...r, reviewer: meReviewer }));
+  const inquiries = real ? [] : (SUEDE_INQUIRIES || []).slice(0, 2).map(it => ({ ...it, asker: meReviewer }));
   const openReview = (r: any) => { appState.review = r; onRoute('review'); };
 
   if (view !== 'profile') {
@@ -219,17 +256,35 @@ export function YourProfileScreen({ onRoute }: any) {
         })()}
 
         {/* Feed */}
-        {tab === 'reviews' ? (
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 28, marginTop: 28, paddingBottom: 20 }}>
-            {feed.filter(r => r.brand.toLowerCase().includes(feedQuery.trim().toLowerCase())).map((r, i) => <ReviewCard key={i} {...r} hideMeasurements onSeeFull={() => openReview(r)} />)}
-          </div>
-        ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 28, marginTop: 28, paddingBottom: 20 }}>
-            {inquiries.filter(it => it.brand.toLowerCase().includes(feedQuery.trim().toLowerCase())).map((it, i) => {
-              return <InquiryCard key={i} {...it} hideMeasurements onOpen={() => { appState.inquiry = it; onRoute('inquiry'); }} />;
-            })}
-          </div>
-        )}
+        {(() => {
+          const list = tab === 'reviews' ? feed : inquiries;
+          if (list.length === 0) {
+            return (
+              <div style={{ textAlign: 'center', padding: '56px 0 40px' }}>
+                <p style={{ fontFamily: 'var(--font-serif)', fontSize: 22, color: 'var(--text-heading)', margin: '0 0 6px' }}>
+                  {tab === 'reviews' ? "You haven't written any reviews yet." : "You haven't posted any inquiries yet."}
+                </p>
+                <p style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-muted)', margin: '0 0 20px' }}>
+                  {tab === 'reviews' ? 'Share how something fit — help the community shop with confidence.' : 'Ask the community about fit before you buy.'}
+                </p>
+                <Button variant="primary" shape="pill" onClick={() => onRoute(tab === 'reviews' ? 'createreview' : 'createinquiry')}>
+                  {tab === 'reviews' ? 'Write a Review' : 'Leave an Inquiry'}
+                </Button>
+              </div>
+            );
+          }
+          return tab === 'reviews' ? (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 28, marginTop: 28, paddingBottom: 20 }}>
+              {feed.filter(r => r.brand.toLowerCase().includes(feedQuery.trim().toLowerCase())).map((r, i) => <ReviewCard key={i} {...r} hideMeasurements onSeeFull={() => openReview(r)} />)}
+            </div>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 28, marginTop: 28, paddingBottom: 20 }}>
+              {inquiries.filter(it => it.brand.toLowerCase().includes(feedQuery.trim().toLowerCase())).map((it, i) => {
+                return <InquiryCard key={i} {...it} hideMeasurements onOpen={() => { appState.inquiry = it; onRoute('inquiry'); }} />;
+              })}
+            </div>
+          );
+        })()}
       </div>
     </div>
   );
