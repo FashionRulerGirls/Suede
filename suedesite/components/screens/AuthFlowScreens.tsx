@@ -110,7 +110,6 @@ export function CreateAccountScreen({ onRoute }: any) {
           <Button variant="primary" fullWidth disabled={busy} onClick={submit}>{busy ? 'Creating…' : 'Create Account'}</Button>
           <OrDivider />
           <Button variant="secondary" fullWidth icon="google" onClick={() => oauth('google')}>Continue with Google</Button>
-          <Button variant="secondary" fullWidth icon="apple" onClick={() => oauth('apple')}>Continue with Apple</Button>
         </div>
       </Card>
       <p style={{ textAlign: 'center', fontFamily: 'var(--font-body)', fontSize: 15, color: 'var(--text-muted)', margin: '30px 0 0' }}>
