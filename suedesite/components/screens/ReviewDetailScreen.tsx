@@ -6,7 +6,7 @@ import { SUEDE_BRANDS } from '@/lib/data';
 import { appState } from '@/lib/appState';
 import { useAuth } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/client';
-import { loadReviewById, loadReviewComments, postReviewComment, loadReviewMedia, formatDate } from '@/lib/contentData';
+import { loadReviewById, loadReviewComments, postReviewComment, loadReviewMedia, formatDate, canEditReview, deleteReview } from '@/lib/contentData';
 
 function SubRating({ label, value }: any) {
   return (
@@ -80,6 +80,20 @@ export function ReviewDetailScreen({ onRoute, authed = false }: any) {
         .map(([label, key]) => ({ label, value: full?.[key] })).filter((s) => s.value != null)
     : [{ label: 'Sizing Accuracy', value: 4 }, { label: 'Material Quality', value: 4 }, { label: 'Value for Price', value: 4 }, { label: 'True to Photos', value: 4 }, { label: 'Customer service', value: 4 }];
 
+  // Author-only actions: edit (within 24h of posting) and delete.
+  const isAuthor = real && !!user && !!full && full.author_id === user.id;
+  const editable = isAuthor && canEditReview(full?.created_at);
+  const [deleting, setDeleting] = React.useState(false);
+  const onEdit = () => { appState.editReview = { ...full }; onRoute('createreview'); };
+  const onDelete = async () => {
+    if (typeof window !== 'undefined' && !window.confirm('Delete this review? This can’t be undone.')) return;
+    const sb = createClient();
+    if (!sb || !user) return;
+    setDeleting(true);
+    try { await deleteReview(sb, user.id, r._id); onRoute('yourprofile'); }
+    catch { setDeleting(false); }
+  };
+
   const [draft, setDraft] = React.useState('');
   const [posting, setPosting] = React.useState(false);
   const postComment = async () => {
@@ -104,9 +118,25 @@ export function ReviewDetailScreen({ onRoute, authed = false }: any) {
 
   return (
     <div className="sd-rev-wrap" style={{ maxWidth: 1240, margin: '0 auto', padding: '28px 40px 0' }}>
-      <button onClick={() => onRoute('lookbook')} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-secondary)', marginBottom: 24 }}>
-        <Icon name="arrow-left" size={16} color="var(--text-secondary)" /> Back to Lookbook
-      </button>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, marginBottom: 24, flexWrap: 'wrap' }}>
+        <button onClick={() => onRoute('lookbook')} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-secondary)' }}>
+          <Icon name="arrow-left" size={16} color="var(--text-secondary)" /> Back to Lookbook
+        </button>
+        {isAuthor && (
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 18 }}>
+            {editable ? (
+              <button onClick={onEdit} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-primary)' }}>
+                <Icon name="pen" size={15} color="var(--text-primary)" /> Edit
+              </button>
+            ) : (
+              <span style={{ fontFamily: 'var(--font-body)', fontSize: 12.5, color: 'var(--text-muted)' }}>Edits close 24h after posting</span>
+            )}
+            <button onClick={onDelete} disabled={deleting} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--rating-critical)', textDecoration: 'underline', textUnderlineOffset: 3 }}>
+              {deleting ? 'Deleting…' : 'Delete'}
+            </button>
+          </div>
+        )}
+      </div>
 
       <div className="sd-rev-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 60, alignItems: 'start' }}>
         {/* Left — gallery */}

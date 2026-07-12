@@ -9,7 +9,7 @@ import { SignInGate } from '@/components/screens/SignInGate';
 import { ProductFetch } from '@/components/screens/ProductFetch';
 import { useAuth } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/client';
-import { createReview } from '@/lib/contentData';
+import { createReview, updateReview } from '@/lib/contentData';
 import { uploadReviewMedia } from '@/lib/storage';
 
 function StarRow({ label, value, onChange }: any) {
@@ -98,22 +98,28 @@ export function CreateReviewScreen({ onRoute, authed = false }: any) {
   const brands = SUEDE_BRANDS || [];
   // When arriving from a brand page, that brand is pre-selected.
   const presetBrand = appState.reviewBrand;
-  React.useEffect(() => { appState.reviewBrand = null; }, []);
-  const [mode, setMode] = React.useState('search');
-  const [ratings, setRatings] = React.useState({ sizing: 0, material: 0, value: 0, photos: 0, service: 0 });
-  const [scale, setScale] = React.useState('Letter');
-  const [size, setSize] = React.useState('');
-  const [rec, setRec] = React.useState<any>(null);
+  // Editing an existing review (within its 24h window). Read once on mount.
+  const editReview = React.useRef<any>(appState.editReview).current;
+  const editing = !!editReview;
+  const editId = editReview?.id;
+  React.useEffect(() => { appState.reviewBrand = null; appState.editReview = null; }, []);
+  const [mode, setMode] = React.useState(editing ? 'manual' : 'search');
+  const [ratings, setRatings] = React.useState(editing
+    ? { sizing: editReview.rating_sizing || 0, material: editReview.rating_material || 0, value: editReview.rating_value || 0, photos: editReview.rating_photos || 0, service: editReview.rating_service || 0 }
+    : { sizing: 0, material: 0, value: 0, photos: 0, service: 0 });
+  const [scale, setScale] = React.useState(editing ? (editReview.size_scale || 'Letter') : 'Letter');
+  const [size, setSize] = React.useState(editing ? (editReview.size_value || '') : '');
+  const [rec, setRec] = React.useState<any>(editing ? (editReview.recommend === true ? 'yes' : editReview.recommend === false ? 'no' : null) : null);
   const [modal, setModal] = React.useState(false);
-  const [hideMeasure, setHideMeasure] = React.useState(false);
-  const [brandType, setBrandType] = React.useState('Capsule Brand');
-  const [brandSel, setBrandSel] = React.useState(presetBrand?.name || '');
+  const [hideMeasure, setHideMeasure] = React.useState(editing ? !!editReview.hide_measurements : false);
+  const [brandType, setBrandType] = React.useState(editing ? (editReview.brand_id ? 'Capsule Brand' : 'Non-Capsule Brand') : 'Capsule Brand');
+  const [brandSel, setBrandSel] = React.useState(editing ? (editReview.brand_id ? (editReview.brand_name || '') : '') : (presetBrand?.name || ''));
   const [brandOpen, setBrandOpen] = React.useState(false);
   const [brandQuery, setBrandQuery] = React.useState('');
-  const [productSel, setProductSel] = React.useState('');
-  const [nonCapsuleBrand, setNonCapsuleBrand] = React.useState('');
-  const [reviewText, setReviewText] = React.useState('');
-  const [otherSize, setOtherSize] = React.useState('');
+  const [productSel, setProductSel] = React.useState(editing ? (editReview.product_name || '') : '');
+  const [nonCapsuleBrand, setNonCapsuleBrand] = React.useState(editing && !editReview.brand_id ? (editReview.brand_name || '') : '');
+  const [reviewText, setReviewText] = React.useState(editing ? (editReview.body || '') : '');
+  const [otherSize, setOtherSize] = React.useState(editing ? (editReview.size_other || '') : '');
   const [contentLink, setContentLink] = React.useState('');
   const [photos, setPhotos] = React.useState<{ url: string; file: File }[]>([]);
   const [errors, setErrors] = React.useState<string[]>([]);
@@ -146,7 +152,7 @@ export function CreateReviewScreen({ onRoute, authed = false }: any) {
     if (sb && user) {
       setSaving(true);
       try {
-        const created = await createReview(sb, user.id, {
+        const payload = {
           brandName: brandType === 'Capsule Brand' ? brandSel : nonCapsuleBrand.trim(),
           productName: productSel.trim(),
           contentLink: contentLink.trim() || undefined,
@@ -158,9 +164,15 @@ export function CreateReviewScreen({ onRoute, authed = false }: any) {
           recommend: rec === 'yes' ? true : rec === 'no' ? false : null,
           hideMeasurements: hideMeasure,
           sizeSatisfaction: satisfaction ?? null,
-        });
-        if (created?.id && photos.length) {
-          await uploadReviewMedia(sb, user.id, created.id, photos.map((p) => p.file));
+        };
+        if (editing && editId) {
+          await updateReview(sb, user.id, editId, payload);
+          if (photos.length) await uploadReviewMedia(sb, user.id, editId, photos.map((p) => p.file));
+        } else {
+          const created = await createReview(sb, user.id, payload);
+          if (created?.id && photos.length) {
+            await uploadReviewMedia(sb, user.id, created.id, photos.map((p) => p.file));
+          }
         }
       } catch (err: any) {
         setSaving(false);
@@ -205,12 +217,14 @@ export function CreateReviewScreen({ onRoute, authed = false }: any) {
         <span style={{ width: 64, height: 64, borderRadius: '50%', background: 'var(--ink-900)', color: 'var(--white)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
           <Icon name="check" size={30} color="var(--white)" />
         </span>
-        <h1 style={{ fontFamily: 'var(--font-serif)', fontWeight: 500, fontSize: 40, color: 'var(--text-heading)', margin: 0 }}>Review submitted</h1>
+        <h1 style={{ fontFamily: 'var(--font-serif)', fontWeight: 500, fontSize: 40, color: 'var(--text-heading)', margin: 0 }}>{editing ? 'Review updated' : 'Review submitted'}</h1>
         <p style={{ fontFamily: 'var(--font-body)', fontSize: 16, color: 'var(--text-secondary)', margin: 0, maxWidth: 480, lineHeight: 1.6 }}>
-          Thank you for sharing your fit. Your review helps the community shop with confidence.
+          {editing ? 'Your changes are live.' : 'Thank you for sharing your fit. Your review helps the community shop with confidence.'}
         </p>
         <div style={{ display: 'flex', gap: 14, marginTop: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
-          <Button variant="secondary" onClick={resetForm}>Write another</Button>
+          {editing
+            ? <Button variant="secondary" onClick={() => onRoute('yourprofile')}>Back to profile</Button>
+            : <Button variant="secondary" onClick={resetForm}>Write another</Button>}
           <Button variant="primary" onClick={() => onRoute('lookbook')}>View The Lookbook</Button>
         </div>
       </div>
@@ -223,8 +237,8 @@ export function CreateReviewScreen({ onRoute, authed = false }: any) {
       {/* Hero header */}
       <div style={{ position: 'relative', textAlign: 'center', padding: '60px 24px 36px' }}>
         <div style={{ position: 'relative' }}>
-          <h1 style={{ fontFamily: 'var(--font-serif)', fontWeight: 500, fontSize: 40, color: 'var(--text-heading)', margin: 0 }}>Submit a Review</h1>
-          <p style={{ fontFamily: 'var(--font-body)', fontSize: 15, color: 'var(--text-muted)', marginTop: 10 }}>Share how clothing fits on your body and help others shop with confidence.</p>
+          <h1 style={{ fontFamily: 'var(--font-serif)', fontWeight: 500, fontSize: 40, color: 'var(--text-heading)', margin: 0 }}>{editing ? 'Edit Review' : 'Submit a Review'}</h1>
+          <p style={{ fontFamily: 'var(--font-body)', fontSize: 15, color: 'var(--text-muted)', marginTop: 10 }}>{editing ? 'Update your review. Photos you add here are appended to the existing ones.' : 'Share how clothing fits on your body and help others shop with confidence.'}</p>
         </div>
       </div>
 
@@ -434,7 +448,7 @@ export function CreateReviewScreen({ onRoute, authed = false }: any) {
             </ul>
           </div>
         )}
-        <Button variant="primary" fullWidth size="lg" disabled={saving} onClick={submitReview}>{saving ? 'Submitting…' : 'Submit Review'}</Button>
+        <Button variant="primary" fullWidth size="lg" disabled={saving} onClick={submitReview}>{saving ? 'Saving…' : (editing ? 'Save Changes' : 'Submit Review')}</Button>
       </div>
 
       <SizeSatisfactionModal open={modal} onClose={() => setModal(false)} onContinue={(s: any) => void finalize(s)} />

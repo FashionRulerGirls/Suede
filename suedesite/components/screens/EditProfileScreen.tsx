@@ -14,6 +14,7 @@ import {
   buildUsualSizes, splitUsualSizes,
 } from '@/lib/profileData';
 import { uploadAvatar } from '@/lib/storage';
+import { AvatarCropper } from '@/components/screens/AvatarCropper';
 
 const EP_STEPS = [
   { id: 'personal', label: 'Personal Info', icon: 'user' },
@@ -207,6 +208,7 @@ export function EditProfileScreen({ onRoute, authed = false }: any) {
   const [step, setStep] = React.useState(0);
   const [avatarSrc, setAvatarSrc] = React.useState('');
   const [avatarFile, setAvatarFile] = React.useState<File | null>(null);
+  const [cropFile, setCropFile] = React.useState<File | null>(null);
   const [f, setF] = React.useState<any>({ ...BLANK });
   const set = (k: string, v: any) => setF((p: any) => ({ ...p, [k]: v }));
   const [sizes, setSizes] = React.useState<any>({ topsLetter: '', topsNum: '', botLetter: '', botNum: '', waist: '', plus: '' });
@@ -217,7 +219,8 @@ export function EditProfileScreen({ onRoute, authed = false }: any) {
 
   const onAvatarPick = (e: any) => {
     const file = e.target.files?.[0];
-    if (file) { setAvatarFile(file); setAvatarSrc(URL.createObjectURL(file)); }
+    if (file) setCropFile(file); // open the cropper before committing the photo
+    e.target.value = '';
   };
 
   // Load the signed-in member's profile + measurements
@@ -321,6 +324,13 @@ export function EditProfileScreen({ onRoute, authed = false }: any) {
 
   return (
     <div style={{ position: 'relative', minHeight: '90vh' }}>
+      {cropFile && (
+        <AvatarCropper
+          file={cropFile}
+          onCancel={() => setCropFile(null)}
+          onCropped={(f: File, url: string) => { setAvatarFile(f); setAvatarSrc(url); setCropFile(null); }}
+        />
+      )}
       <div className="sd-ep-wrap" style={{ position: 'relative', zIndex: 1, maxWidth: 1320, margin: '0 auto', padding: '24px 48px 0' }}>
         <button onClick={() => onRoute('yourprofile')} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-secondary)', marginBottom: 28 }}>
           <Icon name="arrow-left" size={16} color="var(--text-secondary)" /> Back to Profile

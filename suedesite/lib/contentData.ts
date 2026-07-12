@@ -91,6 +91,45 @@ export async function createReview(sb: SupabaseClient, userId: string, r: NewRev
   return data;
 }
 
+// Edits are allowed for 24h after posting.
+export const EDIT_WINDOW_MS = 24 * 60 * 60 * 1000;
+export function canEditReview(createdAt?: string): boolean {
+  if (!createdAt) return false;
+  return Date.now() - new Date(createdAt).getTime() < EDIT_WINDOW_MS;
+}
+
+export async function updateReview(sb: SupabaseClient, userId: string, reviewId: string, r: Partial<NewReview>) {
+  const patch: Record<string, any> = {};
+  if (r.brandName !== undefined) {
+    patch.brand_id = await resolveBrandId(sb, r.brandName);
+    patch.brand_name = r.brandName?.trim() || null;
+  }
+  if (r.productName !== undefined) patch.product_name = r.productName.trim();
+  if (r.sizeScale !== undefined) patch.size_scale = r.sizeScale || null;
+  if (r.sizeValue !== undefined) patch.size_value = r.sizeValue || null;
+  if (r.sizeOther !== undefined) patch.size_other = r.sizeOther?.trim() || null;
+  if (r.ratings) {
+    patch.rating_sizing = clampRating(r.ratings.sizing);
+    patch.rating_material = clampRating(r.ratings.material);
+    patch.rating_value = clampRating(r.ratings.value);
+    patch.rating_photos = clampRating(r.ratings.photos);
+    patch.rating_service = clampRating(r.ratings.service);
+  }
+  if (r.body !== undefined) patch.body = r.body.trim();
+  if (r.recommend !== undefined) patch.recommend = r.recommend;
+  if (r.hideMeasurements !== undefined) patch.hide_measurements = !!r.hideMeasurements;
+  if (r.sizeSatisfaction !== undefined) patch.size_satisfaction = r.sizeSatisfaction ?? null;
+  const { error } = await sb.from('reviews').update(patch).eq('id', reviewId).eq('author_id', userId);
+  if (error) throw error;
+}
+
+// Soft delete: hide from every feed (author-update RLS permits this; no hard
+// delete policy needed). Media/comments remain but become unreachable.
+export async function deleteReview(sb: SupabaseClient, userId: string, reviewId: string) {
+  const { error } = await sb.from('reviews').update({ status: 'removed' }).eq('id', reviewId).eq('author_id', userId);
+  if (error) throw error;
+}
+
 export type NewInquiry = {
   brandName?: string;
   productName: string;
