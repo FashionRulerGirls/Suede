@@ -296,6 +296,7 @@ export function EditProfileScreen({ onRoute, authed = false }: any) {
     ]);
     setSaving(false);
     if (e1 || e2) { setSaveErr((e1 || e2)!.message); return false; }
+    if (typeof window !== 'undefined') window.dispatchEvent(new Event('suede-profile-updated'));
     return true;
   };
 

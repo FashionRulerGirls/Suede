@@ -6,6 +6,7 @@ import React from 'react';
 
 import { Nav } from '@/components/screens/Nav';
 import { Footer } from '@/components/screens/Footer';
+import { ProfileProgress } from '@/components/screens/ProfileProgress';
 import { LandingScreen } from '@/components/screens/LandingScreen';
 import { CapsuleScreen } from '@/components/screens/CapsuleScreen';
 import { BrandScreen } from '@/components/screens/BrandScreen';
@@ -156,6 +157,21 @@ function AppInner() {
     if (recovery) setRouteRaw('reset');
   }, [recovery]);
 
+  // First time a member is seen signed in on this device, send them straight
+  // to their profile to finish setup. (Recovery sessions are excluded.)
+  React.useEffect(() => {
+    if (!user || recovery) return;
+    try {
+      const key = 'suede_onboarded_' + user.id;
+      if (!localStorage.getItem(key)) {
+        localStorage.setItem(key, '1');
+        setRouteRaw('yourprofile');
+        scrollTop();
+      }
+    } catch { /* storage unavailable */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, recovery]);
+
   const screens: Record<string, any> = {
     landing: LandingScreen,
     capsule: CapsuleScreen,
@@ -189,6 +205,7 @@ function AppInner() {
   return (
     <div id="root">
       <Nav route={route} onRoute={setRoute} authed={authed} />
+      <ProfileProgress route={route} onRoute={setRoute} />
       <Screen onRoute={setRoute} tweaks={t} authed={authed} />
       <Footer onRoute={setRoute} />
       <TweaksPanel title="Tweaks">
