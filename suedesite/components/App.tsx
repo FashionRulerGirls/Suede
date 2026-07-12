@@ -43,6 +43,7 @@ import {
   TweakText,
 } from '@/components/TweaksPanel';
 import { appState } from '@/lib/appState';
+import { AuthProvider, useAuth } from '@/lib/auth';
 import {
   SUEDE_BRANDS,
   SUEDE_REVIEWS,
@@ -59,10 +60,14 @@ const TWEAK_DEFAULTS = {
     'DISCOVER, REVIEW, & SHOP MINORITY-OWNED AND EMERGING BRANDS WITH CONFIDENCE',
 };
 
-export default function App() {
+function AppInner() {
+  const { user, signOut } = useAuth();
   const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
   const [route, setRouteRaw] = React.useState('landing');
-  const [authed, setAuthed] = React.useState(false);
+  // Real auth drives `authed`; the test override lets the QA harness (and any
+  // environment where Supabase is unreachable) exercise signed-in screens.
+  const [testAuthed, setTestAuthed] = React.useState(false);
+  const authed = !!user || testAuthed;
   const returnToRef = React.useRef<string | null>(null);
   const AUTH_ROUTES = ['signin', 'createaccount', 'forgot', 'verify', 'reset', 'brandsignin'];
 
@@ -79,7 +84,7 @@ export default function App() {
 
   const setRoute = (r: string) => {
     if (r === '__signin' || r === '__signedin') {
-      setAuthed(true);
+      // A real session (via Supabase) already flips `authed`; just navigate back.
       const back = returnToRef.current;
       returnToRef.current = null;
       setRouteRaw(back || 'landing');
@@ -87,7 +92,8 @@ export default function App() {
       return;
     }
     if (r === '__signout') {
-      setAuthed(false);
+      setTestAuthed(false);
+      void signOut();
       returnToRef.current = null;
       setRouteRaw('landing');
       scrollTop();
@@ -139,8 +145,18 @@ export default function App() {
         appState.member = SUEDE_MEMBERS[0];
         appState.inquiry = SUEDE_INQUIRIES[0];
       },
-      setAuthed,
+      setAuthed: setTestAuthed,
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Password-recovery links (via /auth/callback?type=recovery) land at /?recovery=1
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (new URLSearchParams(window.location.search).get('recovery') === '1') {
+      setRouteRaw('reset');
+      window.history.replaceState({}, '', window.location.pathname);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -216,5 +232,13 @@ export default function App() {
         />
       </TweaksPanel>
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <AppInner />
+    </AuthProvider>
   );
 }
