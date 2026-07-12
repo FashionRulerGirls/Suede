@@ -456,6 +456,35 @@ left join brand_follows bf on bf.brand_id = b.id
 group by b.id;
 ```
 
+### Measurement sources → the same profile fields
+
+All three ways of getting measurements write to the **same `measurements` row**.
+Confirmed coverage (everything stored as inches):
+
+| Field | Manual (Edit Profile) | Tape (Consultation) | Quiz (Quick Fit) |
+|---|---|---|---|
+| `height_in` | ✅ | ✅ | ✅ (asked, not estimated) |
+| `bust_in` | ✅ | ✅ | ✅ estimated |
+| `waist_in` | ✅ | ✅ | ✅ estimated |
+| `hips_in` | ✅ | ✅ | ✅ estimated |
+| `inseam_in` | ✅ | ✅ (optional) | ✅ estimated |
+| `shoulder_in` | ✅ | ✅ (optional) | — left blank |
+| `arm_in` | ✅ | ✅ (optional) | — left blank |
+| `torso_in` | ✅ | ✅ (optional) | — (torso is a quiz *input* cue, not an output) |
+| `usual_sizes` | ✅ | ✅ | ✅ |
+| `source` | `manual` | `tape` | `quiz` |
+| `source_confidence` | ~0.9 | ~1.0 | quiz's high/med/low → **0.7 / 0.55 / 0.4** (already the layered value) |
+
+Write-layer notes (for Phase 1):
+- **Normalize height to total inches** — Consultation captures feet+inches; Quiz supports
+  ft/in *or* cm. All convert to `height_in`.
+- **Map field names** — Consultation/UI use `shoulder_width`/`arm_length`/`torso_length`;
+  DB uses `shoulder_in`/`arm_in`/`torso_in` (1:1).
+- **Quiz fills a subset** — the three optional measurements stay null on a quiz-only
+  profile (expected; they're optional). Users refine anytime in Edit Profile.
+- The quiz already surfaces "lower match confidence than a measured profile," matching the
+  Match model exactly.
+
 ---
 
 ## 7. How today's screens map to the schema
