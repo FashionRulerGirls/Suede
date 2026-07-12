@@ -192,8 +192,6 @@ export function YourProfileScreen({ onRoute }: any) {
   return (
     <div style={{ position: 'relative' }}>
       {/* faint hanger watermark */}
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 520, backgroundImage: 'url(/assets/imagery/hero-hangers.png)', backgroundRepeat: 'no-repeat', backgroundPosition: 'center -40px', backgroundSize: 'auto 88%', opacity: 0.06, pointerEvents: 'none', zIndex: 0 }} />
-
       <div style={{ position: 'relative', zIndex: 1, maxWidth: 1240, margin: '0 auto', padding: '28px 40px 0' }}>
         <button onClick={() => onRoute('collective')} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-secondary)', marginBottom: 24 }}>
           <Icon name="arrow-left" size={16} color="var(--text-secondary)" /> Back to The Collective

@@ -204,7 +204,7 @@ const BLANK = {
 export function EditProfileScreen({ onRoute, authed = false }: any) {
   const { user } = useAuth();
   const [step, setStep] = React.useState(0);
-  const [avatarSrc, setAvatarSrc] = React.useState('/assets/avatars/avatar-rose.jpg');
+  const [avatarSrc, setAvatarSrc] = React.useState('');
   const [f, setF] = React.useState<any>({ ...BLANK });
   const set = (k: string, v: any) => setF((p: any) => ({ ...p, [k]: v }));
   const [sizes, setSizes] = React.useState<any>({ topsLetter: '', topsNum: '', botLetter: '', botNum: '', waist: '', plus: '' });
@@ -310,8 +310,6 @@ export function EditProfileScreen({ onRoute, authed = false }: any) {
 
   return (
     <div style={{ position: 'relative', minHeight: '90vh' }}>
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 360, backgroundImage: 'url(/assets/imagery/hero-hangers.png)', backgroundRepeat: 'no-repeat', backgroundPosition: 'center -60px', backgroundSize: 'auto 80%', opacity: 0.10, pointerEvents: 'none', zIndex: 0 }} />
-
       <div className="sd-ep-wrap" style={{ position: 'relative', zIndex: 1, maxWidth: 1320, margin: '0 auto', padding: '24px 48px 0' }}>
         <button onClick={() => onRoute('yourprofile')} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-secondary)', marginBottom: 28 }}>
           <Icon name="arrow-left" size={16} color="var(--text-secondary)" /> Back to Profile
@@ -322,7 +320,7 @@ export function EditProfileScreen({ onRoute, authed = false }: any) {
             <label style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', marginBottom: 28, cursor: 'pointer' }}>
               <input type="file" accept="image/*" onChange={onAvatarPick} style={{ display: 'none' }} />
               <div style={{ position: 'relative' }}>
-                <Avatar src={avatarSrc} name={f.display_name || 'You'} size={92} ring />
+                <Avatar src={avatarSrc} name={f.display_name || ''} size={92} ring />
                 <span style={{ position: 'absolute', right: 2, bottom: 2, width: 30, height: 30, borderRadius: '50%', background: 'var(--ink-900)', color: 'var(--white)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid var(--paper)' }}>
                   <Icon name="image" size={14} color="var(--white)" />
                 </span>
