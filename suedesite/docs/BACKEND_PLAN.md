@@ -83,8 +83,12 @@ create table measurements (
   arm_in        numeric,
   torso_in      numeric,
   usual_sizes   jsonb default '{}'::jsonb,  -- {tops_letter:"M", tops_num:"8", waist:"28", plus:null}
+  -- how these numbers were produced → feeds the Match confidence level
+  source        text,   -- 'tape' (self-guided consultation) | 'quiz' (AI estimate) | 'manual' (typed)
   updated_at    timestamptz not null default now()
 );
+-- Note: values are stored as numeric INCHES (5'6" → 66) so Match can compare them;
+-- the app still displays feet/inches. `usual_sizes` stays as labels (not for math).
 ```
 
 ### Brands
@@ -306,6 +310,19 @@ create table newsletter_subscribers (
 );
 ```
 
+**Notifications — live vs. on-load (hybrid).** Without Realtime you'd only see new
+notifications after a reload. Rather than make *everything* live, a small set of
+**time-sensitive** types stream in instantly via Supabase Realtime; the rest are simply
+fetched when you open the app or the notifications page.
+
+| Priority (LIVE at launch) | Fetched on load |
+|---|---|
+| Someone **responds to your inquiry** | New follower |
+| A **measurement-matched review** you'd want (your size/silhouette) | Comment on your review |
+| — | "A brand you follow joined The Capsule" |
+
+*(This split is a proposal — easy to move a type from one column to the other.)*
+
 ---
 
 ## 4. Storage buckets
@@ -358,23 +375,30 @@ create policy "author edits own review"
 
 ## 6. Suede Match & aggregate stats (the interesting part)
 
-**Suede Match must never leak raw hidden measurements.** So it's a
-`security definer` function: it can read both people's numbers to compute a
-score, but only returns a **confidence bucket** to callers who aren't the owner.
+Match has **two ingredients** (per your call):
+
+1. **Proximity** — how close two people's measurements are (waist vs. waist, etc.),
+   as a 0–100 `score`.
+2. **Confidence** — how much to trust that score, based on **how each person's
+   measurements were generated** (`measurements.source`). Tape-measured
+   (consultation) or carefully typed = high trust; an AI-quiz estimate = lower. The
+   pair's confidence is capped by the *less certain* of the two people.
+
+The displayed **High / Medium / Low** indicator blends both — a close match between
+two tape-measured members reads "High"; an equally close match where one side is a
+quiz estimate reads "Medium."
+
+**It must never leak raw hidden measurements**, so it's a `security definer` function
+that reads both people's numbers internally but only ever returns the score + bucket.
 
 ```sql
--- returns 0–100 similarity + 'high'|'medium'|'low' from measurement distance
+-- proximity score + a confidence bucket that also factors measurement source
 create or replace function suede_match(viewer uuid, other uuid)
 returns table (score int, confidence text)
 language sql security definer stable as $$
   with a as (select * from measurements where user_id = viewer),
-       b as (select * from measurements where user_id = other)
-  select
-    s.score,
-    case when s.score >= 85 then 'high'
-         when s.score >= 65 then 'medium'
-         else 'low' end
-  from (
+       b as (select * from measurements where user_id = other),
+  prox as (
     select greatest(0, 100 - round(
       ( abs(coalesce(a.bust_in,0)-coalesce(b.bust_in,0))
       + abs(coalesce(a.waist_in,0)-coalesce(b.waist_in,0))
@@ -382,12 +406,25 @@ language sql security definer stable as $$
       + abs(coalesce(a.height_in,0)-coalesce(b.height_in,0)) ) * 2
     ))::int as score
     from a, b
-  ) s;
+  ),
+  -- source → trust weight; the pair is only as certain as its weaker source
+  conf as (
+    select least(
+      case a.source when 'quiz' then 0.7 else 1.0 end,
+      case b.source when 'quiz' then 0.7 else 1.0 end
+    ) as w
+    from a, b
+  )
+  select p.score,
+         case when p.score * c.w >= 85 then 'high'
+              when p.score * c.w >= 65 then 'medium'
+              else 'low' end
+  from prox p, conf c;
 $$;
 ```
 
-*(The exact distance formula/weights are a product call — this is a sane
-starting point. We can tune it once real data exists.)*
+*(Distance weights and the confidence multipliers are product knobs — this is a sane
+starting point we tune once real data exists.)*
 
 Brand stats (rating, review count, follower count) come from a **view** so
 they're always accurate and never drift:
@@ -462,24 +499,23 @@ Each step is shippable on its own; the app keeps working on mock data for anythi
 
 ## 10. Decisions
 
-### Locked ✅
+### All locked ✅
 - **No age minimum** — general-audience; COPPA under-13 deletion honored. (Terms & Privacy updated.)
 - **OAuth** — Google **and** Apple at launch (Apple needs a paid Apple Developer account).
 - **Moderation** — reviews **publish instantly**; auto-flag suspicious ones (bad content,
   possible brand misspellings) into an admin queue via `moderation_flags`.
 - **Brand Portal** — rebuild in-app, but **deferred** (last phase / after launch).
-
-### Still open ❓
-1. **Media limits** — enforce ≤5 photos / ≤2 videos / ≤60s server-side. Confirm the numbers.
-2. **Measurements input** — store canonical **inches** for matching, keep letter/numeric
-   size scales as "usual sizes." OK?
-3. **Notifications** — live (Realtime) from day one, or simple on-load fetch first?
-4. **Match formula** — launch with the simple measurement-distance function above and tune
-   once real data exists?
-5. **Auto-flag keyword list** — do you want to provide the profanity/blocklist, or should we
-   start from a standard open-source list and you refine it?
+- **Media limits** — ≤5 photos / ≤2 videos / ≤60s, enforced server-side.
+- **Measurements** — stored as numeric **inches** for matching; feet/inches shown to users;
+  "usual sizes" stay as labels.
+- **Suede Match** — **proximity + confidence**, where confidence factors how each person's
+  measurements were made (`measurements.source`: tape / manual = high, quiz = lower). Launch
+  with the starting formula and tune with real data.
+- **Notifications** — hybrid: inquiry responses + measurement-matched reviews are **live**
+  (Realtime); the rest fetched on load.
+- **Auto-flag list** — start from a standard open-source blocklist, refine over time.
 
 ---
 
-*Next step once the "still open" items are settled: **Phase 1 (Foundation)** — generate the
-migration SQL files, wire the Supabase client into the app, and seed brands from `lib/data.ts`.*
+*Everything's settled. Next step: **Phase 1 (Foundation)** — generate the migration SQL
+files, wire the Supabase client into the app, and seed brands from `lib/data.ts`.*
