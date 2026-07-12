@@ -150,11 +150,16 @@ function AppInner() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Password-recovery links (via /auth/callback?type=recovery) land at /?recovery=1
+  // Handle where /auth/callback sends people: recovery links → reset screen,
+  // failed links → sign-in (so they can retry), then clean the URL.
   React.useEffect(() => {
     if (typeof window === 'undefined') return;
-    if (new URLSearchParams(window.location.search).get('recovery') === '1') {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('recovery') === '1') {
       setRouteRaw('reset');
+      window.history.replaceState({}, '', window.location.pathname);
+    } else if (params.get('auth_error')) {
+      setRouteRaw('signin');
       window.history.replaceState({}, '', window.location.pathname);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
