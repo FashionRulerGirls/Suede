@@ -23,6 +23,41 @@ const EP_STEPS = [
   { id: 'account', label: 'Account', icon: 'lock' },
 ];
 
+const MEASURE_OPTIONS = [
+  { id: 'consult', label: 'Self-Guided Measurement Consultation', note: 'Walk through a self-guided at-home measurement session' },
+  { id: 'quiz', label: 'AI Body Measurement Quiz', note: 'Get quick directional sizing based on a short questionnaire' },
+  { id: 'manual', label: 'I Know My Measurements', note: 'Enter your measurements directly below' },
+];
+
+function MeasureChooser({ onPick, onClose }: any) {
+  return (
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 60, background: 'rgba(20,18,15,0.62)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+      <div onClick={(e) => e.stopPropagation()} style={{ width: 560, maxWidth: '100%', background: 'var(--surface-card)', boxShadow: 'var(--shadow-lg)', padding: '28px 36px 34px', position: 'relative' }}>
+        <button onClick={onClose} aria-label="Close" style={{ position: 'absolute', top: 22, right: 24, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-primary)', display: 'flex' }}>
+          <Icon name="close" size={22} />
+        </button>
+        <h2 style={{ textAlign: 'center', fontFamily: 'var(--font-serif)', fontWeight: 400, fontSize: 26, color: 'var(--text-heading)', margin: '4px 0 6px' }}>How would you like to add your measurements?</h2>
+        <p style={{ textAlign: 'center', fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-muted)', margin: '0 0 18px' }}>Accurate measurements mean better fit recommendations across Suede.</p>
+        <div style={{ height: 1, background: 'var(--border-subtle)', marginBottom: 18 }} />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {MEASURE_OPTIONS.map((it) => (
+            <button key={it.id} onClick={() => onPick(it.id)}
+              style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 14, background: 'var(--surface-card)', border: '1px solid var(--border-default)', padding: '16px 18px', cursor: 'pointer', textAlign: 'left', transition: 'border-color var(--dur-fast) var(--ease-out)' }}
+              onMouseEnter={(e) => e.currentTarget.style.borderColor = 'var(--ink-900)'}
+              onMouseLeave={(e) => e.currentTarget.style.borderColor = 'var(--border-default)'}>
+              <span style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                <span style={{ fontFamily: 'var(--font-serif)', fontWeight: 400, fontSize: 17, color: 'var(--text-primary)' }}>{it.label}</span>
+                <span style={{ fontFamily: 'var(--font-body)', fontSize: 12.5, color: 'var(--text-muted)' }}>{it.note}</span>
+              </span>
+              <Icon name="chevron-right" size={16} color="var(--text-secondary)" />
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function EPLabel({ children, hint }: any) {
   return (
     <div style={{ marginBottom: 8 }}>
@@ -215,6 +250,10 @@ export function EditProfileScreen({ onRoute, authed = false }: any) {
   const setSize = (k: any, v: any) => setSizes((s: any) => ({ ...s, [k]: v }));
   const [saving, setSaving] = React.useState(false);
   const [saveErr, setSaveErr] = React.useState<string | null>(null);
+  // On the Measurements step, offer how to add measurements (guided / quiz /
+  // manual) before showing the manual fields. Members who already have
+  // measurements skip straight to the fields.
+  const [measureMode, setMeasureMode] = React.useState<'choose' | 'manual'>('choose');
   const cur = EP_STEPS[step].id;
 
   const onAvatarPick = (e: any) => {
@@ -258,6 +297,10 @@ export function EditProfileScreen({ onRoute, authed = false }: any) {
           torso: inchesDisplay(measurements.torso_in),
         }));
         if (measurements.usual_sizes) setSizes((s: any) => ({ ...s, ...splitUsualSizes(measurements.usual_sizes) }));
+        // Already has measurements → go straight to the fields, no chooser.
+        if (measurements.height_in || measurements.bust_in || measurements.waist_in || measurements.hips_in) {
+          setMeasureMode('manual');
+        }
       }
     }).catch(() => {});
     return () => { active = false; };
@@ -329,6 +372,16 @@ export function EditProfileScreen({ onRoute, authed = false }: any) {
           file={cropFile}
           onCancel={() => setCropFile(null)}
           onCropped={(f: File, url: string) => { setAvatarFile(f); setAvatarSrc(url); setCropFile(null); }}
+        />
+      )}
+      {cur === 'measurements' && measureMode === 'choose' && (
+        <MeasureChooser
+          onClose={() => setMeasureMode('manual')}
+          onPick={(id: string) => {
+            if (id === 'quiz') onRoute('quiz');
+            else if (id === 'consult') onRoute('consult');
+            else setMeasureMode('manual');
+          }}
         />
       )}
       <div className="sd-ep-wrap" style={{ position: 'relative', zIndex: 1, maxWidth: 1320, margin: '0 auto', padding: '24px 48px 0' }}>
