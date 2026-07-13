@@ -247,6 +247,37 @@ export async function deleteReviewMedia(sb: SupabaseClient, mediaId: string) {
   if (error) throw error;
 }
 
+// ── reactions (likes / helpful) ────────────────────────────────────
+export type ReactionType = 'review' | 'review_comment' | 'inquiry_response';
+
+// Counts per entity + which the current user has reacted to, for a batch of ids.
+export async function loadReactions(sb: SupabaseClient, userId: string | undefined, entityType: ReactionType, ids: string[]) {
+  const clean = ids.filter(Boolean);
+  if (!clean.length) return { counts: {} as Record<string, number>, mine: new Set<string>() };
+  const { data } = await sb.from('reactions').select('entity_id, user_id').eq('entity_type', entityType).in('entity_id', clean);
+  const counts: Record<string, number> = {};
+  const mine = new Set<string>();
+  (data || []).forEach((r: any) => {
+    counts[r.entity_id] = (counts[r.entity_id] || 0) + 1;
+    if (userId && r.user_id === userId) mine.add(r.entity_id);
+  });
+  return { counts, mine };
+}
+
+export async function setReaction(sb: SupabaseClient, userId: string, entityType: ReactionType, entityId: string, on: boolean) {
+  if (on) {
+    const { error } = await sb.from('reactions').upsert(
+      { user_id: userId, entity_type: entityType, entity_id: entityId },
+      { onConflict: 'user_id,entity_type,entity_id' },
+    );
+    if (error) throw error;
+  } else {
+    const { error } = await sb.from('reactions').delete()
+      .eq('user_id', userId).eq('entity_type', entityType).eq('entity_id', entityId);
+    if (error) throw error;
+  }
+}
+
 export async function loadUserReviews(sb: SupabaseClient, userId: string) {
   const { data } = await sb
     .from('reviews')

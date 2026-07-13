@@ -6,7 +6,7 @@ import { SUEDE_BRANDS } from '@/lib/data';
 import { appState } from '@/lib/appState';
 import { useAuth } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/client';
-import { loadReviewById, loadReviewComments, postReviewComment, loadReviewMedia, formatDate, canEditReview, deleteReview } from '@/lib/contentData';
+import { loadReviewById, loadReviewComments, postReviewComment, loadReviewMedia, formatDate, canEditReview, deleteReview, loadReactions, setReaction } from '@/lib/contentData';
 
 function SubRating({ label, value }: any) {
   return (
@@ -17,7 +17,8 @@ function SubRating({ label, value }: any) {
   );
 }
 
-function CommentRow({ avatar, name, when, body, likes }: any) {
+function CommentRow({ avatar, name, when, body, likes, liked, onLike }: any) {
+  const color = liked ? 'var(--rating-positive)' : 'var(--text-muted)';
   return (
     <article style={{ background: 'var(--surface-card)', border: '1px solid var(--border-subtle)', padding: '20px 24px' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 14 }}>
@@ -28,10 +29,10 @@ function CommentRow({ avatar, name, when, body, likes }: any) {
         <span style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: 'var(--text-muted)' }}>{when}</span>
       </div>
       <p style={{ fontFamily: 'var(--font-body)', fontSize: 14, lineHeight: 1.55, color: 'var(--text-secondary)', margin: '12px 0 0', paddingLeft: 48 }}>{body}</p>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginTop: 12, paddingLeft: 48, color: 'var(--text-muted)' }}>
-        <Icon name="thumbs-up" size={14} color="var(--text-muted)" />
+      <button onClick={onLike} disabled={!onLike} style={{ display: 'flex', alignItems: 'center', gap: 7, marginTop: 12, marginLeft: 48, background: 'none', border: 'none', padding: 0, cursor: onLike ? 'pointer' : 'default', color }}>
+        <Icon name="thumbs-up" size={14} color={color} />
         <span style={{ fontFamily: 'var(--font-body)', fontSize: 13 }}>{likes}</span>
-      </div>
+      </button>
     </article>
   );
 }
@@ -43,6 +44,8 @@ export function ReviewDetailScreen({ onRoute, authed = false }: any) {
   const [full, setFull] = React.useState<any>(null);
   const [media, setMedia] = React.useState<{ url: string; kind: string; poster?: string | null }[]>([]);
   const [lb, setLb] = React.useState<number | null>(null);
+  const [reviewLikes, setReviewLikes] = React.useState(0);
+  const [reviewLiked, setReviewLiked] = React.useState(false);
   const [comments, setComments] = React.useState<any[]>(real ? [] : [
     { avatar: '/assets/avatars/avatar-rose.jpg', name: 'Sophie L.', when: '2 days ago', likes: 3, body: "These look amazing! How do they compare to your usual size? I'm between sizes too." },
     { avatar: '/assets/avatars/avatar-blue.jpg', name: 'Maria T.', when: '1 day ago', likes: 1, body: 'The drape on these is beautiful. Do they stretch at all in the waist?' },
@@ -54,10 +57,38 @@ export function ReviewDetailScreen({ onRoute, authed = false }: any) {
     if (!sb) return;
     let active = true;
     loadReviewById(sb, r._id).then((f) => { if (active) setFull(f); }).catch(() => {});
-    loadReviewComments(sb, r._id).then((c) => { if (active) setComments(c); }).catch(() => {});
     loadReviewMedia(sb, r._id).then((u) => { if (active) setMedia(u); }).catch(() => {});
+    // Comments + their like state.
+    loadReviewComments(sb, r._id).then(async (cs) => {
+      if (!active) return;
+      const ids = cs.map((c: any) => c.id).filter(Boolean);
+      const { counts, mine } = await loadReactions(sb, user?.id, 'review_comment', ids).catch(() => ({ counts: {}, mine: new Set<string>() }));
+      if (active) setComments(cs.map((c: any) => ({ ...c, likes: counts[c.id] || 0, liked: mine.has(c.id) })));
+    }).catch(() => {});
+    // The review's own "helpful" reaction.
+    loadReactions(sb, user?.id, 'review', [r._id]).then(({ counts, mine }) => {
+      if (active) { setReviewLikes(counts[r._id] || 0); setReviewLiked(mine.has(r._id)); }
+    }).catch(() => {});
     return () => { active = false; };
-  }, [r._id]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [r._id, user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const toggleReviewLike = async () => {
+    if (!user) { onRoute('signin'); return; }
+    const sb = createClient(); if (!sb) return;
+    const on = !reviewLiked;
+    setReviewLiked(on); setReviewLikes((n) => n + (on ? 1 : -1));
+    try { await setReaction(sb, user.id, 'review', r._id, on); }
+    catch { setReviewLiked(!on); setReviewLikes((n) => n + (on ? -1 : 1)); }
+  };
+  const toggleCommentLike = async (cid: string) => {
+    if (!user) { onRoute('signin'); return; }
+    const sb = createClient(); if (!sb) return;
+    const cur = comments.find((c) => c.id === cid);
+    const on = !cur?.liked;
+    setComments((cs) => cs.map((c) => c.id === cid ? { ...c, liked: on, likes: c.likes + (on ? 1 : -1) } : c));
+    try { await setReaction(sb, user.id, 'review_comment', cid, on); }
+    catch { setComments((cs) => cs.map((c) => c.id === cid ? { ...c, liked: !on, likes: c.likes + (on ? -1 : 1) } : c)); }
+  };
 
   const reviewer = r.reviewer || { name: 'Kikiola Akanbi', handle: '@kikiolaakanbi', avatar: '/assets/avatars/avatar-asaya.jpg' };
   const hideMeas = real ? !!full?.hide_measurements : false;
@@ -215,7 +246,9 @@ export function ReviewDetailScreen({ onRoute, authed = false }: any) {
           )}
 
           <div style={{ display: 'flex', gap: 24, marginTop: 24, paddingTop: 20, borderTop: '1px solid var(--border-subtle)', color: 'var(--text-muted)' }}>
-            {!real && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontFamily: 'var(--font-body)', fontSize: 14 }}><Icon name="thumbs-up" size={16} color="var(--text-muted)" />48 Helpful</span>}
+            {real
+              ? <button onClick={toggleReviewLike} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: 14, color: reviewLiked ? 'var(--rating-positive)' : 'var(--text-muted)' }}><Icon name="thumbs-up" size={16} color={reviewLiked ? 'var(--rating-positive)' : 'var(--text-muted)'} />{reviewLikes} Helpful</button>
+              : <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontFamily: 'var(--font-body)', fontSize: 14 }}><Icon name="thumbs-up" size={16} color="var(--text-muted)" />48 Helpful</span>}
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontFamily: 'var(--font-body)', fontSize: 14 }}><Icon name="message" size={16} color="var(--text-muted)" />{comments.length} {comments.length === 1 ? 'Comment' : 'Comments'}</span>
           </div>
         </div>
@@ -225,7 +258,7 @@ export function ReviewDetailScreen({ onRoute, authed = false }: any) {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginTop: 48 }}>
         {comments.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '32px 0', fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-muted)' }}>No comments yet — start the conversation.</div>
-        ) : comments.map((c, i) => <CommentRow key={c.id || i} {...c} />)}
+        ) : comments.map((c, i) => <CommentRow key={c.id || i} {...c} onLike={real && c.id ? () => toggleCommentLike(c.id) : undefined} />)}
       </div>
 
       {/* CTA / composer */}
