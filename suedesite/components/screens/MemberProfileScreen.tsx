@@ -9,7 +9,7 @@ import { FullMeasureRow } from '@/components/screens/FullMeasureRow';
 import { InquiryCard } from '@/components/screens/LookbookScreen';
 import { useAuth } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/client';
-import { isFollowingMember, setMemberFollow } from '@/lib/contentData';
+import { isFollowingMember, setMemberFollow, loadMemberProfile, loadMemberReviews, loadMemberInquiries } from '@/lib/contentData';
 
 function MProfStat({ value, label }: any) {
   return (
@@ -33,13 +33,29 @@ export function MemberProfileScreen({ onRoute }: any) {
   const [mQuery, setMQuery] = React.useState('');
   const [mSort, setMSort] = React.useState('date');
   const [following, setFollowing] = React.useState(false);
+  const [realProf, setRealProf] = React.useState<any>(null);
+  const [realReviews, setRealReviews] = React.useState<any[] | null>(null);
+  const [realInquiries, setRealInquiries] = React.useState<any[] | null>(null);
   React.useEffect(() => {
     const sb = createClient();
     if (!sb || !user || !memberId) return;
     let active = true;
     isFollowingMember(sb, user.id, memberId).then((f) => { if (active) setFollowing(f); }).catch(() => {});
+    loadMemberProfile(sb, memberId, user.id).then((p) => { if (active) setRealProf(p); }).catch(() => {});
+    loadMemberReviews(sb, memberId, user.id).then((r) => { if (active) setRealReviews(r); }).catch(() => { if (active) setRealReviews([]); });
+    loadMemberInquiries(sb, memberId, user.id).then((r) => { if (active) setRealInquiries(r); }).catch(() => { if (active) setRealInquiries([]); });
     return () => { active = false; };
   }, [user?.id, memberId]);
+  // For a real member, present live profile data (measurements, counts, feed).
+  const rp = realProf;
+  const disp = rp ? {
+    ...m,
+    name: rp.name, handle: rp.handle, avatar: rp.avatar, bio: rp.bio, social: rp.social,
+    measurements: { height: rp.measurements.height, bust: rp.measurements.bust, waist: rp.measurements.waist, hips: rp.measurements.hips },
+    fullMeasurements: { 'Inseam': rp.measurements.inseam, 'Shoulder Width': rp.measurements.shoulder, 'Arm Length': rp.measurements.arm, 'Torso Length': rp.measurements.torso },
+    usualSizes: rp.measurements.usual_sizes || {},
+    followers: rp.followers, reviews: rp.reviews, inquiries: rp.inquiries, brands: rp.followingCount,
+  } : m;
   const toggleFollow = async () => {
     const on = !following;
     setFollowing(on);
@@ -50,8 +66,9 @@ export function MemberProfileScreen({ onRoute }: any) {
     catch { setFollowing(!on); }
   };
   const reviews = SUEDE_REVIEWS || [];
-  const feed = [...reviews, ...reviews].slice(0, 2);
-  const inqFeed = [...(SUEDE_INQUIRIES || [])].slice(0, 2);
+  const feed = memberId ? (realReviews || []) : [...reviews, ...reviews].slice(0, 2);
+  const inqFeed = memberId ? (realInquiries || []) : [...(SUEDE_INQUIRIES || [])].slice(0, 2);
+  const feedLoading = !!memberId && (tab === 'reviews' ? realReviews === null : realInquiries === null);
 
   return (
     <div style={{ position: 'relative' }}>
@@ -63,22 +80,22 @@ export function MemberProfileScreen({ onRoute }: any) {
         {/* Header card */}
         <div className="sd-mprof-card" style={{ position: 'relative', backgroundImage: 'linear-gradient(rgba(250,249,246,0.55), rgba(250,249,246,0.55)), url(/assets/imagery/suede-card-bg.jpg)', backgroundSize: 'cover', backgroundPosition: 'center', border: '1px solid var(--border-subtle)', boxShadow: 'var(--shadow-card)', borderRadius: 'var(--radius-sm)', padding: '36px 40px' }}>
           <div className="sd-mprof-top" style={{ display: 'flex', gap: 32, alignItems: 'flex-start' }}>
-            <Avatar src={m.avatar} name={m.name} size={116} ring />
+            <Avatar src={disp.avatar} name={disp.name} size={116} ring />
             <div className="sd-mprof-info" style={{ flex: 1, minWidth: 0 }}>
               <div className="sd-mprof-namerow" style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 22 }}>
                 <div className="sd-mprof-nameblock" style={{ minWidth: 0 }}>
-                  <h1 style={{ fontFamily: 'var(--font-serif)', fontWeight: 500, fontSize: 38, lineHeight: 1.05, color: 'var(--text-heading)', margin: 0 }}>{m.name}</h1>
-                  <div style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-muted)', marginTop: 8 }}>{m.handle}</div>
+                  <h1 style={{ fontFamily: 'var(--font-serif)', fontWeight: 500, fontSize: 38, lineHeight: 1.05, color: 'var(--text-heading)', margin: 0 }}>{disp.name}</h1>
+                  <div style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-muted)', marginTop: 8 }}>{disp.handle}</div>
                   <div className="sd-mprof-socials" style={{ display: 'flex', gap: 20, marginTop: 14 }}>
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-secondary)' }}><Icon name="instagram" size={16} color="var(--text-secondary)" />{m.social}</span>
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-secondary)' }}><Icon name="tiktok" size={16} color="var(--text-secondary)" />{m.social}</span>
+                    {(!rp || rp.instagram) && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-secondary)' }}><Icon name="instagram" size={16} color="var(--text-secondary)" />{rp ? (rp.instagram || disp.social) : disp.social}</span>}
+                    {(!rp || rp.tiktok) && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-secondary)' }}><Icon name="tiktok" size={16} color="var(--text-secondary)" />{rp ? (rp.tiktok || disp.social) : disp.social}</span>}
                   </div>
                 </div>
-                <span className="sd-mprof-action"><Button variant="ghost" trailingIcon={following ? 'check' : 'user-plus'} onClick={toggleFollow}>{following ? 'Following' : 'Follow'}</Button></span>
+                {(!rp || (user && user.id !== memberId)) && <span className="sd-mprof-action"><Button variant="ghost" trailingIcon={following ? 'check' : 'user-plus'} onClick={toggleFollow}>{following ? 'Following' : 'Follow'}</Button></span>}
               </div>
-              <p className="sd-mprof-bio" style={{ fontFamily: 'var(--font-body)', fontSize: 14.5, lineHeight: 1.6, color: 'var(--text-secondary)', margin: '20px 0 0', maxWidth: 560 }}>{m.bio}</p>
+              <p className="sd-mprof-bio" style={{ fontFamily: 'var(--font-body)', fontSize: 14.5, lineHeight: 1.6, color: 'var(--text-secondary)', margin: '20px 0 0', maxWidth: 560 }}>{disp.bio}</p>
               <div className="sd-mprof-measure" style={{ marginTop: 16 }}>
-                <FullMeasureRow base={m.measurements} extra={m.fullMeasurements || { 'Inseam': '30"', 'Shoulder Width': '16"', 'Arm Length': '23"', 'Torso Length': '24"' }} sizes={m.usualSizes || { 'Tops': ['M', '8'], 'Bottoms': ['M', '8'] }} />
+                <FullMeasureRow base={disp.measurements} extra={rp ? disp.fullMeasurements : (disp.fullMeasurements || { 'Inseam': '30"', 'Shoulder Width': '16"', 'Arm Length': '23"', 'Torso Length': '24"' })} sizes={rp ? disp.usualSizes : (disp.usualSizes || { 'Tops': ['M', '8'], 'Bottoms': ['M', '8'] })} />
               </div>
             </div>
           </div>
@@ -86,10 +103,10 @@ export function MemberProfileScreen({ onRoute }: any) {
           {/* Stats — centered */}
           <div style={{ display: 'flex', justifyContent: 'center', marginTop: 32 }}>
             <div className="sd-mprof-stats" style={{ display: 'flex', justifyContent: 'center', gap: 64, paddingTop: 28, borderTop: '1px solid var(--border-subtle)', textAlign: 'center', width: '100%' }}>
-              <MProfStat value={m.reviews} label="Reviews" />
-              <MProfStat value={m.inquiries} label="Inquiries" />
-              <MProfStat value={m.brands} label="Brands Followed" />
-              <MProfStat value={m.followers} label="Followers" />
+              <MProfStat value={disp.reviews} label="Reviews" />
+              <MProfStat value={disp.inquiries} label="Inquiries" />
+              <MProfStat value={disp.brands} label="Brands Followed" />
+              <MProfStat value={disp.followers} label="Followers" />
             </div>
           </div>
         </div>
@@ -113,11 +130,22 @@ export function MemberProfileScreen({ onRoute }: any) {
         })()}
 
         {/* Feed */}
-        <div className="sd-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 28, marginTop: 28, paddingBottom: 20 }}>
-          {tab === 'reviews'
-            ? feed.filter(r => r.brand.toLowerCase().includes(mQuery.trim().toLowerCase())).map((r, i) => <ReviewCard key={i} {...r} hideMeasurements onSeeFull={() => { appState.review = r; onRoute('review'); }} />)
-            : inqFeed.filter(r => r.brand.toLowerCase().includes(mQuery.trim().toLowerCase())).map((r, i) => { return <InquiryCard key={i} {...r} hideMeasurements onOpen={() => { appState.inquiry = r; onRoute('inquiry'); }} />; })}
-        </div>
+        {feedLoading ? (
+          <div style={{ textAlign: 'center', padding: '48px 0', fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-muted)' }}>Loading…</div>
+        ) : (() => {
+          const q = mQuery.trim().toLowerCase();
+          const list = (tab === 'reviews' ? feed : inqFeed).filter((r: any) => (r.brand || '').toLowerCase().includes(q));
+          if (list.length === 0) {
+            return <div style={{ textAlign: 'center', padding: '48px 0', fontFamily: 'var(--font-serif)', fontSize: 20, color: 'var(--text-heading)' }}>{tab === 'reviews' ? 'No reviews yet.' : 'No inquiries yet.'}</div>;
+          }
+          return (
+            <div className="sd-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 28, marginTop: 28, paddingBottom: 20 }}>
+              {tab === 'reviews'
+                ? list.map((r: any, i: number) => <ReviewCard key={r.id || i} {...r} hideMeasurements onSeeFull={() => { appState.review = r; onRoute('review'); }} />)
+                : list.map((r: any, i: number) => <InquiryCard key={r.id || i} {...r} hideMeasurements onOpen={() => { appState.inquiry = r; onRoute('inquiry'); }} />)}
+            </div>
+          );
+        })()}
       </div>
     </div>
   );

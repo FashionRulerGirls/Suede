@@ -394,6 +394,93 @@ export async function setMemberFollow(sb: SupabaseClient, followerId: string, fo
   }
 }
 export const memberFollowerCount = (sb: SupabaseClient, userId: string) => count(sb, 'member_follows', 'followee_id', userId);
+const memberFollowingCount = (sb: SupabaseClient, userId: string) => count(sb, 'member_follows', 'follower_id', userId);
+
+// ── member directory (The Collective + member profiles) ────────────
+function measurementsDisplay(m: any) {
+  if (!m) return {};
+  return {
+    height: inchesToHeight(m.height_in) || undefined,
+    bust: inchesDisplay(m.bust_in) || undefined,
+    waist: inchesDisplay(m.waist_in) || undefined,
+    hips: inchesDisplay(m.hips_in) || undefined,
+    inseam: inchesDisplay(m.inseam_in) || undefined,
+    shoulder: inchesDisplay(m.shoulder_in) || undefined,
+    arm: inchesDisplay(m.arm_in) || undefined,
+    torso: inchesDisplay(m.torso_in) || undefined,
+    usual_sizes: m.usual_sizes || {},
+  };
+}
+async function memberMeasurements(sb: SupabaseClient, memberId: string) {
+  try {
+    const { data } = await sb.rpc('member_measurements', { uid: memberId });
+    return Array.isArray(data) ? data[0] : data;
+  } catch { return null; }
+}
+
+// The Collective directory: public profiles + the viewer's match to each.
+export async function loadCollectiveMembers(sb: SupabaseClient, viewerId?: string, limit = 60) {
+  const { data } = await sb
+    .from('profiles')
+    .select('id, username, display_name, avatar_url, bio')
+    .eq('show_in_collective', true)
+    .limit(limit);
+  let members = (data || []).filter((p: any) => p.id !== viewerId);
+  // viewer's follow set + match per member
+  let followingSet = new Set<string>();
+  if (viewerId) {
+    const { data: f } = await sb.from('member_follows').select('followee_id').eq('follower_id', viewerId);
+    followingSet = new Set((f || []).map((r: any) => r.followee_id));
+  }
+  const withMatch = await Promise.all(members.map(async (p: any) => ({
+    id: p.id,
+    name: p.display_name || p.username,
+    handle: '@' + p.username,
+    avatar: p.avatar_url || '',
+    bio: p.bio || '',
+    following: followingSet.has(p.id),
+    match: viewerId ? await loadMatch(sb, viewerId, p.id) : null,
+  })));
+  return withMatch;
+}
+
+export async function loadMemberProfile(sb: SupabaseClient, memberId: string, viewerId?: string) {
+  const [{ data: p }, followers, following, revCount, inqCount, meas, match] = await Promise.all([
+    sb.from('profiles').select('id, username, display_name, avatar_url, bio, instagram, tiktok, website').eq('id', memberId).maybeSingle(),
+    memberFollowerCount(sb, memberId),
+    memberFollowingCount(sb, memberId),
+    count(sb, 'reviews', 'author_id', memberId),
+    count(sb, 'inquiries', 'author_id', memberId),
+    memberMeasurements(sb, memberId),
+    viewerId ? loadMatch(sb, viewerId, memberId) : Promise.resolve(null),
+  ]);
+  if (!p) return null;
+  const prof = p as any;
+  return {
+    id: prof.id,
+    name: prof.display_name || prof.username,
+    handle: '@' + prof.username,
+    avatar: prof.avatar_url || '',
+    bio: prof.bio || '',
+    social: prof.instagram || prof.tiktok || ('@' + prof.username),
+    instagram: prof.instagram, tiktok: prof.tiktok, website: prof.website,
+    measurements: measurementsDisplay(meas),
+    match,
+    followers: String(followers),
+    followingCount: String(following),
+    reviews: String(revCount),
+    inquiries: String(inqCount),
+  };
+}
+
+export async function loadMemberReviews(sb: SupabaseClient, memberId: string, viewerId?: string) {
+  const { data } = await sb.from('reviews').select(REVIEW_SELECT).eq('author_id', memberId).eq('status', 'published').order('created_at', { ascending: false });
+  return enrichReviewCards(sb, (data || []).map(reviewRowToCard), viewerId);
+}
+export async function loadMemberInquiries(sb: SupabaseClient, memberId: string, viewerId?: string) {
+  const { data } = await sb.from('inquiries').select(INQUIRY_SELECT).eq('author_id', memberId).neq('status', 'removed').order('created_at', { ascending: false });
+  return attachMatches(sb, viewerId, (data || []).map(inquiryRowToCard));
+}
 
 export async function loadUserReviews(sb: SupabaseClient, userId: string) {
   const { data } = await sb
