@@ -54,7 +54,7 @@ html, body { max-width: 100%; overflow-x: hidden; }
   #root .sd-hero-links .hero-dest:nth-child(4) { display: none !important; }
   #root .sd-hero-links .hero-dest [data-ul] { display: none !important; }
   #root .sd-hero-photo { background-size: auto 68% !important; background-position: center 30% !important; }
-  #root .sd-thesis { padding: 44px 20px !important; }
+  #root .sd-thesis { padding: 44px 20px 22px !important; }
   #root .sd-thesis-q { white-space: normal !important; font-size: 18px !important; line-height: 1.4 !important; max-width: 340px !important; }
   #root .sd-brand-follow { margin-left: 6px !important; }
   #root .sd-brand-follow svg { width: 18px !important; height: 18px !important; }
@@ -176,7 +176,7 @@ html, body { max-width: 100%; overflow-x: hidden; }
   /* keep the edge fades on phone (narrower) so the entering/exiting models
      dissolve into the page instead of hard-clipping at the screen edge */
   #root .sd-cap-fade { display: block !important; width: 60px !important; }
-  #root .sd-hiw { padding-top: 56px !important; }
+  #root .sd-hiw { padding-top: 0 !important; }
   #root .sd-hiw .sd-hiw-silk { order: -1 !important; background: none !important; min-height: 300px !important; }
   #root .sd-hiw .sd-hiw-paper { min-height: 0 !important; padding: 8px 0 44px !important; }
   #root .sd-hiw-dots { display: none !important; }
