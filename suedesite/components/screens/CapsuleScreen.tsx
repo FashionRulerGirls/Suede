@@ -6,7 +6,8 @@ import { SUEDE_BRANDS } from '@/lib/data';
 import { appState } from '@/lib/appState';
 import { SuedeControls } from '@/lib/listControls';
 import { createClient } from '@/lib/supabase/client';
-import { loadBrands } from '@/lib/contentData';
+import { useAuth } from '@/lib/auth';
+import { loadBrands, loadFollowedBrandIds, setBrandFollow } from '@/lib/contentData';
 
 function CapsuleBrandCell({ b, onExplore, onRoute }: any) {
   const go = () => { appState.brand = b; onRoute('brand'); };
@@ -82,7 +83,9 @@ function ExploreModal({ brand, onClose, onRoute, authed }: any) {
 export function CapsuleScreen({ onRoute, authed = false }: any) {
   // The Capsule is public: load the real brand directory for everyone; fall
   // back to the sample list if Supabase isn't reachable (e.g. offline preview).
+  const { user } = useAuth();
   const [dbBrands, setDbBrands] = React.useState<any[] | null>(null);
+  const [followIds, setFollowIds] = React.useState<Set<string>>(new Set());
   React.useEffect(() => {
     const sb = createClient();
     if (!sb) return;
@@ -90,6 +93,24 @@ export function CapsuleScreen({ onRoute, authed = false }: any) {
     loadBrands(sb, { capsuleOnly: true }).then((bs) => { if (active && bs.length) setDbBrands(bs); }).catch(() => {});
     return () => { active = false; };
   }, []);
+  React.useEffect(() => {
+    if (!user) { setFollowIds(new Set()); return; }
+    const sb = createClient();
+    if (!sb) return;
+    let active = true;
+    loadFollowedBrandIds(sb, user.id).then((ids) => { if (active) setFollowIds(new Set(ids)); }).catch(() => {});
+    return () => { active = false; };
+  }, [user?.id]);
+  const toggleFollow = async (b: any) => {
+    if (!user) { onRoute('signin'); return; } // guests / demo → sign in to follow
+    if (!b.id) return; // sample brand with no DB row — nothing to persist
+    const on = !followIds.has(b.id);
+    setFollowIds((prev) => { const n = new Set(prev); on ? n.add(b.id) : n.delete(b.id); return n; });
+    const sb = createClient();
+    if (!sb) return;
+    try { await setBrandFollow(sb, user.id, b.id, on); }
+    catch { setFollowIds((prev) => { const n = new Set(prev); on ? n.delete(b.id) : n.add(b.id); return n; }); }
+  };
   const allBrands = dbBrands || SUEDE_BRANDS;
   const [explore, setExplore] = React.useState<any>(null);
   const [query, setQuery] = React.useState('');
@@ -140,7 +161,8 @@ export function CapsuleScreen({ onRoute, authed = false }: any) {
               <BrandCard layout="feature" name={b.name} image={b.image} tagline={b.tagline}
                 rating={b.rating} reviews={b.reviews} followers={b.followers}
                 onView={() => { appState.brand = b; onRoute('brand'); }}
-                onFollow={() => { if (!authed) onRoute('signin'); }}
+                following={!!b.id && followIds.has(b.id)}
+                onFollow={() => toggleFollow(b)}
                 onEdit={() => setExplore(b)} />
             </div>
           ))}

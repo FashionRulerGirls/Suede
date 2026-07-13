@@ -19,6 +19,7 @@ export function BrandCard({
   layout = 'tile',
   onExplore,
   onFollow,
+  following = false,
   onEdit,
   onView,
   style,
@@ -42,8 +43,8 @@ export function BrandCard({
       <h3 style={{ display: 'inline-flex', alignItems: 'center', gap: 10, fontFamily: 'var(--font-display)', fontWeight: 'var(--fw-regular)', fontSize: feature ? 24 : 20, letterSpacing: 'var(--ls-wide)', textTransform: 'uppercase', color: 'var(--text-heading)', margin: 0 }}>
         <span onClick={onView} style={{ cursor: onView ? 'pointer' : 'default' }}>{name}</span>
         {feature && (
-          <span role="button" aria-label={`Follow ${name}`} onClick={(e) => { e.stopPropagation(); onFollow && onFollow(); }} style={{ display: 'inline-flex', cursor: 'pointer', color: 'var(--text-secondary)' }}>
-            <Icon name="user-plus" size={18} />
+          <span role="button" aria-label={following ? `Following ${name}` : `Follow ${name}`} title={following ? 'Following' : 'Follow'} onClick={(e) => { e.stopPropagation(); onFollow && onFollow(); }} style={{ display: 'inline-flex', cursor: 'pointer', color: following ? 'var(--ink-900)' : 'var(--text-secondary)' }}>
+            <Icon name={following ? 'check' : 'user-plus'} size={18} />
           </span>
         )}
         {feature && (

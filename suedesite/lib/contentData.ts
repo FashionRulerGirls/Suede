@@ -380,6 +380,12 @@ export async function loadFollowedBrandNames(sb: SupabaseClient, userId: string)
   return (data || []).map((r: any) => r.brands?.name).filter(Boolean);
 }
 
+// Ids of the brands a member follows (for the Capsule directory follow toggles).
+export async function loadFollowedBrandIds(sb: SupabaseClient, userId: string): Promise<string[]> {
+  const { data } = await sb.from('brand_follows').select('brand_id').eq('user_id', userId);
+  return (data || []).map((r: any) => r.brand_id).filter(Boolean);
+}
+
 export async function isFollowingMember(sb: SupabaseClient, followerId: string, followeeId: string) {
   const { data } = await sb.from('member_follows').select('followee_id').eq('follower_id', followerId).eq('followee_id', followeeId).maybeSingle();
   return !!data;
