@@ -7,13 +7,27 @@ import { Logo, IconButton, AuthToggle, Select, Icon, Avatar } from '@/components
 import { SUEDE_BRANDS, SUEDE_MEMBERS, SUEDE_REVIEWS, SUEDE_INQUIRIES, SUEDE_NOTIF_COUNT } from '@/lib/data';
 import { appState } from '@/lib/appState';
 import { useAuth } from '@/lib/auth';
+import { createClient } from '@/lib/supabase/client';
+import { unreadNotificationCount } from '@/lib/contentData';
 
 export function Nav({ route, onRoute, authed = false }: any) {
   const { user, profile } = useAuth();
-  // A real signed-in account shows its own (blank) avatar + no mock notifs;
+  // A real signed-in account shows its own (blank) avatar + live unread count;
   // the demo/test-authed path keeps the sample avatar and badge count.
   const real = !!user;
-  const notifCount = real ? 0 : SUEDE_NOTIF_COUNT;
+  const [realUnread, setRealUnread] = React.useState(0);
+  React.useEffect(() => {
+    if (!real || !user) { setRealUnread(0); return; }
+    let alive = true;
+    const sb = createClient();
+    if (!sb) return;
+    const refresh = () => unreadNotificationCount(sb, user.id).then((n) => { if (alive) setRealUnread(n); }).catch(() => {});
+    refresh();
+    const onRead = () => { if (alive) setRealUnread(0); };
+    window.addEventListener('suede-notifs-read', onRead);
+    return () => { alive = false; window.removeEventListener('suede-notifs-read', onRead); };
+  }, [real, user?.id]);
+  const notifCount = real ? realUnread : SUEDE_NOTIF_COUNT;
   const avatarSrc = real ? (profile?.avatar_url || undefined) : '/assets/avatars/avatar-rose.jpg';
   const avatarName = profile?.display_name || profile?.username || '';
   const [open, setOpen] = React.useState(false);

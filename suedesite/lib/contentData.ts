@@ -625,3 +625,67 @@ export async function postInquiryResponse(sb: SupabaseClient, userId: string, in
   const c = data as any;
   return { id: c.id, avatar: c.author?.avatar_url || '', name: c.author?.display_name || c.author?.username || 'You', specs: '', when: relativeTime(c.created_at), body: c.body, likes: 0 };
 }
+
+// ── notifications ──────────────────────────────────────────────────
+// Rows are written by database triggers (0006). Here we read them for the
+// recipient and shape them for NotificationsScreen / the bell badge.
+const NOTIF_SELECT = 'id, type, actor_id, entity_type, entity_id, data, read_at, created_at, actor:profiles!actor_id(username, display_name, avatar_url)';
+
+function notifRowToItem(row: any) {
+  const actor = row.actor
+    ? { name: row.actor.display_name || row.actor.username || 'Member', avatar: row.actor.avatar_url || '' }
+    : null;
+  const d = row.data || {};
+  const label = d.product ? (d.brand ? `${d.brand} — ${d.product}` : d.product) : undefined;
+  let icon = 'bell', text = '', target: string | undefined, detail: string | undefined;
+  switch (row.type) {
+    case 'follow':
+      icon = 'user-plus'; text = 'started following you'; break;
+    case 'review_comment':
+      icon = 'message'; text = 'commented on your review of'; target = label;
+      detail = d.body ? `“${d.body}”` : undefined; break;
+    case 'inquiry_response':
+      icon = 'message'; text = 'responded to your inquiry about'; target = label;
+      detail = d.body ? `“${d.body}”` : undefined; break;
+    case 'reaction':
+      icon = 'heart';
+      text = d.target === 'review_comment' ? 'liked your comment on'
+        : d.target === 'inquiry_response' ? 'liked your response about'
+        : 'liked your review of';
+      target = label; break;
+    default:
+      text = 'sent you an update';
+  }
+  return {
+    id: row.id, actor, icon, text, target, detail,
+    time: relativeTime(row.created_at), unread: !row.read_at,
+    entityType: row.entity_type, entityId: row.entity_id,
+  };
+}
+
+export async function loadNotifications(sb: SupabaseClient, userId: string, limit = 50) {
+  const { data } = await sb
+    .from('notifications')
+    .select(NOTIF_SELECT)
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+    .limit(limit);
+  return (data || []).map(notifRowToItem);
+}
+
+export async function unreadNotificationCount(sb: SupabaseClient, userId: string) {
+  const { count: n } = await sb
+    .from('notifications')
+    .select('*', { count: 'exact', head: true })
+    .eq('user_id', userId)
+    .is('read_at', null);
+  return n || 0;
+}
+
+export async function markNotificationsRead(sb: SupabaseClient, userId: string) {
+  await sb
+    .from('notifications')
+    .update({ read_at: new Date().toISOString() })
+    .eq('user_id', userId)
+    .is('read_at', null);
+}

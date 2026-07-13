@@ -7,10 +7,13 @@ import { Avatar, Icon, Button } from '@/components/ds';
 import { SUEDE_NOTIFICATIONS } from '@/lib/data';
 import { SignInGate } from '@/components/screens/SignInGate';
 import { useAuth } from '@/lib/auth';
+import { createClient } from '@/lib/supabase/client';
+import { appState } from '@/lib/appState';
+import { loadNotifications, markNotificationsRead, loadReviewById, loadInquiryById, reviewRowToCard, inquiryRowToCard } from '@/lib/contentData';
 
-function NotificationRow({ n, onRoute }: any) {
+function NotificationRow({ n, onOpen }: any) {
   return (
-    <button onClick={() => onRoute(n.route)} style={{
+    <button onClick={() => onOpen(n)} style={{
       width: '100%', textAlign: 'left', cursor: 'pointer', display: 'flex', gap: 16, alignItems: 'flex-start',
       padding: '20px 22px', background: n.unread ? 'var(--surface-inset)' : 'transparent',
       border: 'none', borderBottom: '1px solid var(--border-subtle)', transition: 'background var(--dur-fast) var(--ease-out)',
@@ -37,11 +40,48 @@ function NotificationRow({ n, onRoute }: any) {
 
 export function NotificationsScreen({ onRoute, authed }: any) {
   const { user } = useAuth();
-  const real = !!user; // a real account has no activity yet; demo shows samples
-  const [items, setItems] = React.useState(real ? [] : SUEDE_NOTIFICATIONS);
-  React.useEffect(() => { setItems(real ? [] : SUEDE_NOTIFICATIONS); }, [real]);
+  const real = !!user; // real accounts read live activity; demo shows samples
+  const [items, setItems] = React.useState<any[]>(real ? [] : SUEDE_NOTIFICATIONS);
+  const [loading, setLoading] = React.useState(real);
+  React.useEffect(() => {
+    if (!real || !user) { setItems(SUEDE_NOTIFICATIONS); setLoading(false); return; }
+    let alive = true;
+    const sb = createClient();
+    if (!sb) { setLoading(false); return; }
+    setLoading(true);
+    (async () => {
+      try {
+        const rows = await loadNotifications(sb, user.id);
+        if (alive) setItems(rows);
+        // Opening the page clears the unread badge; keep dots for this view.
+        await markNotificationsRead(sb, user.id);
+        if (alive) window.dispatchEvent(new CustomEvent('suede-notifs-read'));
+      } catch { if (alive) setItems([]); }
+      finally { if (alive) setLoading(false); }
+    })();
+    return () => { alive = false; };
+  }, [real, user?.id]);
   if (!authed && SignInGate) return <SignInGate onRoute={onRoute} title="Notifications" message="Sign in to see your Suede activity." />;
   const markAll = () => setItems((prev) => prev.map((n) => ({ ...n, unread: false })));
+
+  const openNotif = async (n: any) => {
+    if (n.route) { onRoute(n.route); return; } // sample notifications
+    const sb = createClient();
+    if (!sb || !n.entityType || !n.entityId) return;
+    if (n.entityType === 'member') {
+      appState.member = { id: n.entityId, name: n.actor?.name, avatar: n.actor?.avatar };
+      onRoute('member'); return;
+    }
+    try {
+      if (n.entityType === 'review') {
+        const row = await loadReviewById(sb, n.entityId);
+        if (row) { appState.review = reviewRowToCard(row); onRoute('review'); }
+      } else if (n.entityType === 'inquiry') {
+        const row = await loadInquiryById(sb, n.entityId);
+        if (row) { appState.inquiry = inquiryRowToCard(row); onRoute('inquiry'); }
+      }
+    } catch { /* entity removed — leave the user on the list */ }
+  };
 
   return (
     <div style={{ maxWidth: 720, margin: '0 auto', padding: '48px 24px 80px' }}>
@@ -54,7 +94,9 @@ export function NotificationsScreen({ onRoute, authed }: any) {
       </div>
 
       <div style={{ marginTop: 28, background: 'var(--surface-card)', border: '1px solid var(--border-subtle)' }}>
-        {items.length === 0 ? (
+        {loading ? (
+          <div style={{ padding: '64px 22px', textAlign: 'center', fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-muted)' }}>Loading…</div>
+        ) : items.length === 0 ? (
           <div style={{ padding: '64px 22px', textAlign: 'center' }}>
             <span style={{ display: 'inline-flex', width: 52, height: 52, borderRadius: '50%', background: 'var(--linen)', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}><Icon name="bell" size={22} color="var(--text-muted)" /></span>
             <p style={{ fontFamily: 'var(--font-serif)', fontSize: 20, color: 'var(--text-heading)', margin: '0 0 6px' }}>No notifications yet</p>
@@ -62,7 +104,7 @@ export function NotificationsScreen({ onRoute, authed }: any) {
           </div>
         ) : (
           <>
-            {items.map((n) => <NotificationRow key={n.id} n={n} onRoute={onRoute} />)}
+            {items.map((n) => <NotificationRow key={n.id} n={n} onOpen={openNotif} />)}
             <div style={{ padding: '22px', textAlign: 'center' }}>
               <span style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-muted)' }}>You're all caught up.</span>
             </div>
