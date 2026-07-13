@@ -28,7 +28,7 @@ const PATHS = {
   plus:      '<path d="M12 5v14M5 12h14"/>',
   grid:      '<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>',
   inbox:     '<path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.5 5.5 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.5-6.5A2 2 0 0 0 16.8 4H7.2a2 2 0 0 0-1.7 1.5Z"/>',
-  reviews:   '<path d="M21 11.5a8 8 0 0 1-11.7 7L3 21l2.5-6.3A8 8 0 1 1 21 11.5Z"/><path d="M12 7.4 12.8 9.7 15.2 9.8 13.3 11.2 14 13.6 12 12.2 10 13.6 10.7 11.2 8.8 9.8 11.2 9.7Z"/>',
+  reviews:   '<path d="M4 4h16a1.5 1.5 0 0 1 1.5 1.5v8A1.5 1.5 0 0 1 20 15h-6l-2.2 3.2L10 15H4A1.5 1.5 0 0 1 2.5 13.5v-8A1.5 1.5 0 0 1 4 4Z"/><path fill="currentColor" stroke="none" d="M7.60 7.00 L8.16 8.53 L9.79 8.59 L8.50 9.59 L8.95 11.16 L7.60 10.25 L6.25 11.16 L6.70 9.59 L5.41 8.59 L7.04 8.53 Z"/><path fill="currentColor" stroke="none" d="M12.00 7.00 L12.56 8.53 L14.19 8.59 L12.90 9.59 L13.35 11.16 L12.00 10.25 L10.65 11.16 L11.10 9.59 L9.81 8.59 L11.44 8.53 Z"/><path fill="currentColor" stroke="none" d="M16.40 7.00 L16.96 8.53 L18.59 8.59 L17.30 9.59 L17.75 11.16 L16.40 10.25 L15.05 11.16 L15.50 9.59 L14.21 8.59 L15.84 8.53 Z"/>',
   logout:    '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/>',
   pen:       '<path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/>',
   google:    '<path d="M21.6 12.2c0-.7-.06-1.4-.18-2H12v3.8h5.4a4.6 4.6 0 0 1-2 3v2.5h3.2c1.9-1.7 3-4.3 3-7.3Z" fill="currentColor" stroke="none"/><path d="M12 22c2.7 0 5-.9 6.6-2.4l-3.2-2.5a6 6 0 0 1-9-3.2H3.1v2.6A10 10 0 0 0 12 22Z" fill="currentColor" stroke="none"/><path d="M6.4 13.9a6 6 0 0 1 0-3.8V7.5H3.1a10 10 0 0 0 0 9Z" fill="currentColor" stroke="none"/><path d="M12 6.1c1.5 0 2.8.5 3.8 1.5l2.8-2.8A10 10 0 0 0 3.1 7.5l3.3 2.6a6 6 0 0 1 5.6-4Z" fill="currentColor" stroke="none"/>',
@@ -64,7 +64,7 @@ export function Icon({ name, size = 20, stroke = 1.5, color = 'currentColor', st
       strokeLinecap="round"
       strokeLinejoin="round"
       className={className}
-      style={{ flex: 'none', display: 'block', ...style }}
+      style={{ flex: 'none', display: 'block', color, ...style }}
       aria-hidden="true"
       dangerouslySetInnerHTML={{ __html: d || '' }}
       {...rest}
