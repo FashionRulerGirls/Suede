@@ -5,6 +5,8 @@ import { BrandCard, SectionHeading, Button, Icon, StarRating } from '@/component
 import { SUEDE_BRANDS } from '@/lib/data';
 import { appState } from '@/lib/appState';
 import { SuedeControls } from '@/lib/listControls';
+import { createClient } from '@/lib/supabase/client';
+import { loadBrands } from '@/lib/contentData';
 
 function CapsuleBrandCell({ b, onExplore, onRoute }: any) {
   const go = () => { appState.brand = b; onRoute('brand'); };
@@ -78,7 +80,17 @@ function ExploreModal({ brand, onClose, onRoute, authed }: any) {
 }
 
 export function CapsuleScreen({ onRoute, authed = false }: any) {
-  const allBrands = SUEDE_BRANDS;
+  // The Capsule is public: load the real brand directory for everyone; fall
+  // back to the sample list if Supabase isn't reachable (e.g. offline preview).
+  const [dbBrands, setDbBrands] = React.useState<any[] | null>(null);
+  React.useEffect(() => {
+    const sb = createClient();
+    if (!sb) return;
+    let active = true;
+    loadBrands(sb, { capsuleOnly: true }).then((bs) => { if (active && bs.length) setDbBrands(bs); }).catch(() => {});
+    return () => { active = false; };
+  }, []);
+  const allBrands = dbBrands || SUEDE_BRANDS;
   const [explore, setExplore] = React.useState<any>(null);
   const [query, setQuery] = React.useState('');
   const [sort, setSort] = React.useState('az');

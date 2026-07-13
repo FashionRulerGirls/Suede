@@ -318,6 +318,40 @@ export async function setReaction(sb: SupabaseClient, userId: string, entityType
   }
 }
 
+// ── brand directory (The Capsule + brand pages) ────────────────────
+function mapBrand(b: any, s: any) {
+  return {
+    id: b.id,
+    slug: b.slug,
+    name: b.name,
+    tagline: b.tagline || '',
+    founder: b.founder || '',
+    founded: b.founded_year || '',
+    location: b.location || '',
+    social: b.social || ('@' + b.slug),
+    image: b.hero_image_url || '',
+    hero: b.hero_image_url || '',
+    is_capsule: b.is_capsule,
+    status: b.status,
+    rating: s?.avg_rating != null ? Number(s.avg_rating) : 0,
+    reviews: s?.review_count || 0,
+    inquiries: s?.inquiry_count || 0,
+    followers: s?.follower_count || 0,
+  };
+}
+
+export async function loadBrands(sb: SupabaseClient, opts: { capsuleOnly?: boolean } = {}) {
+  let q = sb.from('brands').select('*');
+  if (opts.capsuleOnly) q = q.eq('is_capsule', true);
+  const [{ data: brands }, { data: stats }] = await Promise.all([
+    q.order('name'),
+    sb.from('brand_stats').select('*'),
+  ]);
+  const statsById: Record<string, any> = {};
+  (stats || []).forEach((s: any) => { statsById[s.id] = s; });
+  return (brands || []).map((b: any) => mapBrand(b, statsById[b.id]));
+}
+
 // ── follows (brands + members) ─────────────────────────────────────
 async function count(sb: SupabaseClient, table: string, col: string, value: string) {
   const { count: n } = await sb.from(table).select('*', { count: 'exact', head: true }).eq(col, value);

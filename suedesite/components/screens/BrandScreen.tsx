@@ -180,7 +180,7 @@ export function BrandScreen({ onRoute, authed = false }: any) {
         <div className="sd-brandback-grid" style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 40, alignItems: 'start', marginTop: 8 }}>
           <div>
             <div style={{ fontFamily: 'var(--font-body)', fontSize: 11, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 12 }}>The Brand</div>
-            <p style={{ fontFamily: 'var(--font-body)', fontSize: 14.5, lineHeight: 1.75, color: 'var(--text-secondary)', margin: 0, maxWidth: 450 }}>{brand.founder || ''} Every piece is produced in considered, limited runs — a deliberate stand against overproduction. We design for longevity: garments meant to be worn, kept, and remembered season after season.</p>
+            <p style={{ fontFamily: 'var(--font-body)', fontSize: 14.5, lineHeight: 1.75, color: 'var(--text-secondary)', margin: 0, maxWidth: 450 }}>{brand.id ? [brand.founder, brand.tagline].filter(Boolean).join(' — ') : `${brand.founder || ''} Every piece is produced in considered, limited runs — a deliberate stand against overproduction. We design for longevity: garments meant to be worn, kept, and remembered season after season.`}</p>
           </div>
           <div>
             <div style={{ fontFamily: 'var(--font-body)', fontSize: 11, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 12 }}>Documents</div>
