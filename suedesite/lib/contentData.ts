@@ -231,6 +231,23 @@ async function attachReviewMedia(sb: SupabaseClient, cards: any[]) {
   });
 }
 
+// Like + comment counts for a batch of review cards.
+async function attachReviewStats(sb: SupabaseClient, cards: any[]) {
+  const ids = cards.map((c) => c._id).filter(Boolean);
+  if (!ids.length) return cards;
+  const [rx, cm] = await Promise.all([
+    loadReactions(sb, undefined, 'review', ids),
+    sb.from('review_comments').select('review_id').in('review_id', ids),
+  ]);
+  const cc: Record<string, number> = {};
+  ((cm as any).data || []).forEach((r: any) => { cc[r.review_id] = (cc[r.review_id] || 0) + 1; });
+  return cards.map((c) => ({ ...c, likes: rx.counts[c._id] || 0, comments: cc[c._id] || 0 }));
+}
+
+async function enrichReviewCards(sb: SupabaseClient, cards: any[]) {
+  return attachReviewStats(sb, await attachReviewMedia(sb, cards));
+}
+
 export async function loadReviewMedia(sb: SupabaseClient, reviewId: string): Promise<{ id: string; url: string; kind: string; position: number; poster?: string | null }[]> {
   const { data } = await sb
     .from('media')
@@ -278,6 +295,43 @@ export async function setReaction(sb: SupabaseClient, userId: string, entityType
   }
 }
 
+// ── follows (brands + members) ─────────────────────────────────────
+async function count(sb: SupabaseClient, table: string, col: string, value: string) {
+  const { count: n } = await sb.from(table).select('*', { count: 'exact', head: true }).eq(col, value);
+  return n || 0;
+}
+
+export async function isFollowingBrand(sb: SupabaseClient, userId: string, brandId: string) {
+  const { data } = await sb.from('brand_follows').select('brand_id').eq('user_id', userId).eq('brand_id', brandId).maybeSingle();
+  return !!data;
+}
+export async function setBrandFollow(sb: SupabaseClient, userId: string, brandId: string, on: boolean) {
+  if (on) {
+    const { error } = await sb.from('brand_follows').upsert({ user_id: userId, brand_id: brandId }, { onConflict: 'user_id,brand_id' });
+    if (error) throw error;
+  } else {
+    const { error } = await sb.from('brand_follows').delete().eq('user_id', userId).eq('brand_id', brandId);
+    if (error) throw error;
+  }
+}
+export const brandFollowerCount = (sb: SupabaseClient, brandId: string) => count(sb, 'brand_follows', 'brand_id', brandId);
+export const countFollowedBrands = (sb: SupabaseClient, userId: string) => count(sb, 'brand_follows', 'user_id', userId);
+
+export async function isFollowingMember(sb: SupabaseClient, followerId: string, followeeId: string) {
+  const { data } = await sb.from('member_follows').select('followee_id').eq('follower_id', followerId).eq('followee_id', followeeId).maybeSingle();
+  return !!data;
+}
+export async function setMemberFollow(sb: SupabaseClient, followerId: string, followeeId: string, on: boolean) {
+  if (on) {
+    const { error } = await sb.from('member_follows').upsert({ follower_id: followerId, followee_id: followeeId }, { onConflict: 'follower_id,followee_id' });
+    if (error) throw error;
+  } else {
+    const { error } = await sb.from('member_follows').delete().eq('follower_id', followerId).eq('followee_id', followeeId);
+    if (error) throw error;
+  }
+}
+export const memberFollowerCount = (sb: SupabaseClient, userId: string) => count(sb, 'member_follows', 'followee_id', userId);
+
 export async function loadUserReviews(sb: SupabaseClient, userId: string) {
   const { data } = await sb
     .from('reviews')
@@ -285,7 +339,7 @@ export async function loadUserReviews(sb: SupabaseClient, userId: string) {
     .eq('author_id', userId)
     .neq('status', 'removed')
     .order('created_at', { ascending: false });
-  return attachReviewMedia(sb, (data || []).map(reviewRowToCard));
+  return enrichReviewCards(sb, (data || []).map(reviewRowToCard));
 }
 
 export async function loadUserInquiries(sb: SupabaseClient, userId: string) {
@@ -306,7 +360,7 @@ export async function loadPublishedReviews(sb: SupabaseClient, limit = 48) {
     .eq('status', 'published')
     .order('created_at', { ascending: false })
     .limit(limit);
-  return attachReviewMedia(sb, (data || []).map(reviewRowToCard));
+  return enrichReviewCards(sb, (data || []).map(reviewRowToCard));
 }
 
 export async function loadPublishedInquiries(sb: SupabaseClient, limit = 48) {
@@ -325,7 +379,7 @@ export async function loadBrandReviews(sb: SupabaseClient, brandName: string, br
   let q = sb.from('reviews').select(REVIEW_SELECT).eq('status', 'published');
   q = id ? q.or(`brand_id.eq.${id},brand_name.ilike.${brandName}`) : q.ilike('brand_name', brandName);
   const { data } = await q.order('created_at', { ascending: false });
-  return attachReviewMedia(sb, (data || []).map(reviewRowToCard));
+  return enrichReviewCards(sb, (data || []).map(reviewRowToCard));
 }
 
 export async function loadBrandInquiries(sb: SupabaseClient, brandName: string, brandId?: string | null) {

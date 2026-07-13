@@ -10,7 +10,7 @@ import { InquiryCard } from '@/components/screens/LookbookScreen';
 import { useAuth } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/client';
 import { loadProfileData, inchesToHeight, inchesDisplay } from '@/lib/profileData';
-import { loadUserReviews, loadUserInquiries } from '@/lib/contentData';
+import { loadUserReviews, loadUserInquiries, countFollowedBrands, memberFollowerCount } from '@/lib/contentData';
 
 function YProfStat({ value, label, links, onValue }: any) {
   const valueStyle = { fontFamily: 'var(--font-meta)', fontWeight: 500, fontSize: 30, lineHeight: 1, color: 'var(--text-heading)' } as const;
@@ -38,13 +38,17 @@ export function YourProfileScreen({ onRoute }: any) {
   const [db, setDb] = React.useState<any>(null);
   const [dbReviews, setDbReviews] = React.useState<any[]>([]);
   const [dbInquiries, setDbInquiries] = React.useState<any[]>([]);
+  const [followedBrands, setFollowedBrands] = React.useState(0);
+  const [followerCount, setFollowerCount] = React.useState(0);
   React.useEffect(() => {
     const sb = createClient();
-    if (!sb || !user) { setDb(null); setDbReviews([]); setDbInquiries([]); return; }
+    if (!sb || !user) { setDb(null); setDbReviews([]); setDbInquiries([]); setFollowedBrands(0); setFollowerCount(0); return; }
     let active = true;
     loadProfileData(sb, user.id).then((d) => { if (active) setDb(d); }).catch(() => {});
     loadUserReviews(sb, user.id).then((r) => { if (active) setDbReviews(r); }).catch(() => {});
     loadUserInquiries(sb, user.id).then((q) => { if (active) setDbInquiries(q); }).catch(() => {});
+    countFollowedBrands(sb, user.id).then((n) => { if (active) setFollowedBrands(n); }).catch(() => {});
+    memberFollowerCount(sb, user.id).then((n) => { if (active) setFollowerCount(n); }).catch(() => {});
     return () => { active = false; };
   }, [user?.id]);
 
@@ -78,7 +82,7 @@ export function YourProfileScreen({ onRoute }: any) {
       'Torso Length': inchesDisplay(ms?.torso_in) || undefined,
     },
     usualSizes: ms?.usual_sizes || {},
-    followers: '0', reviews: String(dbReviews.length), inquiries: String(dbInquiries.length), brands: '0',
+    followers: String(followerCount), reviews: String(dbReviews.length), inquiries: String(dbInquiries.length), brands: String(followedBrands),
   } : MOCK;
   const [tab, setTab] = React.useState('reviews');
   const [view, setView] = React.useState(appState.profileView || 'profile'); // profile | brands | followers

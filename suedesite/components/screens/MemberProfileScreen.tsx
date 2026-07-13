@@ -7,6 +7,9 @@ import { appState } from '@/lib/appState';
 import { SuedeControls } from '@/lib/listControls';
 import { FullMeasureRow } from '@/components/screens/FullMeasureRow';
 import { InquiryCard } from '@/components/screens/LookbookScreen';
+import { useAuth } from '@/lib/auth';
+import { createClient } from '@/lib/supabase/client';
+import { isFollowingMember, setMemberFollow } from '@/lib/contentData';
 
 function MProfStat({ value, label }: any) {
   return (
@@ -24,10 +27,28 @@ export function MemberProfileScreen({ onRoute }: any) {
     measurements: { height: "5'7\"", bust: '34"', waist: '26"', hips: '36"' },
     followers: '30', reviews: '24', inquiries: '12', brands: '8',
   };
+  const { user } = useAuth();
+  const memberId = m.id; // present only for a real member (from the DB)
   const [tab, setTab] = React.useState('reviews');
   const [mQuery, setMQuery] = React.useState('');
   const [mSort, setMSort] = React.useState('date');
   const [following, setFollowing] = React.useState(false);
+  React.useEffect(() => {
+    const sb = createClient();
+    if (!sb || !user || !memberId) return;
+    let active = true;
+    isFollowingMember(sb, user.id, memberId).then((f) => { if (active) setFollowing(f); }).catch(() => {});
+    return () => { active = false; };
+  }, [user?.id, memberId]);
+  const toggleFollow = async () => {
+    const on = !following;
+    setFollowing(on);
+    const sb = createClient();
+    if (!sb || !user || !memberId) return; // demo/mock member — local toggle only
+    if (user.id === memberId) { setFollowing(false); return; } // can't follow yourself
+    try { await setMemberFollow(sb, user.id, memberId, on); }
+    catch { setFollowing(!on); }
+  };
   const reviews = SUEDE_REVIEWS || [];
   const feed = [...reviews, ...reviews].slice(0, 2);
   const inqFeed = [...(SUEDE_INQUIRIES || [])].slice(0, 2);
@@ -53,7 +74,7 @@ export function MemberProfileScreen({ onRoute }: any) {
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-secondary)' }}><Icon name="tiktok" size={16} color="var(--text-secondary)" />{m.social}</span>
                   </div>
                 </div>
-                <span className="sd-mprof-action"><Button variant="ghost" trailingIcon={following ? 'check' : 'user-plus'} onClick={() => setFollowing(f => !f)}>{following ? 'Following' : 'Follow'}</Button></span>
+                <span className="sd-mprof-action"><Button variant="ghost" trailingIcon={following ? 'check' : 'user-plus'} onClick={toggleFollow}>{following ? 'Following' : 'Follow'}</Button></span>
               </div>
               <p className="sd-mprof-bio" style={{ fontFamily: 'var(--font-body)', fontSize: 14.5, lineHeight: 1.6, color: 'var(--text-secondary)', margin: '20px 0 0', maxWidth: 560 }}>{m.bio}</p>
               <div className="sd-mprof-measure" style={{ marginTop: 16 }}>

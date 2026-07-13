@@ -8,7 +8,7 @@ import { SuedeControls } from '@/lib/listControls';
 import { InquiryCard } from '@/components/screens/LookbookScreen';
 import { useAuth } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/client';
-import { loadBrandReviews, loadBrandInquiries } from '@/lib/contentData';
+import { loadBrandReviews, loadBrandInquiries, resolveBrandId, isFollowingBrand, setBrandFollow, brandFollowerCount } from '@/lib/contentData';
 
 function BrandStat({ value, label, icon, breakdown }: any) {
   const [hover, setHover] = React.useState(false);
@@ -79,14 +79,35 @@ export function BrandScreen({ onRoute, authed = false }: any) {
   const real = !!user;
   const [dbReviews, setDbReviews] = React.useState<any[]>([]);
   const [dbInq, setDbInq] = React.useState<any[]>([]);
+  const [brandId, setBrandId] = React.useState<string | null>(null);
+  const [following, setFollowing] = React.useState(false);
+  const [followers, setFollowers] = React.useState(0);
+  const [followBusy, setFollowBusy] = React.useState(false);
   React.useEffect(() => {
     const sb = createClient();
-    if (!sb || !user || !brand?.name) { setDbReviews([]); setDbInq([]); return; }
+    if (!sb || !user || !brand?.name) { setDbReviews([]); setDbInq([]); setBrandId(null); setFollowing(false); setFollowers(0); return; }
     let active = true;
     loadBrandReviews(sb, brand.name).then((r) => { if (active) setDbReviews(r); }).catch(() => {});
     loadBrandInquiries(sb, brand.name).then((q) => { if (active) setDbInq(q); }).catch(() => {});
+    resolveBrandId(sb, brand.name).then(async (id) => {
+      if (!active || !id) return;
+      setBrandId(id);
+      const [isF, fc] = await Promise.all([isFollowingBrand(sb, user.id, id), brandFollowerCount(sb, id)]);
+      if (active) { setFollowing(isF); setFollowers(fc); }
+    }).catch(() => {});
     return () => { active = false; };
   }, [user?.id, brand?.name]);
+
+  const toggleFollow = async () => {
+    if (!user) { onRoute('signin'); return; }
+    const sb = createClient();
+    if (!sb || !brandId) return;
+    const on = !following;
+    setFollowing(on); setFollowers((n) => n + (on ? 1 : -1)); setFollowBusy(true);
+    try { await setBrandFollow(sb, user.id, brandId, on); }
+    catch { setFollowing(!on); setFollowers((n) => n + (on ? -1 : 1)); }
+    finally { setFollowBusy(false); }
+  };
   const [tab, setTab] = React.useState('reviews');
   const [bQuery, setBQuery] = React.useState('');
   const [bSort, setBSort] = React.useState('date');
@@ -101,7 +122,7 @@ export function BrandScreen({ onRoute, authed = false }: any) {
   const statRating = real ? rAvg.toFixed(1) : ((brand.rating && brand.rating.toFixed ? brand.rating.toFixed(1) : brand.rating) || '0.0');
   const statReviews = real ? String(dbReviews.length) : (brand.reviews || '0');
   const statInquiries = real ? String(dbInq.length) : (brand.inquiries || '0');
-  const statFollowers = real ? '0' : (brand.followers || '0');
+  const statFollowers = real ? String(followers) : (brand.followers || '0');
   const [flipped, setFlipped] = React.useState(false);
   const [docNote, setDocNote] = React.useState<string | null>(null);
   const [rateOpen, setRateOpen] = React.useState(false);
@@ -208,7 +229,19 @@ export function BrandScreen({ onRoute, authed = false }: any) {
             );
           })}
         </div>
-        <div style={{ textAlign: 'center', marginTop: 28 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 18, marginTop: 28 }}>
+          {real && brandId && (
+            <button onClick={toggleFollow} disabled={followBusy} style={{
+              display: 'inline-flex', alignItems: 'center', gap: 9, padding: '11px 26px', cursor: 'pointer',
+              borderRadius: 'var(--radius-pill)', fontFamily: 'var(--font-body)', fontSize: 14, letterSpacing: '0.02em',
+              border: following ? '1px solid var(--border-default)' : 'none',
+              background: following ? 'transparent' : 'var(--ink-900)', color: following ? 'var(--text-primary)' : 'var(--white)',
+              transition: 'all var(--dur-fast) var(--ease-out)',
+            }}>
+              <Icon name={following ? 'check' : 'plus'} size={15} color={following ? 'var(--text-primary)' : 'var(--white)'} />
+              {following ? 'Following' : 'Follow'}
+            </button>
+          )}
           <button onClick={() => window.open('https://' + website, '_blank', 'noopener,noreferrer')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: 15, color: 'var(--text-primary)', textDecoration: 'underline', textUnderlineOffset: 4 }}>{website}</button>
         </div>
       </div>
