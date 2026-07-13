@@ -8,7 +8,7 @@ import { SUEDE_BRANDS, SUEDE_MEMBERS, SUEDE_REVIEWS, SUEDE_INQUIRIES, SUEDE_NOTI
 import { appState } from '@/lib/appState';
 import { useAuth } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/client';
-import { unreadNotificationCount } from '@/lib/contentData';
+import { unreadNotificationCount, loadBrands, loadCollectiveMembers, loadPublishedReviews, loadPublishedInquiries } from '@/lib/contentData';
 
 export function Nav({ route, onRoute, authed = false }: any) {
   const { user, profile } = useAuth();
@@ -47,18 +47,38 @@ export function Nav({ route, onRoute, authed = false }: any) {
   const searchInputRef = React.useRef<any>(null);
   React.useEffect(() => { if (search && searchInputRef.current) searchInputRef.current.focus(); }, [search]);
 
+  // Real users search the live database; guests/demo search the sample set.
+  // The four datasets are fetched once when the overlay first opens.
+  const [realIndex, setRealIndex] = React.useState<any>(null);
+  const [searchLoading, setSearchLoading] = React.useState(false);
+  React.useEffect(() => {
+    if (!search || !real || !user || realIndex) return;
+    const sb = createClient();
+    if (!sb) return;
+    let active = true;
+    setSearchLoading(true);
+    Promise.all([
+      loadBrands(sb, {}).catch(() => []),
+      loadCollectiveMembers(sb, user.id).catch(() => []),
+      loadPublishedReviews(sb, user.id).catch(() => []),
+      loadPublishedInquiries(sb, user.id).catch(() => []),
+    ]).then(([b, m, r, i]) => { if (active) setRealIndex({ brands: b, members: m, reviews: r, inquiries: i }); })
+      .finally(() => { if (active) setSearchLoading(false); });
+    return () => { active = false; };
+  }, [search, real, user?.id, realIndex]);
+
   const ql = q.trim().toLowerCase();
-  const brands = (SUEDE_BRANDS || []);
-  const members = (SUEDE_MEMBERS || []);
-  const reviews = (SUEDE_REVIEWS || []);
-  const inquiries = (SUEDE_INQUIRIES || []);
-  const mBrands = ql ? brands.filter(b => (b.name + ' ' + (b.tagline || '') + ' ' + (b.category || '')).toLowerCase().includes(ql)) : brands.slice(0, 4);
-  const mMembers = ql ? members.filter(m => (m.name + ' ' + m.handle).toLowerCase().includes(ql)) : members.slice(0, 4);
-  const mReviews = ql ? reviews.filter(r => (r.brand + ' ' + r.product + ' ' + r.reviewer.name + ' ' + r.excerpt).toLowerCase().includes(ql)) : reviews.slice(0, 3);
-  const mInquiries = ql ? inquiries.filter(i => (i.brand + ' ' + i.product + ' ' + i.asker.name + ' ' + i.question).toLowerCase().includes(ql)) : inquiries.slice(0, 3);
+  const src = real
+    ? (realIndex || { brands: [], members: [], reviews: [], inquiries: [] })
+    : { brands: SUEDE_BRANDS || [], members: SUEDE_MEMBERS || [], reviews: SUEDE_REVIEWS || [], inquiries: SUEDE_INQUIRIES || [] };
+  const mBrands = (ql ? src.brands.filter((b: any) => (b.name + ' ' + (b.tagline || '') + ' ' + (b.category || '')).toLowerCase().includes(ql)) : src.brands.slice(0, 4)).slice(0, 6);
+  const mMembers = (ql ? src.members.filter((m: any) => (m.name + ' ' + m.handle).toLowerCase().includes(ql)) : src.members.slice(0, 4)).slice(0, 6);
+  const mReviews = (ql ? src.reviews.filter((r: any) => (r.brand + ' ' + r.product + ' ' + (r.reviewer?.name || '') + ' ' + (r.excerpt || '')).toLowerCase().includes(ql)) : src.reviews.slice(0, 3)).slice(0, 6);
+  const mInquiries = (ql ? src.inquiries.filter((i: any) => (i.brand + ' ' + i.product + ' ' + (i.asker?.name || '') + ' ' + (i.question || '')).toLowerCase().includes(ql)) : src.inquiries.slice(0, 3)).slice(0, 6);
   const totalResults = mBrands.length + mMembers.length + mReviews.length + mInquiries.length;
   const openSearch = () => { setSearch(true); setBiz(false); setPlus(false); setOpen(false); };
   const goSearch = (r) => { setSearch(false); setQ(''); onRoute(r); };
+  const openResult = (screen: string, set: () => void) => { set(); setSearch(false); setQ(''); onRoute(screen); };
   const bizItems = [
     { id: 'apply', icon: 'pen', label: 'Apply', note: 'Join the Capsule' },
     { id: 'portal', icon: 'grid', label: 'Brand Portal', note: 'Manage your brand' },
@@ -336,14 +356,17 @@ export function Nav({ route, onRoute, authed = false }: any) {
             </button>
           </div>
           <div style={{ overflowY: 'auto', padding: '8px 0 16px' }}>
-            {totalResults === 0 && (
-              <div style={{ padding: '40px 24px', textAlign: 'center', fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-muted)' }}>No results for “{q}”.</div>
+            {searchLoading && totalResults === 0 && (
+              <div style={{ padding: '40px 24px', textAlign: 'center', fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-muted)' }}>Searching…</div>
+            )}
+            {!searchLoading && totalResults === 0 && (
+              <div style={{ padding: '40px 24px', textAlign: 'center', fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-muted)' }}>{q ? `No results for “${q}”.` : 'Start typing to search.'}</div>
             )}
             {mBrands.length > 0 && (
               <div>
                 <div style={{ fontFamily: 'var(--font-body)', fontSize: 11, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--text-muted)', padding: '14px 24px 8px' }}>Brands · The Capsule</div>
-                {mBrands.map(b => (
-                  <button key={b.name} onClick={() => goSearch('capsule')} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 14, padding: '10px 24px', border: 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left' }}
+                {mBrands.map((b: any) => (
+                  <button key={b.id || b.name} onClick={() => openResult('brand', () => { appState.brand = b; })} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 14, padding: '10px 24px', border: 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left' }}
                     onMouseEnter={(e) => e.currentTarget.style.background = 'var(--linen)'} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
                     <img src={b.image} alt="" style={{ width: 40, height: 50, objectFit: 'contain', flex: 'none' }} />
                     <span style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
@@ -357,13 +380,14 @@ export function Nav({ route, onRoute, authed = false }: any) {
             {mMembers.length > 0 && (
               <div>
                 <div style={{ fontFamily: 'var(--font-body)', fontSize: 11, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--text-muted)', padding: '14px 24px 8px' }}>Members · The Collective</div>
-                {mMembers.map(m => (
-                  <button key={m.handle} onClick={() => goSearch('collective')} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 14, padding: '10px 24px', border: 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left' }}
+                {mMembers.map((m: any) => (
+                  <button key={m.id || m.handle} onClick={() => openResult('member', () => { appState.member = { id: m.id, name: m.name, handle: m.handle, avatar: m.avatar, social: m.social || m.handle, bio: m.bio || '' }; })} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 14, padding: '10px 24px', border: 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left' }}
                     onMouseEnter={(e) => e.currentTarget.style.background = 'var(--linen)'} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
-                    <span style={{ width: 40, height: 40, borderRadius: '50%', background: 'var(--linen)', flex: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-serif)', fontSize: 16, color: 'var(--text-secondary)' }}>{m.name.charAt(0)}</span>
+                    {m.avatar ? <img src={m.avatar} alt="" style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover', flex: 'none' }} />
+                      : <span style={{ width: 40, height: 40, borderRadius: '50%', background: 'var(--linen)', flex: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-serif)', fontSize: 16, color: 'var(--text-secondary)' }}>{(m.name || '?').charAt(0)}</span>}
                     <span style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                       <span style={{ fontFamily: 'var(--font-serif)', fontWeight: 700, fontSize: 16, color: 'var(--text-primary)' }}>{m.name}</span>
-                      <span style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: 'var(--text-muted)' }}>{m.handle} · {m.reviews} reviews</span>
+                      <span style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: 'var(--text-muted)' }}>{m.handle}{m.reviews != null ? ` · ${m.reviews} reviews` : ''}</span>
                     </span>
                   </button>
                 ))}
@@ -372,13 +396,14 @@ export function Nav({ route, onRoute, authed = false }: any) {
             {mReviews.length > 0 && (
               <div>
                 <div style={{ fontFamily: 'var(--font-body)', fontSize: 11, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--text-muted)', padding: '14px 24px 8px' }}>Reviews · The Lookbook</div>
-                {mReviews.map((r, i) => (
-                  <button key={i} onClick={() => { appState.lookbookTab = 'reviews'; goSearch('lookbook'); }} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 14, padding: '10px 24px', border: 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left' }}
+                {mReviews.map((r: any, i: number) => (
+                  <button key={r._id || i} onClick={() => openResult('review', () => { appState.review = r; })} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 14, padding: '10px 24px', border: 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left' }}
                     onMouseEnter={(e) => e.currentTarget.style.background = 'var(--linen)'} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
-                    <img src={r.image} alt="" style={{ width: 40, height: 50, objectFit: 'cover', flex: 'none' }} />
+                    {r.image ? <img src={r.image} alt="" style={{ width: 40, height: 50, objectFit: 'cover', flex: 'none' }} />
+                      : <span style={{ width: 40, height: 50, background: 'var(--linen)', flex: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}><Icon name="reviews" size={16} color="var(--text-muted)" /></span>}
                     <span style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
                       <span style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-primary)' }}><b>{r.brand}</b> · {r.product}</span>
-                      <span style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 520 }}>{r.reviewer.name}: “{r.excerpt}”</span>
+                      <span style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 520 }}>{r.reviewer?.name}: “{r.excerpt}”</span>
                     </span>
                   </button>
                 ))}
@@ -387,13 +412,14 @@ export function Nav({ route, onRoute, authed = false }: any) {
             {mInquiries.length > 0 && (
               <div>
                 <div style={{ fontFamily: 'var(--font-body)', fontSize: 11, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--text-muted)', padding: '14px 24px 8px' }}>Inquiries · The Lookbook</div>
-                {mInquiries.map((it, i) => (
-                  <button key={i} onClick={() => { appState.lookbookTab = 'inquiries'; goSearch('lookbook'); }} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 14, padding: '10px 24px', border: 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left' }}
+                {mInquiries.map((it: any, i: number) => (
+                  <button key={it._id || i} onClick={() => openResult('inquiry', () => { appState.inquiry = it; })} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 14, padding: '10px 24px', border: 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left' }}
                     onMouseEnter={(e) => e.currentTarget.style.background = 'var(--linen)'} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
-                    <img src={it.image} alt="" style={{ width: 40, height: 50, objectFit: 'cover', flex: 'none' }} />
+                    {it.image ? <img src={it.image} alt="" style={{ width: 40, height: 50, objectFit: 'cover', flex: 'none' }} />
+                      : <span style={{ width: 40, height: 50, background: 'var(--linen)', flex: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}><Icon name="message" size={16} color="var(--text-muted)" /></span>}
                     <span style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
                       <span style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-primary)' }}><b>{it.brand}</b> · {it.product}</span>
-                      <span style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 520 }}>{it.asker.name}: “{it.question}”</span>
+                      <span style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 520 }}>{it.asker?.name}: “{it.question}”</span>
                     </span>
                   </button>
                 ))}
