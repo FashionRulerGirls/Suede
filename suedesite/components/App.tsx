@@ -72,6 +72,22 @@ function AppInner() {
   const returnToRef = React.useRef<string | null>(null);
   const AUTH_ROUTES = ['signin', 'createaccount', 'forgot', 'verify', 'reset', 'brandsignin'];
 
+  // After an OAuth redirect the identity provider's page (e.g. Google) sits in
+  // browser history, so pressing Back would leave the app. Captured during
+  // render (before the Supabase client strips the code from the URL); we then
+  // add an in-app history entry so Back returns to Suede, not the provider.
+  const cameFromOAuth = React.useState(() => {
+    if (typeof window === 'undefined') return false;
+    return /[?&#](code|access_token)=/.test(window.location.search + window.location.hash);
+  })[0];
+  React.useEffect(() => {
+    if (!cameFromOAuth) return;
+    try {
+      window.history.replaceState(null, '', window.location.pathname);
+      window.history.pushState(null, '', window.location.pathname);
+    } catch { /* history unavailable */ }
+  }, [cameFromOAuth]);
+
   const scrollTop = () => {
     const top = () => {
       window.scrollTo(0, 0);

@@ -424,14 +424,24 @@ async function memberMeasurements(sb: SupabaseClient, memberId: string) {
   } catch { return null; }
 }
 
-// The Collective directory: public profiles + the viewer's match to each.
+// The Collective directory: only COMPLETE profiles (name + avatar + bio +
+// core measurements), via a security-definer function so a member's
+// measurements can be checked without exposing them. Falls back to the plain
+// profiles query if the 0007 function isn't applied yet.
 export async function loadCollectiveMembers(sb: SupabaseClient, viewerId?: string, limit = 60) {
-  const { data } = await sb
-    .from('profiles')
-    .select('id, username, display_name, avatar_url, bio')
-    .eq('show_in_collective', true)
-    .limit(limit);
-  let members = (data || []).filter((p: any) => p.id !== viewerId);
+  let rows: any[] | null = null;
+  const rpc = await sb.rpc('collective_members');
+  if (!rpc.error) {
+    rows = rpc.data as any[];
+  } else {
+    const { data } = await sb
+      .from('profiles')
+      .select('id, username, display_name, avatar_url, bio')
+      .eq('show_in_collective', true)
+      .limit(limit);
+    rows = data as any[];
+  }
+  let members = (rows || []).filter((p: any) => p.id !== viewerId).slice(0, limit);
   // viewer's follow set + match per member
   let followingSet = new Set<string>();
   if (viewerId) {
