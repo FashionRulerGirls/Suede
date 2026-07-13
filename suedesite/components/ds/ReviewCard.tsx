@@ -25,9 +25,13 @@ export function ReviewCard({
   onReviewer,
   onBrand,
   hideMeasurements = false,
+  match, // undefined = not computed (sample); null = self/none (hide); {score,confidence}
   style,
   ...rest
 }: any) {
+  const conf = match?.confidence as string | undefined;
+  const matchDot = conf === 'high' ? 'var(--rating-positive)' : conf === 'medium' ? 'var(--denim)' : conf === 'low' ? 'var(--text-muted)' : 'var(--rating-positive)';
+  const matchTip = match ? `${conf!.charAt(0).toUpperCase() + conf!.slice(1)} confidence · ${match.score}% match` : 'High Confidence';
   return (
     <article
       className="sd-reviewcard"
@@ -49,16 +53,18 @@ export function ReviewCard({
         {!hideMeasurements && (
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8 }}>
           <MeasurementSpec {...measurements} size="sm" tone="muted" />
+          {match !== null && (
           <span style={{ position: 'relative', display: 'inline-flex' }}
             onMouseEnter={(e) => { const t = e.currentTarget.querySelector('[data-tip]') as any; if (t) { t.style.opacity = '1'; t.style.pointerEvents = 'auto'; } }}
             onMouseLeave={(e) => { const t = e.currentTarget.querySelector('[data-tip]') as any; if (t) { t.style.opacity = '0'; t.style.pointerEvents = 'none'; } }}>
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: 'var(--font-body)', fontSize: 12, letterSpacing: '0.02em', color: 'var(--text-muted)' }}>
-              <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--rating-positive)', flex: 'none' }} />Suede Match
+              <span style={{ width: 6, height: 6, borderRadius: '50%', background: matchDot, flex: 'none' }} />Suede Match
             </span>
             <span data-tip style={{ position: 'absolute', top: 'calc(100% + 8px)', right: 0, whiteSpace: 'nowrap', background: 'var(--surface-card)', border: '1px solid var(--border-subtle)', boxShadow: 'var(--shadow-lg)', padding: '8px 12px', display: 'inline-flex', alignItems: 'center', opacity: 0, pointerEvents: 'none', transition: 'opacity var(--dur-base) var(--ease-out)', zIndex: 20 }}>
-              <span style={{ fontFamily: 'var(--font-body)', fontSize: 12.5, color: 'var(--text-secondary)' }}>High Confidence</span>
+              <span style={{ fontFamily: 'var(--font-body)', fontSize: 12.5, color: 'var(--text-secondary)' }}>{matchTip}</span>
             </span>
           </span>
+          )}
         </div>
         )}
       </div>

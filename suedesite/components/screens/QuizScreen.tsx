@@ -496,7 +496,7 @@ Respond ONLY with a valid JSON object in this exact format, no markdown, no prea
                 <Sub>Upload one or more full-body photos in fitted clothing for the most accurate read. Front, side, or both — your choice. Photos are processed securely and never shared.</Sub>
               </div>
               {a.photos.length > 0 && (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
+                <div className="sd-3col" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
                   {a.photos.map((p, i) => (
                     <div key={i} style={{ position: 'relative', aspectRatio: '3 / 4', borderRadius: 0, overflow: 'hidden', border: `1px solid ${ink(0.1)}`, background: 'var(--white)' }}>
                       <img src={p.dataUrl} alt={`Upload ${i + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />

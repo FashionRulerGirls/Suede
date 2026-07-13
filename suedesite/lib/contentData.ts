@@ -176,6 +176,7 @@ function personFromAuthor(a: any) {
 export function reviewRowToCard(row: any) {
   return {
     _id: row.id,
+    authorId: row.author_id,
     reviewer: personFromAuthor(row.author),
     product: row.product_name,
     size: row.size_value || row.size_other || '',
@@ -192,6 +193,7 @@ export function reviewRowToCard(row: any) {
 export function inquiryRowToCard(row: any) {
   return {
     _id: row.id,
+    authorId: row.author_id,
     asker: personFromAuthor(row.author),
     product: row.product_name,
     size: row.size_value || row.size_other || '',
@@ -244,8 +246,29 @@ async function attachReviewStats(sb: SupabaseClient, cards: any[]) {
   return cards.map((c) => ({ ...c, likes: rx.counts[c._id] || 0, comments: cc[c._id] || 0 }));
 }
 
-async function enrichReviewCards(sb: SupabaseClient, cards: any[]) {
-  return attachReviewStats(sb, await attachReviewMedia(sb, cards));
+async function enrichReviewCards(sb: SupabaseClient, cards: any[], viewerId?: string) {
+  return attachMatches(sb, viewerId, await attachReviewStats(sb, await attachReviewMedia(sb, cards)));
+}
+
+// Suede Match (proximity + confidence) between the viewer and one other member.
+// Uses the security-definer suede_match function, so the other member's raw
+// measurements are never exposed.
+export async function loadMatch(sb: SupabaseClient, viewerId: string, otherId: string) {
+  if (!viewerId || !otherId || viewerId === otherId) return null;
+  try {
+    const { data } = await sb.rpc('suede_match', { viewer: viewerId, other: otherId });
+    const row = Array.isArray(data) ? data[0] : data;
+    return row && row.score != null ? { score: row.score as number, confidence: row.confidence as string } : null;
+  } catch { return null; }
+}
+
+// Attach each card's match for the viewer (deduped by author; self → null).
+export async function attachMatches(sb: SupabaseClient, viewerId: string | undefined, cards: any[]) {
+  if (!viewerId) return cards;
+  const ids = Array.from(new Set(cards.map((c) => c.authorId).filter((id) => id && id !== viewerId)));
+  const entries = await Promise.all(ids.map(async (id) => [id, await loadMatch(sb, viewerId, id)] as const));
+  const map = Object.fromEntries(entries);
+  return cards.map((c) => ({ ...c, match: c.authorId && c.authorId !== viewerId ? (map[c.authorId] || null) : null }));
 }
 
 export async function loadReviewMedia(sb: SupabaseClient, reviewId: string): Promise<{ id: string; url: string; kind: string; position: number; poster?: string | null }[]> {
@@ -358,42 +381,42 @@ export async function loadUserInquiries(sb: SupabaseClient, userId: string) {
   return (data || []).map(inquiryRowToCard);
 }
 
-// Community-wide published feed (The Lookbook).
-export async function loadPublishedReviews(sb: SupabaseClient, limit = 48) {
+// Community-wide published feed (The Lookbook). viewerId enables Suede Match.
+export async function loadPublishedReviews(sb: SupabaseClient, viewerId?: string, limit = 48) {
   const { data } = await sb
     .from('reviews')
     .select(REVIEW_SELECT)
     .eq('status', 'published')
     .order('created_at', { ascending: false })
     .limit(limit);
-  return enrichReviewCards(sb, (data || []).map(reviewRowToCard));
+  return enrichReviewCards(sb, (data || []).map(reviewRowToCard), viewerId);
 }
 
-export async function loadPublishedInquiries(sb: SupabaseClient, limit = 48) {
+export async function loadPublishedInquiries(sb: SupabaseClient, viewerId?: string, limit = 48) {
   const { data } = await sb
     .from('inquiries')
     .select(INQUIRY_SELECT)
     .neq('status', 'removed')
     .order('created_at', { ascending: false })
     .limit(limit);
-  return (data || []).map(inquiryRowToCard);
+  return attachMatches(sb, viewerId, (data || []).map(inquiryRowToCard));
 }
 
 // Reviews / inquiries for a single brand (matched by id or free-text name).
-export async function loadBrandReviews(sb: SupabaseClient, brandName: string, brandId?: string | null) {
+export async function loadBrandReviews(sb: SupabaseClient, brandName: string, viewerId?: string, brandId?: string | null) {
   const id = brandId ?? (await resolveBrandId(sb, brandName));
   let q = sb.from('reviews').select(REVIEW_SELECT).eq('status', 'published');
   q = id ? q.or(`brand_id.eq.${id},brand_name.ilike.${brandName}`) : q.ilike('brand_name', brandName);
   const { data } = await q.order('created_at', { ascending: false });
-  return enrichReviewCards(sb, (data || []).map(reviewRowToCard));
+  return enrichReviewCards(sb, (data || []).map(reviewRowToCard), viewerId);
 }
 
-export async function loadBrandInquiries(sb: SupabaseClient, brandName: string, brandId?: string | null) {
+export async function loadBrandInquiries(sb: SupabaseClient, brandName: string, viewerId?: string, brandId?: string | null) {
   const id = brandId ?? (await resolveBrandId(sb, brandName));
   let q = sb.from('inquiries').select(INQUIRY_SELECT).neq('status', 'removed');
   q = id ? q.or(`brand_id.eq.${id},brand_name.ilike.${brandName}`) : q.ilike('brand_name', brandName);
   const { data } = await q.order('created_at', { ascending: false });
-  return (data || []).map(inquiryRowToCard);
+  return attachMatches(sb, viewerId, (data || []).map(inquiryRowToCard));
 }
 
 // ── detail pages ───────────────────────────────────────────────────

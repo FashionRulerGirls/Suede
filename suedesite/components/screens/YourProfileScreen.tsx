@@ -105,7 +105,7 @@ export function YourProfileScreen({ onRoute }: any) {
     const sb = createClient();
     if (!sb || !user) return;
     let active = true;
-    Promise.all([loadPublishedReviews(sb), loadPublishedInquiries(sb)]).then(([r, q]) => {
+    Promise.all([loadPublishedReviews(sb, user.id), loadPublishedInquiries(sb, user.id)]).then(([r, q]) => {
       if (!active) return;
       setCommunityReviews(r); setCommunityInquiries(q); setFeedLoaded(true);
     }).catch(() => {});

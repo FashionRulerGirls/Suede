@@ -87,8 +87,8 @@ export function BrandScreen({ onRoute, authed = false }: any) {
     const sb = createClient();
     if (!sb || !user || !brand?.name) { setDbReviews([]); setDbInq([]); setBrandId(null); setFollowing(false); setFollowers(0); return; }
     let active = true;
-    loadBrandReviews(sb, brand.name).then((r) => { if (active) setDbReviews(r); }).catch(() => {});
-    loadBrandInquiries(sb, brand.name).then((q) => { if (active) setDbInq(q); }).catch(() => {});
+    loadBrandReviews(sb, brand.name, user.id).then((r) => { if (active) setDbReviews(r); }).catch(() => {});
+    loadBrandInquiries(sb, brand.name, user.id).then((q) => { if (active) setDbInq(q); }).catch(() => {});
     resolveBrandId(sb, brand.name).then(async (id) => {
       if (!active || !id) return;
       setBrandId(id);

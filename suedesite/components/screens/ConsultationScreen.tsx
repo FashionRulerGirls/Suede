@@ -276,7 +276,7 @@ export function ConsultationScreen({ onRoute, authed }: any) {
             ].map((group, gi) => (
               <div key={group.title} style={{ marginBottom: gi < 2 ? 28 : 0 }}>
                 <p style={{ fontSize: 11, letterSpacing: '0.18em', textTransform: 'uppercase', color: ink(0.4), margin: '0 0 12px', paddingBottom: 8, borderBottom: `1px solid ${ink(0.1)}` }}>{group.title}</p>
-                <div style={{ display: 'grid', gridTemplateColumns: `repeat(${group.fields.length}, 1fr)`, gap: 12 }}>
+                <div className="sd-consult-steps" style={{ display: 'grid', gridTemplateColumns: `repeat(${group.fields.length}, 1fr)`, gap: 12 }}>
                   {group.fields.map((f) => {
                     const i = MEASUREMENT_STEPS.findIndex((s) => s.field === f);
                     if (i < 0) return null;

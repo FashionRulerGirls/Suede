@@ -11,6 +11,7 @@ import { useAuth } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/client';
 import { createReview, updateReview, loadReviewMedia, deleteReviewMedia } from '@/lib/contentData';
 import { uploadReviewMedia } from '@/lib/storage';
+import { loadProfileData, inchesToHeight, inchesDisplay } from '@/lib/profileData';
 
 function StarRow({ label, value, onChange }: any) {
   const [hover, setHover] = React.useState(0);
@@ -146,6 +147,24 @@ export function CreateReviewScreen({ onRoute, authed = false }: any) {
   const [submitted, setSubmitted] = React.useState(false);
   const [saving, setSaving] = React.useState(false);
   const [lb, setLb] = React.useState<number | null>(null);
+  // The signed-in member's real measurements shown in the "Your Measurements"
+  // section (falls back to the sample values for guests/demo).
+  const [myMeasure, setMyMeasure] = React.useState<[string, string][] | null>(null);
+  React.useEffect(() => {
+    const sb = createClient();
+    if (!sb || !user) return;
+    let active = true;
+    loadProfileData(sb, user.id).then(({ measurements: ms }) => {
+      if (!active) return;
+      setMyMeasure([
+        ['Height', inchesToHeight(ms?.height_in) || '—'],
+        ['Bust', inchesDisplay(ms?.bust_in) || '—'],
+        ['Waist', inchesDisplay(ms?.waist_in) || '—'],
+        ['Hips', inchesDisplay(ms?.hips_in) || '—'],
+      ]);
+    }).catch(() => {});
+    return () => { active = false; };
+  }, [user?.id]);
   const [exPreview, setExPreview] = React.useState<any>(null);
   const gallery = photos.map((p) => ({ url: p.url, kind: (p.file.type || '').startsWith('video') ? 'video' : 'image', poster: p.posterUrl }));
   const onPhotos = (e: any) => {
@@ -486,14 +505,17 @@ export function CreateReviewScreen({ onRoute, authed = false }: any) {
           </label>
         }>
           <div style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-muted)', marginBottom: 16, marginTop: -8 }}>These measurements will be shown with your review. Even if hidden, they still contribute to our Suede Match calculation.</div>
-          <div className="sd-chipgrid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
-            {[['Height', "5'6\""], ['Bust', '34"'], ['Waist', '26"'], ['Hips', '36"']].map(([k, v]) => (
+          <div className="sd-measuregrid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
+            {(myMeasure || [['Height', "5'6\""], ['Bust', '34"'], ['Waist', '26"'], ['Hips', '36"']]).map(([k, v]) => (
               <div key={k} style={{ background: 'var(--linen)', padding: '14px 16px', textAlign: 'center' }}>
                 <div style={{ fontFamily: 'var(--font-body)', fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--text-muted)' }}>{k}</div>
                 <div style={{ fontFamily: 'var(--font-body)', fontSize: 16, color: 'var(--text-primary)', marginTop: 4 }}>{v}</div>
               </div>
             ))}
           </div>
+          {myMeasure && myMeasure.every(([, v]) => v === '—') && (
+            <button type="button" onClick={() => onRoute('editprofile')} style={{ marginTop: 12, background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-primary)', textDecoration: 'underline', textUnderlineOffset: 3 }}>Add your measurements to improve fit matching</button>
+          )}
         </SectionCard>
 
         {errors.length > 0 && (
