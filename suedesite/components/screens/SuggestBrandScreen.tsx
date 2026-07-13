@@ -1,6 +1,9 @@
 'use client';
 import React from 'react';
 import { Button, Field, Input, Icon } from '@/components/ds';
+import { useAuth } from '@/lib/auth';
+import { createClient } from '@/lib/supabase/client';
+import { submitBrandSuggestion } from '@/lib/contentData';
 
 function SuggestSection({ label, children }: any) {
   return (
@@ -12,10 +15,26 @@ function SuggestSection({ label, children }: any) {
 }
 
 export function SuggestBrandScreen({ onRoute }: any) {
+  const { user } = useAuth();
   const [name, setName] = React.useState('');
   const [url, setUrl] = React.useState('');
   const [why, setWhy] = React.useState('');
+  const [submitting, setSubmitting] = React.useState(false);
+  const [error, setError] = React.useState('');
   const [submitted, setSubmitted] = React.useState(false);
+  const submit = async () => {
+    if (!name.trim()) return;
+    setSubmitting(true); setError('');
+    try {
+      const sb = createClient();
+      if (sb) await submitBrandSuggestion(sb, { name, url, why }, user?.id);
+      setSubmitted(true);
+    } catch {
+      setError('Something went wrong. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   if (submitted) {
     return (
@@ -54,7 +73,8 @@ export function SuggestBrandScreen({ onRoute }: any) {
             style={{ width: '100%', boxSizing: 'border-box', resize: 'vertical', border: '1px solid var(--border-default)', borderRadius: 'var(--radius-xs)', background: 'transparent', padding: '12px 13px', fontFamily: 'var(--font-body)', fontSize: 14, lineHeight: 1.5, color: 'var(--text-primary)', outline: 'none' }} />
           <div style={{ textAlign: 'right', fontFamily: 'var(--font-body)', fontSize: 12, color: 'var(--text-muted)', marginTop: 8 }}>{why.length} / 600 characters</div>
         </SuggestSection>
-        <Button variant="primary" fullWidth size="lg" disabled={!name.trim()} onClick={() => setSubmitted(true)}>Submit</Button>
+        {error && <div role="alert" style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--rating-critical)', textAlign: 'center' }}>{error}</div>}
+        <Button variant="primary" fullWidth size="lg" disabled={!name.trim() || submitting} onClick={submit}>{submitting ? 'Submitting…' : 'Submit'}</Button>
       </div>
     </div>
   );

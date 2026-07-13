@@ -689,3 +689,46 @@ export async function markNotificationsRead(sb: SupabaseClient, userId: string) 
     .eq('user_id', userId)
     .is('read_at', null);
 }
+
+// ── intake forms ───────────────────────────────────────────────────
+// All three tables allow anyone to insert (RLS: with check (true)); admins
+// read them from the dashboard. submitted_by is stamped when a member is
+// signed in, otherwise null.
+export async function submitBrandApplication(sb: SupabaseClient, p: {
+  brandName: string; website?: string; email: string; location?: string;
+  ownership?: string; ownershipOther?: string; foundingYear?: string; pitch: string;
+}, userId?: string) {
+  const { error } = await sb.from('brand_applications').insert({
+    brand_name: p.brandName.trim(),
+    website: p.website?.trim() || null,
+    email: p.email.trim(),
+    location: p.location?.trim() || null,
+    ownership: p.ownership || null,
+    ownership_other: p.ownershipOther?.trim() || null,
+    founding_year: p.foundingYear?.trim() || null,
+    pitch: p.pitch.trim(),
+    submitted_by: userId || null,
+  });
+  if (error) throw error;
+}
+
+export async function submitBrandSuggestion(sb: SupabaseClient, p: {
+  name: string; url?: string; why?: string;
+}, userId?: string) {
+  const { error } = await sb.from('brand_suggestions').insert({
+    name: p.name.trim(),
+    url: p.url?.trim() || null,
+    why: p.why?.trim() || null,
+    submitted_by: userId || null,
+  });
+  if (error) throw error;
+}
+
+export async function subscribeNewsletter(sb: SupabaseClient, email: string) {
+  const e = email.trim().toLowerCase();
+  // Idempotent: a repeat sign-up is a no-op, not an error.
+  const { error } = await sb
+    .from('newsletter_subscribers')
+    .upsert({ email: e }, { onConflict: 'email', ignoreDuplicates: true });
+  if (error) throw error;
+}

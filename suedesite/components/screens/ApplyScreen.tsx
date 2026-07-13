@@ -1,9 +1,13 @@
 'use client';
 import React from 'react';
 import { Button, Input, Field, Select, Icon, Logo } from '@/components/ds';
+import { useAuth } from '@/lib/auth';
+import { createClient } from '@/lib/supabase/client';
+import { submitBrandApplication } from '@/lib/contentData';
 
 export function ApplyScreen({ onRoute }: any) {
   const ownership = ['Brand Owner', 'Brand PR / Communications', 'Other'];
+  const { user } = useAuth();
   const [own, setOwn] = React.useState('Brand Owner');
   const [ownOpen, setOwnOpen] = React.useState(false);
   const [ownOther, setOwnOther] = React.useState('');
@@ -11,16 +15,34 @@ export function ApplyScreen({ onRoute }: any) {
   const [brandName, setBrandName] = React.useState('');
   const [website, setWebsite] = React.useState('');
   const [email, setEmail] = React.useState('');
+  const [location, setLocation] = React.useState('');
+  const [foundingYear, setFoundingYear] = React.useState('');
   const [errors, setErrors] = React.useState<string[]>([]);
+  const [submitting, setSubmitting] = React.useState(false);
   const [submitted, setSubmitted] = React.useState(false);
-  const submitApplication = () => {
+  const submitApplication = async () => {
     const e: string[] = [];
     if (!brandName.trim()) e.push('Enter your brand name');
     if (!website.trim()) e.push('Add your website');
     if (!email.trim() || !email.includes('@')) e.push('Enter a valid contact email');
     if (!why.trim()) e.push('Tell us why your brand belongs in The Capsule');
     setErrors(e);
-    if (!e.length) setSubmitted(true);
+    if (e.length) return;
+    setSubmitting(true);
+    try {
+      const sb = createClient();
+      if (sb) {
+        await submitBrandApplication(sb, {
+          brandName, website, email, location,
+          ownership: own, ownershipOther: ownOther, foundingYear, pitch: why,
+        }, user?.id);
+      }
+      setSubmitted(true);
+    } catch {
+      setErrors(['Something went wrong submitting your application. Please try again.']);
+    } finally {
+      setSubmitting(false);
+    }
   };
   const points = [
     'Capsule Brands get feautured placement on our Brand Directory page, access to personalized dashboards, and response features to engage directly with Reviews / Inquiries.',
@@ -67,7 +89,7 @@ export function ApplyScreen({ onRoute }: any) {
           <Field label="Website"><Input variant="outline" maxLength={300} value={website} onChange={(e: any) => setWebsite(e.target.value)} placeholder="https://" /></Field>
           <Field label="Email"><Input variant="outline" maxLength={120} value={email} onChange={(e: any) => setEmail(e.target.value)} placeholder="e.g you@gmail.com" /></Field>
           <div className="sd-apply-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-            <Field label="Location"><Input variant="outline" maxLength={80} placeholder="City, Country" /></Field>
+            <Field label="Location"><Input variant="outline" maxLength={80} placeholder="City, Country" value={location} onChange={(e: any) => setLocation(e.target.value)} /></Field>
             <Field label="Ownership / identity">
               <div style={{ position: 'relative' }}>
                 <button type="button" onClick={() => setOwnOpen(o => !o)} style={{
@@ -104,7 +126,7 @@ export function ApplyScreen({ onRoute }: any) {
               </div>
             </Field>
           </div>
-          <Field label="Founding year"><Input variant="outline" maxLength={4} inputMode="numeric" placeholder="2019" /></Field>
+          <Field label="Founding year"><Input variant="outline" maxLength={4} inputMode="numeric" placeholder="2019" value={foundingYear} onChange={(e: any) => setFoundingYear(e.target.value)} /></Field>
           {own === 'Other' && (
             <Field label="Please specify your role"><Input variant="outline" maxLength={60} placeholder="e.g. Stylist, Founder's partner" value={ownOther} onChange={(e: any) => setOwnOther(e.target.value)} /></Field>
           )}
@@ -125,7 +147,7 @@ export function ApplyScreen({ onRoute }: any) {
           )}
           <div className="sd-apply-submit" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, borderTop: '1px solid var(--border-subtle)', paddingTop: 24 }}>
             <span style={{ fontFamily: 'var(--font-body)', fontSize: 12, lineHeight: 1.4, color: 'var(--ink-500)', maxWidth: 300 }}>By submitting your Capsule application, you agree to be contacted by the Suede Partnerships team.</span>
-            <Button variant="primary" onClick={submitApplication}>Submit application</Button>
+            <Button variant="primary" onClick={submitApplication} disabled={submitting}>{submitting ? 'Submitting…' : 'Submit application'}</Button>
           </div>
         </div>
       </div>
