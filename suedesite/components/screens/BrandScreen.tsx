@@ -143,7 +143,15 @@ export function BrandScreen({ onRoute, authed = false }: any) {
       <div className="sd-brandcard-front" style={{ position: 'relative', minHeight: 420, backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden', visibility: flipped ? 'hidden' : 'visible', transition: 'visibility 0s linear 350ms', backgroundImage: `linear-gradient(rgba(250,249,246,0.4), rgba(250,249,246,0.4)), url(${brand.hero || '/assets/imagery/suede-card-bg.jpg'})`, backgroundSize: 'cover', backgroundPosition: 'center', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {/* Centered brand name */}
         <div className="sd-brandname-block" style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 14, pointerEvents: 'none', padding: '0 40px' }}>
-          <h1 className="sd-brandname" style={{ fontFamily: 'var(--font-serif)', fontWeight: 100, fontSize: 88, lineHeight: 1, letterSpacing: '0.04em', color: 'var(--ink-900)', margin: 0, textTransform: 'uppercase', textAlign: 'center' }}>{brand.name}</h1>
+          <h1 className="sd-brandname" style={{ fontFamily: 'var(--font-serif)', fontWeight: 100, fontSize: 88, lineHeight: 1, letterSpacing: '0.04em', color: 'var(--ink-900)', margin: 0, textTransform: 'uppercase', textAlign: 'center' }}>
+            {brand.name}
+            {real && brandId && (
+              <button className="sd-brand-follow" onClick={toggleFollow} disabled={followBusy} aria-label={following ? 'Following' : 'Follow'} title={following ? 'Following' : 'Follow'}
+                style={{ verticalAlign: 'super', marginLeft: 12, background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: 'var(--ink-900)', display: 'inline-flex', pointerEvents: 'auto' }}>
+                <Icon name={following ? 'check' : 'user-plus'} size={26} color="var(--ink-900)" />
+              </button>
+            )}
+          </h1>
           <span className="sd-brandtag" style={{ fontFamily: 'var(--font-serif)', fontStyle: 'italic', fontSize: 16, color: 'var(--ink-600)', textAlign: 'center', lineHeight: 1.3, whiteSpace: 'nowrap' }}>{brand.tagline}</span>
         </div>
 
@@ -229,19 +237,7 @@ export function BrandScreen({ onRoute, authed = false }: any) {
             );
           })}
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 18, marginTop: 28 }}>
-          {real && brandId && (
-            <button onClick={toggleFollow} disabled={followBusy} style={{
-              display: 'inline-flex', alignItems: 'center', gap: 9, padding: '11px 26px', cursor: 'pointer',
-              borderRadius: 'var(--radius-pill)', fontFamily: 'var(--font-body)', fontSize: 14, letterSpacing: '0.02em',
-              border: following ? '1px solid var(--border-default)' : 'none',
-              background: following ? 'transparent' : 'var(--ink-900)', color: following ? 'var(--text-primary)' : 'var(--white)',
-              transition: 'all var(--dur-fast) var(--ease-out)',
-            }}>
-              <Icon name={following ? 'check' : 'plus'} size={15} color={following ? 'var(--text-primary)' : 'var(--white)'} />
-              {following ? 'Following' : 'Follow'}
-            </button>
-          )}
+        <div style={{ textAlign: 'center', marginTop: 28 }}>
           <button onClick={() => window.open('https://' + website, '_blank', 'noopener,noreferrer')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: 15, color: 'var(--text-primary)', textDecoration: 'underline', textUnderlineOffset: 4 }}>{website}</button>
         </div>
       </div>

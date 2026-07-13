@@ -54,7 +54,10 @@ html, body { max-width: 100%; overflow-x: hidden; }
   #root .sd-hero-links .hero-dest:nth-child(4) { display: none !important; }
   #root .sd-hero-links .hero-dest [data-ul] { display: none !important; }
   #root .sd-hero-photo { background-size: auto 68% !important; background-position: center 30% !important; }
-  #root .sd-thesis { padding: 44px 12px !important; }
+  #root .sd-thesis { padding: 44px 20px !important; }
+  #root .sd-thesis-q { white-space: normal !important; font-size: 18px !important; line-height: 1.4 !important; max-width: 340px !important; }
+  #root .sd-brand-follow { margin-left: 6px !important; }
+  #root .sd-brand-follow svg { width: 18px !important; height: 18px !important; }
   #root .sd-pp-inner { padding: 10px 16px !important; gap: 12px !important; }
   #root .sd-pp-label { font-size: 12px !important; }
   #root .sd-pp-btn { padding: 0 13px !important; font-size: 12px !important; height: 34px !important; }
