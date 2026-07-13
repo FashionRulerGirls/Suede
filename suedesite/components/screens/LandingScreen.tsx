@@ -208,7 +208,7 @@ export function LandingScreen({ onRoute, tweaks, authed = false }: any) {
 
         {/* three destinations: Capsule left, Lookbook centered, Collective right */}
         <div className="sd-hero-dests" style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'start', paddingTop: 40, paddingLeft: 60, paddingRight: 60 }}>
-          {[{ ic: 'search', label: 'The Capsule', r: 'capsule', js: 'start' },
+          {[{ ic: 'shirt', label: 'The Capsule', r: 'capsule', js: 'start' },
             { ic: 'reviews', label: 'The Lookbook', r: 'lookbook', js: 'center' },
             { ic: 'user', label: 'The Collective', r: 'collective', js: 'end' }].map(l => (
             <button key={l.label} onClick={() => onRoute(l.r)} className="sd-dest"
