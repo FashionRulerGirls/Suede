@@ -55,6 +55,7 @@ html, body { max-width: 100%; overflow-x: hidden; }
   #root .sd-hero-links .hero-dest [data-ul] { display: none !important; }
   #root .sd-hero-photo { background-size: auto 68% !important; background-position: center 30% !important; }
   #root .sd-thesis { padding: 44px 20px 22px !important; }
+  #root .sd-feedwrap { padding-left: 18px !important; padding-right: 18px !important; }
   #root .sd-thesis-q { white-space: normal !important; font-size: 18px !important; line-height: 1.4 !important; max-width: 340px !important; }
   #root .sd-brand-follow { margin-left: 6px !important; }
   #root .sd-brand-follow svg { width: 18px !important; height: 18px !important; }

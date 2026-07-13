@@ -10,7 +10,7 @@ import { InquiryCard } from '@/components/screens/LookbookScreen';
 import { useAuth } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/client';
 import { loadProfileData, inchesToHeight, inchesDisplay } from '@/lib/profileData';
-import { loadUserReviews, loadUserInquiries, countFollowedBrands, memberFollowerCount } from '@/lib/contentData';
+import { loadUserReviews, loadUserInquiries, countFollowedBrands, memberFollowerCount, loadFollowedBrandNames, loadPublishedReviews, loadPublishedInquiries } from '@/lib/contentData';
 
 function YProfStat({ value, label, links, onValue }: any) {
   const valueStyle = { fontFamily: 'var(--font-meta)', fontWeight: 500, fontSize: 30, lineHeight: 1, color: 'var(--text-heading)' } as const;
@@ -49,8 +49,15 @@ export function YourProfileScreen({ onRoute }: any) {
     loadUserInquiries(sb, user.id).then((q) => { if (active) setDbInquiries(q); }).catch(() => {});
     countFollowedBrands(sb, user.id).then((n) => { if (active) setFollowedBrands(n); }).catch(() => {});
     memberFollowerCount(sb, user.id).then((n) => { if (active) setFollowerCount(n); }).catch(() => {});
+    loadFollowedBrandNames(sb, user.id).then((names) => { if (active) setFollowedNames(names); }).catch(() => {});
     return () => { active = false; };
   }, [user?.id]);
+  // Community content for the Capsule Feed — loaded lazily when a feed view opens.
+  const [followedNames, setFollowedNames] = React.useState<string[]>([]);
+  const [communityReviews, setCommunityReviews] = React.useState<any[]>([]);
+  const [communityInquiries, setCommunityInquiries] = React.useState<any[]>([]);
+  const [feedLoaded, setFeedLoaded] = React.useState(false);
+  const view0 = appState.profileView; // read once for the initial-load decision
 
   const MOCK = {
     name: 'Kikiola Kanbi', handle: '@kikiolakanbi', avatar: '/assets/avatars/avatar-rose.jpg',
@@ -92,6 +99,18 @@ export function YourProfileScreen({ onRoute }: any) {
     window.addEventListener('suede-profile-view', onView);
     return () => window.removeEventListener('suede-profile-view', onView);
   }, []);
+  // Load the community feed the first time a real member opens the Capsule Feed.
+  React.useEffect(() => {
+    if (!real || view !== 'capsulefeed' || feedLoaded) return;
+    const sb = createClient();
+    if (!sb || !user) return;
+    let active = true;
+    Promise.all([loadPublishedReviews(sb), loadPublishedInquiries(sb)]).then(([r, q]) => {
+      if (!active) return;
+      setCommunityReviews(r); setCommunityInquiries(q); setFeedLoaded(true);
+    }).catch(() => {});
+    return () => { active = false; };
+  }, [real, view, feedLoaded, user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
   const [feedTab, setFeedTab] = React.useState('reviews');
   const [feedQuery, setFeedQuery] = React.useState('');
   const [feedSort, setFeedSort] = React.useState('date');
@@ -110,16 +129,29 @@ export function YourProfileScreen({ onRoute }: any) {
     const isBrandSide = view === 'capsulefeed' || view === 'brands';
     const ql = feedQuery.trim().toLowerCase();
     const avatarPool = ['/assets/avatars/avatar-rose.jpg', '/assets/avatars/avatar-blue.jpg', '/assets/avatars/avatar-asaya.jpg'];
-    // The brands this member follows / the members who follow them.
-    const followedBrands = (SUEDE_BRANDS || []).slice(0, Number(m.brands) || 8).filter(b => b.name.toLowerCase().includes(ql));
-    const followers = (SUEDE_MEMBERS || []).filter(p => (p.name + ' ' + p.handle).toLowerCase().includes(ql));
+    const followedSet = new Set(followedNames.map((n) => n.toLowerCase()));
+    // The brands this member follows / the members who follow them. Real members
+    // see their own follows + community content; guests/demo see the samples.
+    const followedBrands = real
+      ? (SUEDE_BRANDS || []).filter(b => followedSet.has(b.name.toLowerCase()) && b.name.toLowerCase().includes(ql))
+      : (SUEDE_BRANDS || []).slice(0, Number(m.brands) || 8).filter(b => b.name.toLowerCase().includes(ql));
+    const followers = real ? [] : (SUEDE_MEMBERS || []).filter(p => (p.name + ' ' + p.handle).toLowerCase().includes(ql));
+    // Capsule Feed = community reviews/inquiries from the brands you follow.
+    // Collective Feed (from members who follow you) is empty until the member
+    // graph exists.
+    const feedReviews = real
+      ? (view === 'capsulefeed' ? communityReviews.filter(r => followedSet.has((r.brand || '').toLowerCase())) : [])
+      : [...reviews].slice(0, 4);
+    const feedInquiries = real
+      ? (view === 'capsulefeed' ? communityInquiries.filter(it => followedSet.has((it.brand || '').toLowerCase())) : [])
+      : (SUEDE_INQUIRIES || []);
     const openBrand = (b: any) => { appState.brand = b; onRoute('brand'); };
     const openMember = (p: any, avatar: string) => {
       appState.member = { name: p.name, handle: p.handle, avatar, social: p.handle, bio: "I love to explore the brands and Fashion. It's my hobby.", measurements: p.m, followers: '30', reviews: String(p.reviews), inquiries: String(p.inquiries), brands: String(p.brands) };
       onRoute('member');
     };
     return (
-      <div style={{ maxWidth: 1460, margin: '0 auto', padding: '28px 52px 0' }}>
+      <div className="sd-feedwrap" style={{ maxWidth: 1460, margin: '0 auto', padding: '28px 52px 0' }}>
         <button onClick={() => setView('profile')} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-secondary)', marginBottom: 24 }}>
           <Icon name="arrow-left" size={16} color="var(--text-secondary)" /> Back to your profile
         </button>
@@ -152,21 +184,36 @@ export function YourProfileScreen({ onRoute }: any) {
             <div style={{ maxWidth: 460, margin: '24px auto 32px' }}>
               <Tabs items={[{ label: 'Reviews', value: 'reviews' }, { label: 'Inquiries', value: 'inquiries' }]} value={feedTab} onChange={setFeedTab} align="stretch" />
             </div>
-            {feedTab === 'reviews' ? (
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 28, paddingBottom: 24 }}>
-                {[...reviews].slice(0, 4).filter(r => r.brand.toLowerCase().includes(ql)).map((r, i) => <ReviewCard key={i} {...r} onSeeFull={() => openReview(r)} />)}
-              </div>
-            ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 28, paddingBottom: 24 }}>
-                {(SUEDE_INQUIRIES || []).filter(it => it.brand.toLowerCase().includes(ql)).map((it, i) => <InquiryCard key={i} {...it} onOpen={() => { appState.inquiry = it; onRoute('inquiry'); }} />)}
-              </div>
-            )}
+            {(() => {
+              const list = (feedTab === 'reviews'
+                ? feedReviews.filter((r: any) => (r.brand || '').toLowerCase().includes(ql))
+                : feedInquiries.filter((it: any) => (it.brand || '').toLowerCase().includes(ql)));
+              if (list.length === 0) {
+                return (
+                  <div style={{ textAlign: 'center', padding: '48px 0 24px' }}>
+                    <p style={{ fontFamily: 'var(--font-serif)', fontSize: 21, color: 'var(--text-heading)', margin: '0 0 6px' }}>Nothing here yet</p>
+                    <p style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-muted)', margin: 0 }}>
+                      {view === 'capsulefeed' ? 'Follow brands to see their latest reviews and inquiries here.' : 'When members who follow you post, it’ll show up here.'}
+                    </p>
+                  </div>
+                );
+              }
+              return feedTab === 'reviews' ? (
+                <div className="sd-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 28, paddingBottom: 24 }}>
+                  {list.map((r: any, i: number) => <ReviewCard key={i} {...r} onSeeFull={() => openReview(r)} />)}
+                </div>
+              ) : (
+                <div className="sd-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 28, paddingBottom: 24 }}>
+                  {list.map((it: any, i: number) => <InquiryCard key={i} {...it} onOpen={() => { appState.inquiry = it; onRoute('inquiry'); }} />)}
+                </div>
+              );
+            })()}
           </React.Fragment>
         ) : isBrandSide ? (
           followedBrands.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '54px 0', fontFamily: 'var(--font-serif)', fontSize: 22, color: 'var(--text-heading)' }}>No brands found.</div>
           ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24, marginTop: 28, paddingBottom: 28 }}>
+          <div className="sd-3col" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24, marginTop: 28, paddingBottom: 28 }}>
             {followedBrands.map((b: any) => (
               <button key={b.name} onClick={() => openBrand(b)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, background: 'var(--surface-card)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-sm)', padding: '24px 20px', cursor: 'pointer', textAlign: 'center', transition: 'border-color var(--dur-fast) var(--ease-out)' }}
                 onMouseEnter={(e) => e.currentTarget.style.borderColor = 'var(--ink-900)'} onMouseLeave={(e) => e.currentTarget.style.borderColor = 'var(--border-subtle)'}>
@@ -184,7 +231,7 @@ export function YourProfileScreen({ onRoute }: any) {
           followers.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '54px 0', fontFamily: 'var(--font-serif)', fontSize: 22, color: 'var(--text-heading)' }}>No followers found.</div>
           ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 28, paddingBottom: 28 }}>
+          <div className="sd-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 28, paddingBottom: 28 }}>
             {followers.map((p: any, i: number) => {
               const avatar = avatarPool[i % avatarPool.length];
               return (

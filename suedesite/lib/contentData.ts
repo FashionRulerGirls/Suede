@@ -317,6 +317,12 @@ export async function setBrandFollow(sb: SupabaseClient, userId: string, brandId
 export const brandFollowerCount = (sb: SupabaseClient, brandId: string) => count(sb, 'brand_follows', 'brand_id', brandId);
 export const countFollowedBrands = (sb: SupabaseClient, userId: string) => count(sb, 'brand_follows', 'user_id', userId);
 
+// Names of the brands a member follows (for the Capsule Feed + Brands list).
+export async function loadFollowedBrandNames(sb: SupabaseClient, userId: string): Promise<string[]> {
+  const { data } = await sb.from('brand_follows').select('brands(name)').eq('user_id', userId);
+  return (data || []).map((r: any) => r.brands?.name).filter(Boolean);
+}
+
 export async function isFollowingMember(sb: SupabaseClient, followerId: string, followeeId: string) {
   const { data } = await sb.from('member_follows').select('followee_id').eq('follower_id', followerId).eq('followee_id', followeeId).maybeSingle();
   return !!data;
