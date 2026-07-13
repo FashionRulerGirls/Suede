@@ -194,8 +194,8 @@ export function LandingScreen({ onRoute, tweaks, authed = false }: any) {
   return (
     <div>
       {/* HERO — giant SUEDE wordmark behind the auto-scrolling model carousel */}
-      <section className="sd-hero-new" style={{ position: 'relative', overflow: 'hidden', minHeight: 'calc(100vh - 75px)', display: 'flex', flexDirection: 'column', padding: '38px 0 46px', background: 'var(--surface-page)' }}>
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+      <section className="sd-hero-new" style={{ position: 'relative', overflow: 'hidden', height: 'calc(100vh - 75px)', minHeight: 540, display: 'flex', flexDirection: 'column', padding: '38px 0 40px', background: 'var(--surface-page)' }}>
+        <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
           <div className="sd-hero-stage" style={{ position: 'relative' }}>
             <div className="sd-hero-wordmark" aria-hidden="true" style={{ position: 'absolute', left: 0, right: 0, top: 20, height: 475, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 0, pointerEvents: 'none' }}>
               <Logo variant="wordmark" height={400} color="var(--ink-900)" style={{ maxWidth: 'none', width: 'auto', flex: 'none' }} />
