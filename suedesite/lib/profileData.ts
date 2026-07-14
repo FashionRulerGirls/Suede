@@ -61,7 +61,9 @@ export type DbMeasurements = {
 // ── reads ──────────────────────────────────────────────────────────
 export async function loadProfileData(sb: SupabaseClient, userId: string) {
   const [{ data: profile }, { data: measurements }] = await Promise.all([
-    sb.from('profiles').select('*').eq('id', userId).single(),
+    // explicit columns (not '*') so this keeps working once is_admin is
+    // removed from the public column grant in 0009; the client never uses it.
+    sb.from('profiles').select('id, username, display_name, bio, avatar_url, instagram, tiktok, website, measurements_public, email_notifications, show_in_collective, accepted_terms_at, created_at').eq('id', userId).single(),
     sb.from('measurements').select('*').eq('user_id', userId).maybeSingle(),
   ]);
   return {

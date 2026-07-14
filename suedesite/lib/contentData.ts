@@ -14,6 +14,13 @@ export async function resolveBrandId(sb: SupabaseClient, name?: string | null): 
   return (data as any)?.id ?? null;
 }
 
+// Values placed inside a PostgREST or()/and() filter string must be wrapped in
+// double quotes when they may contain reserved characters (commas, parens,
+// dots), or they get parsed as filter syntax. Escape embedded " and \.
+function pgrstQuote(v: string): string {
+  return `"${v.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
+}
+
 // A display-string snapshot of the member's current measurements, stored on the
 // review/inquiry so the card shows the fit even if the profile changes later.
 async function measurementSnapshot(sb: SupabaseClient, userId: string) {
@@ -543,7 +550,7 @@ export async function loadPublishedInquiries(sb: SupabaseClient, viewerId?: stri
 export async function loadBrandReviews(sb: SupabaseClient, brandName: string, viewerId?: string, brandId?: string | null) {
   const id = brandId ?? (await resolveBrandId(sb, brandName));
   let q = sb.from('reviews').select(REVIEW_SELECT).eq('status', 'published');
-  q = id ? q.or(`brand_id.eq.${id},brand_name.ilike.${brandName}`) : q.ilike('brand_name', brandName);
+  q = id ? q.or(`brand_id.eq.${id},brand_name.ilike.${pgrstQuote(brandName)}`) : q.ilike('brand_name', brandName);
   const { data } = await q.order('created_at', { ascending: false });
   return enrichReviewCards(sb, (data || []).map(reviewRowToCard), viewerId);
 }
@@ -551,7 +558,7 @@ export async function loadBrandReviews(sb: SupabaseClient, brandName: string, vi
 export async function loadBrandInquiries(sb: SupabaseClient, brandName: string, viewerId?: string, brandId?: string | null) {
   const id = brandId ?? (await resolveBrandId(sb, brandName));
   let q = sb.from('inquiries').select(INQUIRY_SELECT).neq('status', 'removed');
-  q = id ? q.or(`brand_id.eq.${id},brand_name.ilike.${brandName}`) : q.ilike('brand_name', brandName);
+  q = id ? q.or(`brand_id.eq.${id},brand_name.ilike.${pgrstQuote(brandName)}`) : q.ilike('brand_name', brandName);
   const { data } = await q.order('created_at', { ascending: false });
   return attachMatches(sb, viewerId, (data || []).map(inquiryRowToCard));
 }
