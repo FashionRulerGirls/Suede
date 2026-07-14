@@ -22,7 +22,9 @@ export function Footer({ onRoute }: any) {
     }
   };
   const [fb, setFb] = React.useState('');
+  const [fbOpen, setFbOpen] = React.useState(false);
   const [fbState, setFbState] = React.useState<'idle' | 'busy' | 'done' | 'error'>('idle');
+  const closeFb = () => { setFbOpen(false); setTimeout(() => { setFb(''); setFbState('idle'); }, 200); };
   const sendFeedback = async () => {
     const m = fb.trim();
     if (!m) { setFbState('error'); return; }
@@ -36,7 +38,7 @@ export function Footer({ onRoute }: any) {
     }
   };
   const cols = [
-    { h: 'About Us', items: [], route: 'about' },
+    { h: 'About Us', items: [{ label: 'Help us improve Suede', onClick: () => setFbOpen(true) }], route: 'about' },
     { h: 'Privacy', items: [{ label: 'Terms of Service', route: 'terms' }], route: 'privacy' },
     { h: 'Suede for Business', items: [{ label: 'Apply', route: 'apply' }, { label: 'Brand Portal', route: 'brandsignin' }] },
     { h: 'Suggest a Brand', items: [], route: 'suggest' },
@@ -68,37 +70,12 @@ export function Footer({ onRoute }: any) {
           {cols.map(c => (
             <div key={c.h} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div onClick={() => go(c.route)} style={{ fontFamily: 'var(--font-serif)', fontWeight: 700, fontSize: 15, color: 'var(--text-primary)', cursor: c.route ? 'pointer' : 'default' }}>{c.h}</div>
-              {c.items.map(it => (
-                <div key={it.label} onClick={() => go(it.route)} style={{ fontFamily: 'var(--font-serif)', fontSize: 14, color: 'var(--text-secondary)', cursor: it.route ? 'pointer' : 'default' }}>{it.label}</div>
+              {c.items.map((it: any) => (
+                <div key={it.label} onClick={() => it.onClick ? it.onClick() : go(it.route)} style={{ fontFamily: 'var(--font-serif)', fontSize: 14, color: 'var(--text-secondary)', cursor: (it.route || it.onClick) ? 'pointer' : 'default' }}>{it.label}</div>
               ))}
             </div>
           ))}
         </div>
-        {/* Improvement suggestion box */}
-        <div className="sd-footer-feedback" style={{ marginTop: 44, paddingTop: 30, borderTop: '1px solid var(--border-subtle)', maxWidth: 560 }}>
-          <div style={{ fontFamily: 'var(--font-serif)', fontWeight: 700, fontSize: 15, marginBottom: 6 }}>Help us improve Suede</div>
-          {fbState === 'done' ? (
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-secondary)' }}>
-              <Icon name="check" size={16} color="var(--rating-positive)" /> Thank you — your suggestion is in.
-            </div>
-          ) : (
-            <>
-              <div style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-muted)', marginBottom: 12 }}>Spotted something, or have an idea? Tell us — we read every note.</div>
-              <textarea value={fb} rows={3} maxLength={1000}
-                onChange={(e) => { setFb(e.target.value); if (fbState === 'error') setFbState('idle'); }}
-                placeholder="Share an improvement or report an issue…"
-                style={{ width: '100%', boxSizing: 'border-box', resize: 'vertical', border: '1px solid var(--border-default)', borderRadius: 'var(--radius-xs)', background: 'var(--surface-card)', padding: '12px 13px', fontFamily: 'var(--font-body)', fontSize: 14, lineHeight: 1.5, color: 'var(--text-primary)', outline: 'none' }} />
-              <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginTop: 10 }}>
-                <button onClick={sendFeedback} disabled={fbState === 'busy'}
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', padding: '2px 0', cursor: fbState === 'busy' ? 'default' : 'pointer', fontFamily: 'var(--font-body)', fontSize: 13, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text-primary)', borderBottom: '1px solid var(--ink-900)', opacity: fbState === 'busy' ? 0.6 : 1 }}>
-                  {fbState === 'busy' ? 'Sending…' : 'Submit suggestion'} <Icon name="arrow-right" size={15} color="var(--ink-900)" />
-                </button>
-                {fbState === 'error' && <span style={{ fontFamily: 'var(--font-body)', fontSize: 12.5, color: 'var(--rating-critical)' }}>{fb.trim() ? 'Couldn’t send that — please try again.' : 'Add a short message first.'}</span>}
-              </div>
-            </>
-          )}
-        </div>
-
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 30 }}>
           <div style={{ textAlign: 'right' }}>
             <div style={{ fontFamily: 'var(--font-serif)', fontWeight: 700, fontSize: 15 }}>Let's Connect!</div>
@@ -114,6 +91,37 @@ export function Footer({ onRoute }: any) {
           </span>
         </div>
       </div>
+
+      {fbOpen && (
+        <div onClick={closeFb} style={{ position: 'fixed', inset: 0, zIndex: 70, background: 'rgba(20,18,15,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ width: 480, maxWidth: '100%', background: 'var(--surface-card)', boxShadow: 'var(--shadow-lg)', padding: '30px 34px 34px', position: 'relative' }}>
+            <button onClick={closeFb} aria-label="Close" style={{ position: 'absolute', top: 22, right: 24, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-primary)', display: 'flex' }}>
+              <Icon name="close" size={22} />
+            </button>
+            <h2 style={{ fontFamily: 'var(--font-serif)', fontWeight: 500, fontSize: 24, color: 'var(--text-heading)', margin: '0 0 6px' }}>Help us improve Suede</h2>
+            {fbState === 'done' ? (
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-secondary)', marginTop: 10 }}>
+                <Icon name="check" size={16} color="var(--rating-positive)" /> Thank you — your suggestion is in.
+              </div>
+            ) : (
+              <>
+                <p style={{ fontFamily: 'var(--font-body)', fontSize: 13.5, color: 'var(--text-muted)', margin: '0 0 16px', lineHeight: 1.55 }}>Spotted something, or have an idea? Tell us — we read every note.</p>
+                <textarea value={fb} rows={4} maxLength={1000} autoFocus
+                  onChange={(e) => { setFb(e.target.value); if (fbState === 'error') setFbState('idle'); }}
+                  placeholder="Share an improvement or report an issue…"
+                  style={{ width: '100%', boxSizing: 'border-box', resize: 'vertical', border: '1px solid var(--border-default)', borderRadius: 'var(--radius-xs)', background: 'var(--surface-card)', padding: '12px 13px', fontFamily: 'var(--font-body)', fontSize: 14, lineHeight: 1.5, color: 'var(--text-primary)', outline: 'none' }} />
+                <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginTop: 16 }}>
+                  <button onClick={sendFeedback} disabled={fbState === 'busy'}
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', padding: '2px 0', cursor: fbState === 'busy' ? 'default' : 'pointer', fontFamily: 'var(--font-body)', fontSize: 13, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text-primary)', borderBottom: '1px solid var(--ink-900)', opacity: fbState === 'busy' ? 0.6 : 1 }}>
+                    {fbState === 'busy' ? 'Sending…' : 'Submit suggestion'} <Icon name="arrow-right" size={15} color="var(--ink-900)" />
+                  </button>
+                  {fbState === 'error' && <span style={{ fontFamily: 'var(--font-body)', fontSize: 12.5, color: 'var(--rating-critical)' }}>{fb.trim() ? 'Couldn’t send that — please try again.' : 'Add a short message first.'}</span>}
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </footer>
   );
 }
