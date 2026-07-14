@@ -31,6 +31,7 @@ export function CreateInquiryScreen({ onRoute, authed = false }: any) {
   const [hideMeasure, setHideMeasure] = React.useState(false);
   const [detail, setDetail] = React.useState('');
   const [product, setProduct] = React.useState('');
+  const [productImage, setProductImage] = React.useState('');
   const brands = SUEDE_BRANDS || [];
   const presetBrand = appState.inquiryBrand;
   const [brandType, setBrandType] = React.useState('Capsule Brand');
@@ -78,6 +79,7 @@ export function CreateInquiryScreen({ onRoute, authed = false }: any) {
         await createInquiry(sb, user.id, {
           brandName: brandType === 'Capsule Brand' ? brandSel : nonCapsuleBrand.trim(),
           productName: product.trim(),
+          productImage: productImage.trim() || undefined,
           sizeScale: scale,
           sizeValue: size,
           sizeOther: otherSize.trim(),
@@ -93,7 +95,7 @@ export function CreateInquiryScreen({ onRoute, authed = false }: any) {
     }
     setSubmitted(true);
   };
-  const resetForm = () => { setSubmitted(false); setErrors([]); setProduct(''); setSize(''); setOtherSize(''); setDetail(''); setBrandSel(''); setNonCapsuleBrand(''); setBrandType('Capsule Brand'); };
+  const resetForm = () => { setSubmitted(false); setErrors([]); setProduct(''); setProductImage(''); setSize(''); setOtherSize(''); setDetail(''); setBrandSel(''); setNonCapsuleBrand(''); setBrandType('Capsule Brand'); };
   const chip = (active: any) => ({
     padding: '13px 0', textAlign: 'center' as any, cursor: 'pointer',
     border: `1px solid ${active ? 'var(--ink-900)' : 'var(--border-default)'}`,
@@ -177,7 +179,7 @@ export function CreateInquiryScreen({ onRoute, authed = false }: any) {
 
         <CISectionCard title="Product Information">
           <Field label="Paste the product link">
-            <ProductFetch placeholder="https://example.com/product" onFetched={(p: any) => setProduct(p.title || 'Product')} />
+            <ProductFetch placeholder="https://example.com/product" onFetched={(p: any) => { setProduct(p.title || 'Product'); setProductImage(p.image || ''); }} />
           </Field>
         </CISectionCard>
 

@@ -67,6 +67,7 @@ export type NewReview = {
   recommend: boolean | null;
   hideMeasurements: boolean;
   sizeSatisfaction?: any;
+  productImage?: string;
 };
 
 export async function createReview(sb: SupabaseClient, userId: string, r: NewReview) {
@@ -80,6 +81,7 @@ export async function createReview(sb: SupabaseClient, userId: string, r: NewRev
     brand_name: r.brandName?.trim() || null,
     product_name: r.productName.trim(),
     product_url: r.productUrl?.trim() || null,
+    product_image_url: r.productImage?.trim() || null,
     size_scale: r.sizeScale || null,
     size_value: r.sizeValue || null,
     size_other: r.sizeOther?.trim() || null,
@@ -112,6 +114,7 @@ export async function updateReview(sb: SupabaseClient, userId: string, reviewId:
     patch.brand_name = r.brandName?.trim() || null;
   }
   if (r.productName !== undefined) patch.product_name = r.productName.trim();
+  if (r.productImage !== undefined) patch.product_image_url = r.productImage?.trim() || null;
   if (r.sizeScale !== undefined) patch.size_scale = r.sizeScale || null;
   if (r.sizeValue !== undefined) patch.size_value = r.sizeValue || null;
   if (r.sizeOther !== undefined) patch.size_other = r.sizeOther?.trim() || null;
@@ -147,6 +150,7 @@ export type NewInquiry = {
   sizeOther?: string;
   body: string;
   hideMeasurements?: boolean;
+  productImage?: string;
 };
 
 export async function createInquiry(sb: SupabaseClient, userId: string, q: NewInquiry) {
@@ -160,6 +164,7 @@ export async function createInquiry(sb: SupabaseClient, userId: string, q: NewIn
     brand_name: q.brandName?.trim() || null,
     product_name: q.productName.trim(),
     product_url: q.productUrl?.trim() || null,
+    product_image_url: q.productImage?.trim() || null,
     category: q.category || null,
     size_scale: q.sizeScale || null,
     size_value: q.sizeValue || null,
@@ -568,22 +573,28 @@ export async function loadBrandInquiries(sb: SupabaseClient, brandName: string, 
 
 // Distinct product names already seen for a brand (across its reviews and
 // inquiries) — powers the "Search Existing" product picker on the review form.
-export async function loadBrandProducts(sb: SupabaseClient, brandName: string, brandId?: string | null): Promise<string[]> {
+export type BrandProduct = { name: string; image: string | null };
+export async function loadBrandProducts(sb: SupabaseClient, brandName: string, brandId?: string | null): Promise<BrandProduct[]> {
   if (!brandName?.trim() && !brandId) return [];
   const id = brandId ?? (await resolveBrandId(sb, brandName));
   const nameF = pgrstQuote(brandName);
+  const cols = 'product_name, product_image_url';
   const [rev, inq] = await Promise.all([
-    id ? sb.from('reviews').select('product_name').eq('status', 'published').or(`brand_id.eq.${id},brand_name.ilike.${nameF}`)
-       : sb.from('reviews').select('product_name').eq('status', 'published').ilike('brand_name', brandName),
-    id ? sb.from('inquiries').select('product_name').neq('status', 'removed').or(`brand_id.eq.${id},brand_name.ilike.${nameF}`)
-       : sb.from('inquiries').select('product_name').neq('status', 'removed').ilike('brand_name', brandName),
+    id ? sb.from('reviews').select(cols).eq('status', 'published').or(`brand_id.eq.${id},brand_name.ilike.${nameF}`)
+       : sb.from('reviews').select(cols).eq('status', 'published').ilike('brand_name', brandName),
+    id ? sb.from('inquiries').select(cols).neq('status', 'removed').or(`brand_id.eq.${id},brand_name.ilike.${nameF}`)
+       : sb.from('inquiries').select(cols).neq('status', 'removed').ilike('brand_name', brandName),
   ]);
-  const names = new Set<string>();
+  // Dedupe by product name; keep the first image we find for each.
+  const byName = new Map<string, string | null>();
   for (const row of [...(rev.data || []), ...(inq.data || [])]) {
     const n = (row as any).product_name?.trim();
-    if (n) names.add(n);
+    if (!n) continue;
+    const img = (row as any).product_image_url || null;
+    if (!byName.has(n)) byName.set(n, img);
+    else if (!byName.get(n) && img) byName.set(n, img);
   }
-  return Array.from(names).sort((a, b) => a.localeCompare(b));
+  return Array.from(byName, ([name, image]) => ({ name, image })).sort((a, b) => a.name.localeCompare(b.name));
 }
 
 // ── detail pages ───────────────────────────────────────────────────

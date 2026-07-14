@@ -122,7 +122,8 @@ export function CreateReviewScreen({ onRoute, authed = false }: any) {
   const [reviewText, setReviewText] = React.useState(editing ? (editReview.body || '') : '');
   const [otherSize, setOtherSize] = React.useState(editing ? (editReview.size_other || '') : '');
   const [contentLink, setContentLink] = React.useState('');
-  const [productList, setProductList] = React.useState<string[]>([]);
+  const [productImage, setProductImage] = React.useState(editing ? (editReview.product_image_url || '') : '');
+  const [productList, setProductList] = React.useState<any[]>([]);
   const [productQuery, setProductQuery] = React.useState('');
   // Load the brand's existing products for the "Search Existing" picker.
   const activeBrandName = brandType === 'Capsule Brand' ? brandSel : nonCapsuleBrand.trim();
@@ -207,6 +208,7 @@ export function CreateReviewScreen({ onRoute, authed = false }: any) {
         const payload = {
           brandName: brandType === 'Capsule Brand' ? brandSel : nonCapsuleBrand.trim(),
           productName: productSel.trim(),
+          productImage: productImage.trim() || undefined,
           contentLink: contentLink.trim() || undefined,
           sizeScale: scale,
           sizeValue: size,
@@ -253,7 +255,7 @@ export function CreateReviewScreen({ onRoute, authed = false }: any) {
     else void finalize();
   };
   const resetForm = () => {
-    setSubmitted(false); setErrors([]); setReviewText(''); setProductSel(''); setNonCapsuleBrand('');
+    setSubmitted(false); setErrors([]); setReviewText(''); setProductSel(''); setProductImage(''); setNonCapsuleBrand('');
     setRatings({ sizing: 0, material: 0, value: 0, photos: 0, service: 0 }); setSize(''); setRec(null); setPhotos([]);
   };
 
@@ -367,19 +369,21 @@ export function CreateReviewScreen({ onRoute, authed = false }: any) {
               {(() => {
                 const hint = (msg: string) => <div style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-muted)', padding: '16px 4px' }}>{msg}</div>;
                 if (!activeBrandName) return hint('Select a brand above to see its existing products.');
-                const filtered = productList.filter((p) => p.toLowerCase().includes(productQuery.toLowerCase()));
+                const filtered = productList.filter((p: any) => p.name.toLowerCase().includes(productQuery.toLowerCase()));
                 if (!filtered.length) return hint(productQuery ? 'No matching products — try “Paste URL” or “Enter Manually”.' : `No products logged yet for ${activeBrandName}. Try “Paste URL” or “Enter Manually”.`);
                 return (
                   <div style={{ border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-xs)', overflow: 'hidden' }}>
-                    {filtered.map((p, i) => (
-                      <button key={p} type="button" onClick={() => setProductSel(p)} style={{
+                    {filtered.map((p: any, i: number) => (
+                      <button key={p.name} type="button" onClick={() => { setProductSel(p.name); setProductImage(p.image || ''); }} style={{
                         width: '100%', display: 'flex', alignItems: 'center', gap: 14,
                         padding: '14px 16px', border: 'none', borderTop: i ? '1px solid var(--border-subtle)' : 'none',
-                        background: productSel === p ? 'var(--linen)' : 'transparent', cursor: 'pointer', textAlign: 'left',
+                        background: productSel === p.name ? 'var(--linen)' : 'transparent', cursor: 'pointer', textAlign: 'left',
                       }}>
                         <span style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                          <span style={{ width: 40, height: 50, flex: 'none', background: 'var(--linen)' }} />
-                          <span style={{ fontFamily: 'var(--font-body)', fontSize: 15, color: 'var(--text-primary)' }}>{p}</span>
+                          <span style={{ width: 40, height: 50, flex: 'none', background: 'var(--linen)', overflow: 'hidden' }}>
+                            {p.image && <img src={p.image} alt="" referrerPolicy="no-referrer" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
+                          </span>
+                          <span style={{ fontFamily: 'var(--font-body)', fontSize: 15, color: 'var(--text-primary)' }}>{p.name}</span>
                         </span>
                       </button>
                     ))}
@@ -390,7 +394,7 @@ export function CreateReviewScreen({ onRoute, authed = false }: any) {
           )}
           {mode === 'url' && (
             <Field label="Product URL">
-              <ProductFetch placeholder="https://example.com/product" onFetched={(p: any) => setProductSel(p.title || '')} />
+              <ProductFetch placeholder="https://example.com/product" onFetched={(p: any) => { setProductSel(p.title || ''); setProductImage(p.image || ''); }} />
             </Field>
           )}
           {mode === 'manual' && (
