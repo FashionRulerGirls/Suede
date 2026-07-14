@@ -101,11 +101,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     },
     async signInWithOAuth(provider) {
       if (!supabase) return { error: 'Sign-in is not available yet.' };
-      const { error } = await supabase.auth.signInWithOAuth({
+      // skipBrowserRedirect + location.replace: navigate to the provider by
+      // REPLACING the current history entry instead of pushing a new one, so the
+      // provider's auth page never lands in the back stack. Back then returns to
+      // the app, not Google. (The PKCE verifier is stored when the URL is built,
+      // so /auth/callback can still complete the exchange.)
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider,
-        options: { redirectTo: typeof window !== 'undefined' ? `${window.location.origin}/auth/callback` : undefined },
+        options: {
+          redirectTo: typeof window !== 'undefined' ? `${window.location.origin}/auth/callback` : undefined,
+          skipBrowserRedirect: true,
+        },
       });
-      return { error: error?.message ?? null };
+      if (error) return { error: error.message };
+      if (data?.url && typeof window !== 'undefined') window.location.replace(data.url);
+      return { error: null };
     },
     async resetPassword(email) {
       if (!supabase) return { error: 'Not available yet.' };
