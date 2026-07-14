@@ -146,6 +146,7 @@ export type NewInquiry = {
   sizeValue?: string;
   sizeOther?: string;
   body: string;
+  hideMeasurements?: boolean;
 };
 
 export async function createInquiry(sb: SupabaseClient, userId: string, q: NewInquiry) {
@@ -164,6 +165,7 @@ export async function createInquiry(sb: SupabaseClient, userId: string, q: NewIn
     size_value: q.sizeValue || null,
     size_other: q.sizeOther?.trim() || null,
     body: q.body.trim(),
+    hide_measurements: !!q.hideMeasurements,
     measurements_snapshot: snap,
   }).select('id').single();
   if (error) throw error;
@@ -206,6 +208,7 @@ export function inquiryRowToCard(row: any) {
     size: row.size_value || row.size_other || '',
     brand: row.brand_name || '',
     measurements: row.measurements_snapshot || {},
+    hideMeasurements: !!row.hide_measurements,
     question: row.body,
     responses: [],
     status: row.status === 'answered' ? 'Answered' : 'Awaiting response',

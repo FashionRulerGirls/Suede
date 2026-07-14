@@ -10,10 +10,13 @@ import { createClient } from '@/lib/supabase/client';
 import { createInquiry } from '@/lib/contentData';
 import { loadProfileData, inchesToHeight, inchesDisplay } from '@/lib/profileData';
 
-function CISectionCard({ title, children }: any) {
+function CISectionCard({ title, action, children }: any) {
   return (
     <section className="sd-form-card" style={{ background: 'var(--white)', padding: '32px 40px' }}>
-      <h2 style={{ fontFamily: 'var(--font-serif)', fontWeight: 500, fontSize: 22, color: 'var(--text-heading)', margin: '0 0 22px' }}>{title}</h2>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, margin: '0 0 22px' }}>
+        <h2 style={{ fontFamily: 'var(--font-serif)', fontWeight: 500, fontSize: 22, color: 'var(--text-heading)', margin: 0 }}>{title}</h2>
+        {action}
+      </div>
       {children}
     </section>
   );
@@ -24,6 +27,7 @@ export function CreateInquiryScreen({ onRoute, authed = false }: any) {
   const [scale, setScale] = React.useState('Letter');
   const [size, setSize] = React.useState('');
   const [otherSize, setOtherSize] = React.useState('');
+  const [hideMeasure, setHideMeasure] = React.useState(false);
   const [detail, setDetail] = React.useState('');
   const [product, setProduct] = React.useState('');
   const [category, setCategory] = React.useState('');
@@ -68,6 +72,7 @@ export function CreateInquiryScreen({ onRoute, authed = false }: any) {
           sizeValue: size,
           sizeOther: otherSize.trim(),
           body: detail,
+          hideMeasurements: hideMeasure,
         });
       } catch (err: any) {
         setSaving(false);
@@ -161,8 +166,16 @@ export function CreateInquiryScreen({ onRoute, authed = false }: any) {
           <div style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: 'var(--text-muted)', marginTop: 8 }}>{detail.length} / 500 characters</div>
         </CISectionCard>
 
-        <CISectionCard title="Your Measurements">
-          <div style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-muted)', marginBottom: 16, marginTop: -8 }}>Shown with your inquiry so members can match your fit. Manage them in your profile.</div>
+        <CISectionCard title="Your Measurements" action={
+          <label style={{ display: 'inline-flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
+            <span style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-muted)' }}>Hide your measurement from other users</span>
+            <input type="checkbox" checked={hideMeasure} onChange={(e) => setHideMeasure(e.target.checked)} style={{ width: 0, height: 0, opacity: 0, position: 'absolute' }} />
+            <span style={{ width: 40, height: 22, borderRadius: 999, background: hideMeasure ? 'var(--ink-900)' : 'var(--ink-200)', position: 'relative', transition: 'background var(--dur-fast)' }}>
+              <span style={{ position: 'absolute', top: 2, left: hideMeasure ? 20 : 2, width: 18, height: 18, borderRadius: '50%', background: 'var(--white)', transition: 'left var(--dur-fast)' }} />
+            </span>
+          </label>
+        }>
+          <div style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-muted)', marginBottom: 16, marginTop: -8 }}>Shown with your inquiry so members can match your fit. Even if hidden, they still contribute to our Suede Match calculation. Manage them in your profile.</div>
           <div className="sd-measuregrid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
             {(myMeasure || [['Height', "5'6\""], ['Bust', '34"'], ['Waist', '26"'], ['Hips', '36"']]).map(([k, v]) => (
               <div key={k} style={{ background: 'var(--linen)', padding: '14px 16px', textAlign: 'center' }}>
