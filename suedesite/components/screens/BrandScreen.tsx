@@ -140,7 +140,7 @@ export function BrandScreen({ onRoute, authed = false }: any) {
       <div style={{ perspective: 2000 }}>
       <div style={{ position: 'relative', transition: 'transform 700ms var(--ease-inout)', transformStyle: 'preserve-3d', transform: flipped ? 'rotateY(180deg)' : 'none' }}>
       {/* FRONT — Dark suede hero box */}
-      <div className="sd-brandcard-front" style={{ position: 'relative', minHeight: 420, backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden', visibility: flipped ? 'hidden' : 'visible', transition: 'visibility 0s linear 350ms', backgroundImage: `linear-gradient(rgba(250,249,246,0.4), rgba(250,249,246,0.4)), url(${brand.hero || '/assets/imagery/suede-card-bg.jpg'})`, backgroundSize: 'cover', backgroundPosition: 'center', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div className="sd-brandcard-front" style={{ position: 'relative', minHeight: 420, backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden', visibility: flipped ? 'hidden' : 'visible', transition: 'visibility 0s linear 350ms', backgroundImage: `linear-gradient(rgba(250,249,246,0.4), rgba(250,249,246,0.4)), url(/assets/imagery/suede-card-bg.jpg)`, backgroundSize: 'cover', backgroundPosition: 'center', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {/* Centered brand name */}
         <div className="sd-brandname-block" style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 14, pointerEvents: 'none', padding: '0 40px' }}>
           <h1 className="sd-brandname" style={{ fontFamily: 'var(--font-serif)', fontWeight: 100, fontSize: 88, lineHeight: 1, letterSpacing: '0.04em', color: 'var(--ink-900)', margin: 0, textTransform: 'uppercase', textAlign: 'center' }}>
@@ -173,7 +173,7 @@ export function BrandScreen({ onRoute, authed = false }: any) {
       </div>
 
       {/* BACK — bio + documents */}
-      <div className="sd-brandcard-back" style={{ position: 'absolute', inset: 0, backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden', visibility: flipped ? 'visible' : 'hidden', transition: 'visibility 0s linear 350ms', transform: 'rotateY(180deg)', backgroundImage: `linear-gradient(rgba(250,249,246,0.4), rgba(250,249,246,0.4)), url(${brand.hero || '/assets/imagery/suede-card-bg.jpg'})`, backgroundSize: 'cover', backgroundPosition: 'center', border: '1px solid var(--border-subtle)', display: 'flex', flexDirection: 'column', padding: '36px 40px', overflowY: 'auto' }}>
+      <div className="sd-brandcard-back" style={{ position: 'absolute', inset: 0, backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden', visibility: flipped ? 'visible' : 'hidden', transition: 'visibility 0s linear 350ms', transform: 'rotateY(180deg)', backgroundImage: `linear-gradient(rgba(250,249,246,0.4), rgba(250,249,246,0.4)), url(/assets/imagery/suede-card-bg.jpg)`, backgroundSize: 'cover', backgroundPosition: 'center', border: '1px solid var(--border-subtle)', display: 'flex', flexDirection: 'column', padding: '36px 40px', overflowY: 'auto' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 22 }}>
           <span style={{ fontFamily: 'var(--font-serif)', fontSize: 20, color: 'var(--text-heading)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>{brand.name}</span>
         </div>
