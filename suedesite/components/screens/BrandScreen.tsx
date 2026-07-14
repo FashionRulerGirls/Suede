@@ -146,7 +146,7 @@ export function BrandScreen({ onRoute, authed = false }: any) {
         <div className="sd-brandname-block" style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 14, pointerEvents: 'none', padding: '0 40px' }}>
           <h1 className="sd-brandname" style={{ fontFamily: 'var(--font-serif)', fontWeight: 100, fontSize: 88, lineHeight: 1, letterSpacing: '0.04em', color: 'var(--ink-900)', margin: 0, textTransform: 'uppercase', textAlign: 'center' }}>
             {brand.name}
-            <span style={{ verticalAlign: 'super', marginLeft: 12, display: 'inline-flex', flexDirection: 'column', alignItems: 'center', gap: 12, pointerEvents: 'auto' }}>
+            <span className="sd-brand-actions" style={{ verticalAlign: 'super', marginLeft: 12, display: 'inline-flex', flexDirection: 'column', alignItems: 'center', gap: 12, pointerEvents: 'auto' }}>
               <button className="sd-brand-follow" onClick={toggleFollow} disabled={followBusy} aria-label={following ? 'Following' : 'Follow'} title={following ? 'Following' : 'Follow'}
                 style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: 'var(--ink-900)', display: 'inline-flex' }}>
                 <Icon name={following ? 'check' : 'user-plus'} size={24} color="var(--ink-900)" />
