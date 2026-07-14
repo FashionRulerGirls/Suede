@@ -78,7 +78,7 @@ function AppInner() {
   // add an in-app history entry so Back returns to Suede, not the provider.
   const cameFromOAuth = React.useState(() => {
     if (typeof window === 'undefined') return false;
-    return /[?&#](code|access_token)=/.test(window.location.search + window.location.hash);
+    return /[?&#](code|access_token|signedin)=/.test(window.location.search + window.location.hash);
   })[0];
   React.useEffect(() => {
     if (!cameFromOAuth) return;

@@ -32,5 +32,8 @@ export async function GET(request: Request) {
     return NextResponse.redirect(`${origin}/?auth_error=${encodeURIComponent('This link is invalid or has expired.')}`);
   }
 
-  return NextResponse.redirect(`${origin}${isRecovery ? '/?recovery=1' : '/'}`);
+  // `signedin=1` lets the SPA add an in-app history entry so the browser Back
+  // button returns to Suede instead of the provider's auth page (the PKCE code
+  // was already consumed here, so the app can't detect the return on its own).
+  return NextResponse.redirect(`${origin}${isRecovery ? '/?recovery=1' : '/?signedin=1'}`);
 }
