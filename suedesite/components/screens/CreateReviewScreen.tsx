@@ -9,7 +9,7 @@ import { SignInGate } from '@/components/screens/SignInGate';
 import { ProductFetch } from '@/components/screens/ProductFetch';
 import { useAuth } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/client';
-import { createReview, updateReview, loadReviewMedia, deleteReviewMedia } from '@/lib/contentData';
+import { createReview, updateReview, loadReviewMedia, deleteReviewMedia, loadBrandProducts } from '@/lib/contentData';
 import { uploadReviewMedia } from '@/lib/storage';
 import { loadProfileData, inchesToHeight, inchesDisplay } from '@/lib/profileData';
 
@@ -122,6 +122,17 @@ export function CreateReviewScreen({ onRoute, authed = false }: any) {
   const [reviewText, setReviewText] = React.useState(editing ? (editReview.body || '') : '');
   const [otherSize, setOtherSize] = React.useState(editing ? (editReview.size_other || '') : '');
   const [contentLink, setContentLink] = React.useState('');
+  const [productList, setProductList] = React.useState<string[]>([]);
+  const [productQuery, setProductQuery] = React.useState('');
+  // Load the brand's existing products for the "Search Existing" picker.
+  const activeBrandName = brandType === 'Capsule Brand' ? brandSel : nonCapsuleBrand.trim();
+  React.useEffect(() => {
+    const sb = createClient();
+    if (!sb || !activeBrandName) { setProductList([]); return; }
+    let active = true;
+    loadBrandProducts(sb, activeBrandName).then((ps) => { if (active) setProductList(ps); }).catch(() => {});
+    return () => { active = false; };
+  }, [activeBrandName]);
   const [photos, setPhotos] = React.useState<{ url: string; file: File; poster?: File; posterUrl?: string }[]>([]);
   // Existing media (edit mode): shown with remove buttons; removals apply on save.
   const [existingMedia, setExistingMedia] = React.useState<any[]>([]);
@@ -342,21 +353,29 @@ export function CreateReviewScreen({ onRoute, authed = false }: any) {
           </div>
           {mode === 'search' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <Input variant="outline" icon="search" placeholder={brandSel ? `Search ${brandSel} products` : 'Search products'} />
-              <div style={{ border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-xs)', overflow: 'hidden' }}>
-                {['The Nyomi Maxi', 'Tailored Wide-Leg Trouser', 'Bias Slip Dress', 'Structured Blazer'].map((p, i) => (
-                  <button key={p} type="button" onClick={() => setProductSel(p)} style={{
-                    width: '100%', display: 'flex', alignItems: 'center', gap: 14,
-                    padding: '14px 16px', border: 'none', borderTop: i ? '1px solid var(--border-subtle)' : 'none',
-                    background: productSel === p ? 'var(--linen)' : 'transparent', cursor: 'pointer', textAlign: 'left',
-                  }}>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                      <span style={{ width: 40, height: 50, flex: 'none', background: 'var(--linen)' }} />
-                      <span style={{ fontFamily: 'var(--font-body)', fontSize: 15, color: 'var(--text-primary)' }}>{p}</span>
-                    </span>
-                  </button>
-                ))}
-              </div>
+              <Input variant="outline" icon="search" placeholder={activeBrandName ? `Search ${activeBrandName} products` : 'Search products'} value={productQuery} onChange={(e: any) => setProductQuery(e.target.value)} />
+              {(() => {
+                const hint = (msg: string) => <div style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-muted)', padding: '16px 4px' }}>{msg}</div>;
+                if (!activeBrandName) return hint('Select a brand above to see its existing products.');
+                const filtered = productList.filter((p) => p.toLowerCase().includes(productQuery.toLowerCase()));
+                if (!filtered.length) return hint(productQuery ? 'No matching products — try “Paste URL” or “Enter Manually”.' : `No products logged yet for ${activeBrandName}. Try “Paste URL” or “Enter Manually”.`);
+                return (
+                  <div style={{ border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-xs)', overflow: 'hidden' }}>
+                    {filtered.map((p, i) => (
+                      <button key={p} type="button" onClick={() => setProductSel(p)} style={{
+                        width: '100%', display: 'flex', alignItems: 'center', gap: 14,
+                        padding: '14px 16px', border: 'none', borderTop: i ? '1px solid var(--border-subtle)' : 'none',
+                        background: productSel === p ? 'var(--linen)' : 'transparent', cursor: 'pointer', textAlign: 'left',
+                      }}>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                          <span style={{ width: 40, height: 50, flex: 'none', background: 'var(--linen)' }} />
+                          <span style={{ fontFamily: 'var(--font-body)', fontSize: 15, color: 'var(--text-primary)' }}>{p}</span>
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                );
+              })()}
             </div>
           )}
           {mode === 'url' && (

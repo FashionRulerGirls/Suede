@@ -566,6 +566,26 @@ export async function loadBrandInquiries(sb: SupabaseClient, brandName: string, 
   return attachMatches(sb, viewerId, (data || []).map(inquiryRowToCard));
 }
 
+// Distinct product names already seen for a brand (across its reviews and
+// inquiries) — powers the "Search Existing" product picker on the review form.
+export async function loadBrandProducts(sb: SupabaseClient, brandName: string, brandId?: string | null): Promise<string[]> {
+  if (!brandName?.trim() && !brandId) return [];
+  const id = brandId ?? (await resolveBrandId(sb, brandName));
+  const nameF = pgrstQuote(brandName);
+  const [rev, inq] = await Promise.all([
+    id ? sb.from('reviews').select('product_name').eq('status', 'published').or(`brand_id.eq.${id},brand_name.ilike.${nameF}`)
+       : sb.from('reviews').select('product_name').eq('status', 'published').ilike('brand_name', brandName),
+    id ? sb.from('inquiries').select('product_name').neq('status', 'removed').or(`brand_id.eq.${id},brand_name.ilike.${nameF}`)
+       : sb.from('inquiries').select('product_name').neq('status', 'removed').ilike('brand_name', brandName),
+  ]);
+  const names = new Set<string>();
+  for (const row of [...(rev.data || []), ...(inq.data || [])]) {
+    const n = (row as any).product_name?.trim();
+    if (n) names.add(n);
+  }
+  return Array.from(names).sort((a, b) => a.localeCompare(b));
+}
+
 // ── detail pages ───────────────────────────────────────────────────
 export function formatDate(iso?: string): string {
   if (!iso) return '';

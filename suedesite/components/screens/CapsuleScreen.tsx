@@ -136,8 +136,11 @@ export function CapsuleScreen({ onRoute, authed = false }: any) {
 
       <div className="sd-wrap" style={{ maxWidth: 1240, margin: '64px auto 0', padding: '40px', textAlign: 'center', borderTop: '1px solid var(--border-subtle)' }}>
         <p style={{ fontFamily: 'var(--font-serif)', fontSize: 22, color: 'var(--text-heading)', margin: 0 }}>Know a brand that deserves to be featured in the Capsule?</p>
-        <div style={{ marginTop: 18 }}>
-          <Button variant="primary" shape="pill" onClick={() => onRoute('suggest')}>Complete our Suggestion Form</Button>
+        <div style={{ marginTop: 20 }}>
+          <button onClick={() => onRoute('suggest')} className="sd-textlink"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', padding: '2px 0', cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: 13, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text-primary)', borderBottom: '1px solid var(--ink-900)' }}>
+            Complete our Suggestion Form <Icon name="arrow-right" size={15} color="var(--ink-900)" />
+          </button>
         </div>
       </div>
     </div>
