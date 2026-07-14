@@ -34,6 +34,7 @@ export async function uploadReviewMedia(
   startPosition = 0,
 ): Promise<string[]> {
   const urls: string[] = [];
+  let failed = 0; // surfaced to the caller so silent upload failures are visible
   const stamp = Date.now(); // unique token so edits never overwrite existing files
   for (let i = 0; i < items.length; i++) {
     const { file, poster } = items[i];
@@ -42,7 +43,7 @@ export async function uploadReviewMedia(
     const { error } = await sb.storage.from('review-media').upload(path, file, {
       upsert: true, contentType: file.type || undefined, cacheControl: '3600',
     });
-    if (error) continue;
+    if (error) { failed++; continue; }
     const { data } = sb.storage.from('review-media').getPublicUrl(path);
     urls.push(data.publicUrl);
 
@@ -55,7 +56,7 @@ export async function uploadReviewMedia(
       if (!pErr) poster_url = sb.storage.from('review-media').getPublicUrl(pPath).data.publicUrl;
     }
 
-    await sb.from('media').insert({
+    const { error: insErr } = await sb.from('media').insert({
       parent_type: 'review',
       parent_id: reviewId,
       url: data.publicUrl,
@@ -63,6 +64,10 @@ export async function uploadReviewMedia(
       position: startPosition + i,
       poster_url,
     });
+    if (insErr) failed++;
   }
+  // Let the caller know if any file didn't make it (storage bucket missing,
+  // policy not applied, RLS, etc.) instead of failing silently.
+  if (failed) throw new Error(`${failed} of ${items.length} file(s) failed to upload`);
   return urls;
 }

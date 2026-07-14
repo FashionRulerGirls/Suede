@@ -157,6 +157,7 @@ export function CreateReviewScreen({ onRoute, authed = false }: any) {
   const [errors, setErrors] = React.useState<string[]>([]);
   const [submitted, setSubmitted] = React.useState(false);
   const [saving, setSaving] = React.useState(false);
+  const [photoWarn, setPhotoWarn] = React.useState(false);
   const [lb, setLb] = React.useState<number | null>(null);
   // The signed-in member's real measurements shown in the "Your Measurements"
   // section (falls back to the sample values for guests/demo).
@@ -216,17 +217,21 @@ export function CreateReviewScreen({ onRoute, authed = false }: any) {
           hideMeasurements: hideMeasure,
           sizeSatisfaction: satisfaction ?? null,
         };
+        // Photo upload is best-effort: if storage isn't reachable/configured
+        // the review itself still saves, and we warn instead of failing.
         if (editing && editId) {
           await updateReview(sb, user.id, editId, payload);
           for (const id of removedIds) { try { await deleteReviewMedia(sb, id); } catch { /* ignore */ } }
           if (photos.length) {
             const startPos = existingMedia.filter((m) => !removedIds.includes(m.id)).length;
-            await uploadReviewMedia(sb, user.id, editId, photos.map((p) => ({ file: p.file, poster: p.poster })), startPos);
+            try { await uploadReviewMedia(sb, user.id, editId, photos.map((p) => ({ file: p.file, poster: p.poster })), startPos); }
+            catch { setPhotoWarn(true); }
           }
         } else {
           const created = await createReview(sb, user.id, payload);
           if (created?.id && photos.length) {
-            await uploadReviewMedia(sb, user.id, created.id, photos.map((p) => ({ file: p.file, poster: p.poster })));
+            try { await uploadReviewMedia(sb, user.id, created.id, photos.map((p) => ({ file: p.file, poster: p.poster }))); }
+            catch { setPhotoWarn(true); }
           }
         }
       } catch (err: any) {
@@ -276,6 +281,11 @@ export function CreateReviewScreen({ onRoute, authed = false }: any) {
         <p style={{ fontFamily: 'var(--font-body)', fontSize: 16, color: 'var(--text-secondary)', margin: 0, maxWidth: 480, lineHeight: 1.6 }}>
           {editing ? 'Your changes are live.' : 'Thank you for sharing your fit. Your review helps the community shop with confidence.'}
         </p>
+        {photoWarn && (
+          <p role="alert" style={{ display: 'flex', alignItems: 'center', gap: 8, fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--rating-critical)', margin: 0 }}>
+            <Icon name="info" size={16} color="var(--rating-critical)" /> Your review saved, but the photos couldn’t be uploaded. You can edit the review to try again.
+          </p>
+        )}
         <div style={{ display: 'flex', gap: 14, marginTop: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
           {editing
             ? <Button variant="secondary" onClick={() => onRoute('yourprofile')}>Back to profile</Button>
