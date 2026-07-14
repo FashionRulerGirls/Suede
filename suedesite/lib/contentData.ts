@@ -778,3 +778,15 @@ export async function subscribeNewsletter(sb: SupabaseClient, email: string) {
     .upsert({ email: e }, { onConflict: 'email', ignoreDuplicates: true });
   if (error) throw error;
 }
+
+// Improvement suggestion from the footer mini-form. Open to guests and members.
+export async function submitFeedback(sb: SupabaseClient, message: string, email?: string, userId?: string) {
+  const msg = message.trim();
+  if (!msg) throw new Error('Please enter a suggestion.');
+  const { error } = await sb.from('feedback').insert({
+    message: msg,
+    email: email?.trim() || null,
+    user_id: userId || null,
+  });
+  if (error) throw error;
+}
