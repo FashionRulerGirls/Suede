@@ -103,7 +103,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!supabase) return { error: 'Sign-in is not available yet.' };
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
-        options: { redirectTo: typeof window !== 'undefined' ? `${window.location.origin}/` : undefined },
+        options: { redirectTo: typeof window !== 'undefined' ? `${window.location.origin}/auth/callback` : undefined },
       });
       return { error: error?.message ?? null };
     },
