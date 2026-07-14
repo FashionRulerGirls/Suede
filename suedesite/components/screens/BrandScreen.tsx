@@ -6,6 +6,7 @@ import { SUEDE_BRANDS, SUEDE_REVIEWS, SUEDE_INQUIRIES } from '@/lib/data';
 import { appState } from '@/lib/appState';
 import { SuedeControls } from '@/lib/listControls';
 import { InquiryCard } from '@/components/screens/LookbookScreen';
+import { ExploreModal } from '@/components/screens/ExploreModal';
 import { useAuth } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/client';
 import { loadBrandReviews, loadBrandInquiries, resolveBrandId, isFollowingBrand, setBrandFollow, brandFollowerCount } from '@/lib/contentData';
@@ -83,6 +84,7 @@ export function BrandScreen({ onRoute, authed = false }: any) {
   const [following, setFollowing] = React.useState(false);
   const [followers, setFollowers] = React.useState(0);
   const [followBusy, setFollowBusy] = React.useState(false);
+  const [explore, setExplore] = React.useState(false);
   React.useEffect(() => {
     const sb = createClient();
     if (!sb || !user || !brand?.name) { setDbReviews([]); setDbInq([]); setBrandId(null); setFollowing(false); setFollowers(0); return; }
@@ -126,7 +128,6 @@ export function BrandScreen({ onRoute, authed = false }: any) {
   const [flipped, setFlipped] = React.useState(false);
   const [docNote, setDocNote] = React.useState<string | null>(null);
   const [rateOpen, setRateOpen] = React.useState(false);
-  const handle = brand.social || ('@' + brand.name.toLowerCase().replace(/\s+/g, ''));
   const website = 'www.' + brand.name.toLowerCase().replace(/[^a-z]/g, '') + '.com';
 
   return (
@@ -145,30 +146,30 @@ export function BrandScreen({ onRoute, authed = false }: any) {
         <div className="sd-brandname-block" style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 14, pointerEvents: 'none', padding: '0 40px' }}>
           <h1 className="sd-brandname" style={{ fontFamily: 'var(--font-serif)', fontWeight: 100, fontSize: 88, lineHeight: 1, letterSpacing: '0.04em', color: 'var(--ink-900)', margin: 0, textTransform: 'uppercase', textAlign: 'center' }}>
             {brand.name}
-            {real && brandId && (
-              <button className="sd-brand-follow" onClick={toggleFollow} disabled={followBusy} aria-label={following ? 'Following' : 'Follow'} title={following ? 'Following' : 'Follow'}
-                style={{ verticalAlign: 'super', marginLeft: 12, background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: 'var(--ink-900)', display: 'inline-flex', pointerEvents: 'auto' }}>
-                <Icon name={following ? 'check' : 'user-plus'} size={26} color="var(--ink-900)" />
+            <span style={{ verticalAlign: 'super', marginLeft: 12, display: 'inline-flex', flexDirection: 'column', alignItems: 'center', gap: 10, pointerEvents: 'auto' }}>
+              {real && brandId && (
+                <button className="sd-brand-follow" onClick={toggleFollow} disabled={followBusy} aria-label={following ? 'Following' : 'Follow'} title={following ? 'Following' : 'Follow'}
+                  style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: 'var(--ink-900)', display: 'inline-flex' }}>
+                  <Icon name={following ? 'check' : 'user-plus'} size={26} color="var(--ink-900)" />
+                </button>
+              )}
+              <button className="sd-brand-engage" onClick={() => setExplore(true)} aria-label="Leave a review or inquiry" title="Leave a review or inquiry"
+                style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: 'var(--ink-900)', display: 'inline-flex' }}>
+                <Icon name="pen" size={22} color="var(--ink-900)" />
               </button>
-            )}
+            </span>
           </h1>
           <span className="sd-brandtag" style={{ fontFamily: 'var(--font-serif)', fontStyle: 'italic', fontSize: 16, color: 'var(--ink-600)', textAlign: 'center', lineHeight: 1.3, whiteSpace: 'nowrap' }}>{brand.tagline}</span>
         </div>
 
         <div style={{ flex: 1 }} />
 
-        {/* Bottom info bar */}
-        <div className="sd-brandbar" style={{ position: 'relative', zIndex: 3, display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'end', gap: 24, padding: '0 40px 28px' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <span style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: 'var(--ink-600)' }}>Founded – {brand.founded || '—'} · {brand.location || '—'}</span>
-          </div>
-          <button onClick={() => setFlipped(true)} style={{ justifySelf: 'center', display: 'inline-flex', alignItems: 'center', gap: 10, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: 13, letterSpacing: '0.02em', color: 'var(--ink-900)', textAlign: 'center', whiteSpace: 'nowrap' }}>
+        {/* Bottom info bar — only the confirmed "learn more" affordance; founded
+            year, location, and socials are hidden until we have real data. */}
+        <div className="sd-brandbar" style={{ position: 'relative', zIndex: 3, display: 'flex', justifyContent: 'center', padding: '0 40px 28px' }}>
+          <button onClick={() => setFlipped(true)} style={{ display: 'inline-flex', alignItems: 'center', gap: 10, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: 13, letterSpacing: '0.02em', color: 'var(--ink-900)', textAlign: 'center', whiteSpace: 'nowrap' }}>
             Swipe to learn more <Icon name="arrow-right" size={17} color="var(--ink-900)" />
           </button>
-          <div style={{ justifySelf: 'end', display: 'flex', alignItems: 'center', gap: 22 }}>
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--ink-900)' }}><Icon name="instagram" size={18} color="var(--ink-900)" />{handle}</span>
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--ink-900)' }}><Icon name="tiktok" size={18} color="var(--ink-900)" />{handle}</span>
-          </div>
         </div>
       </div>
 
@@ -180,7 +181,7 @@ export function BrandScreen({ onRoute, authed = false }: any) {
         <div className="sd-brandback-grid" style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 40, alignItems: 'start', marginTop: 8 }}>
           <div>
             <div style={{ fontFamily: 'var(--font-body)', fontSize: 11, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 12 }}>The Brand</div>
-            <p style={{ fontFamily: 'var(--font-body)', fontSize: 14.5, lineHeight: 1.75, color: 'var(--text-secondary)', margin: 0, maxWidth: 450 }}>{brand.id ? [brand.founder, brand.tagline].filter(Boolean).join(' — ') : `${brand.founder || ''} Every piece is produced in considered, limited runs — a deliberate stand against overproduction. We design for longevity: garments meant to be worn, kept, and remembered season after season.`}</p>
+            <p style={{ fontFamily: 'var(--font-body)', fontSize: 14.5, lineHeight: 1.75, color: 'var(--text-secondary)', margin: 0, maxWidth: 450 }}>{brand.tagline}</p>
           </div>
           <div>
             <div style={{ fontFamily: 'var(--font-body)', fontSize: 11, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 12 }}>Documents</div>
@@ -282,6 +283,8 @@ export function BrandScreen({ onRoute, authed = false }: any) {
         );
       })()}
       </div>
+
+      <ExploreModal brand={explore ? brand : null} authed={authed} onClose={() => setExplore(false)} onRoute={onRoute} />
     </div>
   );
 }

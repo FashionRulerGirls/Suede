@@ -1,8 +1,9 @@
 'use client';
 /* Suede — Submit an Inquiry (create) page. */
 import React from 'react';
-import { Button, Field, Input, Icon, Select } from '@/components/ds';
+import { Button, Field, Input, Icon } from '@/components/ds';
 import { appState } from '@/lib/appState';
+import { SUEDE_BRANDS } from '@/lib/data';
 import { SignInGate } from '@/components/screens/SignInGate';
 import { ProductFetch } from '@/components/screens/ProductFetch';
 import { useAuth } from '@/lib/auth';
@@ -30,7 +31,13 @@ export function CreateInquiryScreen({ onRoute, authed = false }: any) {
   const [hideMeasure, setHideMeasure] = React.useState(false);
   const [detail, setDetail] = React.useState('');
   const [product, setProduct] = React.useState('');
-  const [category, setCategory] = React.useState('');
+  const brands = SUEDE_BRANDS || [];
+  const presetBrand = appState.inquiryBrand;
+  const [brandType, setBrandType] = React.useState('Capsule Brand');
+  const [brandSel, setBrandSel] = React.useState(presetBrand?.name || '');
+  const [brandOpen, setBrandOpen] = React.useState(false);
+  const [brandQuery, setBrandQuery] = React.useState('');
+  const [nonCapsuleBrand, setNonCapsuleBrand] = React.useState('');
   const [errors, setErrors] = React.useState<string[]>([]);
   const [submitted, setSubmitted] = React.useState(false);
   const [saving, setSaving] = React.useState(false);
@@ -50,8 +57,11 @@ export function CreateInquiryScreen({ onRoute, authed = false }: any) {
     }).catch(() => {});
     return () => { active = false; };
   }, [user?.id]);
+  React.useEffect(() => { appState.inquiryBrand = null; }, []);
   const validate = () => {
     const e: string[] = [];
+    const brand = brandType === 'Capsule Brand' ? brandSel : nonCapsuleBrand.trim();
+    if (!brand) e.push('Select or enter a brand');
     if (!product.trim()) e.push('Add the product link and tap Fetch');
     if (!(size || otherSize.trim())) e.push('Select a size');
     if (!detail.trim()) e.push('Describe your inquiry');
@@ -66,8 +76,8 @@ export function CreateInquiryScreen({ onRoute, authed = false }: any) {
       setSaving(true);
       try {
         await createInquiry(sb, user.id, {
+          brandName: brandType === 'Capsule Brand' ? brandSel : nonCapsuleBrand.trim(),
           productName: product.trim(),
-          category: category || undefined,
           sizeScale: scale,
           sizeValue: size,
           sizeOther: otherSize.trim(),
@@ -83,7 +93,7 @@ export function CreateInquiryScreen({ onRoute, authed = false }: any) {
     }
     setSubmitted(true);
   };
-  const resetForm = () => { setSubmitted(false); setErrors([]); setProduct(''); setSize(''); setOtherSize(''); setDetail(''); setCategory(''); };
+  const resetForm = () => { setSubmitted(false); setErrors([]); setProduct(''); setSize(''); setOtherSize(''); setDetail(''); setBrandSel(''); setNonCapsuleBrand(''); setBrandType('Capsule Brand'); };
   const chip = (active: any) => ({
     padding: '13px 0', textAlign: 'center' as any, cursor: 'pointer',
     border: `1px solid ${active ? 'var(--ink-900)' : 'var(--border-default)'}`,
@@ -116,11 +126,59 @@ export function CreateInquiryScreen({ onRoute, authed = false }: any) {
       </div>
 
       <div className="sd-form-wrap" style={{ maxWidth: 1000, margin: '0 auto', padding: '0 40px 60px', display: 'flex', flexDirection: 'column', gap: 18 }}>
+        <CISectionCard title="Brand Information">
+          <div style={{ display: 'flex', gap: 14, marginBottom: 20 }}>
+            {['Capsule Brand', 'Non-Capsule Brand'].map(t => (
+              <button key={t} type="button" onClick={() => { setBrandType(t); setBrandSel(''); setBrandOpen(false); }} style={{ ...chip(brandType === t), padding: '13px 26px' }}>{t}</button>
+            ))}
+          </div>
+          {brandType === 'Capsule Brand' ? (
+            <Field label="Select Brand">
+              <div style={{ position: 'relative' }}>
+                <button type="button" onClick={() => setBrandOpen(o => !o)} style={{
+                  width: '100%', height: 50, display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  background: 'var(--surface-card)', border: '1px solid var(--border-default)', borderRadius: 'var(--radius-xs)',
+                  padding: '0 14px', cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: 14, color: brandSel ? 'var(--text-primary)' : 'var(--text-muted)',
+                }}>
+                  {brandSel || 'Choose a Capsule brand'}
+                  <Icon name="chevron-down" size={16} color="var(--text-secondary)" style={{ transition: 'transform var(--dur-base) var(--ease-out)', transform: brandOpen ? 'rotate(180deg)' : 'none' }} />
+                </button>
+                {brandOpen && <div onClick={() => setBrandOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 40 }} />}
+                <div style={{
+                  position: 'absolute', left: 0, right: 0, top: 'calc(100% + 6px)', zIndex: 41, maxHeight: 280, overflowY: 'auto',
+                  background: 'var(--surface-card)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-sm)',
+                  boxShadow: 'var(--shadow-lg)', padding: 6,
+                  opacity: brandOpen ? 1 : 0, transform: brandOpen ? 'translateY(0)' : 'translateY(-6px)',
+                  pointerEvents: brandOpen ? 'auto' : 'none', transition: 'opacity 150ms var(--ease-out), transform 150ms var(--ease-out)',
+                }}>
+                  <div style={{ position: 'sticky', top: 0, background: 'var(--surface-card)', paddingBottom: 6 }}>
+                    <Input variant="outline" icon="search" placeholder="Search brands" value={brandQuery} onChange={(e) => setBrandQuery(e.target.value)} onClick={(e) => e.stopPropagation()} />
+                  </div>
+                  {brands.filter((b: any) => b.name.toLowerCase().includes(brandQuery.toLowerCase())).map((b: any) => (
+                    <button key={b.name} type="button" onClick={() => { setBrandSel(b.name); setBrandOpen(false); }} style={{
+                      width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: '11px 12px', borderRadius: 'var(--radius-xs)', border: 'none',
+                      background: brandSel === b.name ? 'var(--linen)' : 'transparent', cursor: 'pointer', textAlign: 'left',
+                    }}
+                      onMouseEnter={(e) => { if (brandSel !== b.name) e.currentTarget.style.background = 'var(--linen)'; }}
+                      onMouseLeave={(e) => { if (brandSel !== b.name) e.currentTarget.style.background = 'transparent'; }}>
+                      <span style={{ width: 34, height: 34, flex: 'none', borderRadius: '50%', overflow: 'hidden', background: 'var(--linen)' }}>
+                        <img src={b.image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top' }} />
+                      </span>
+                      <span style={{ fontFamily: 'var(--font-serif)', fontSize: 17, letterSpacing: 'var(--ls-wide)', textTransform: 'uppercase', color: 'var(--text-primary)' }}>{b.name}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </Field>
+          ) : (
+            <Field label="Brand name" hint="Not in The Capsule yet? Enter the brand name."><Input variant="outline" maxLength={80} value={nonCapsuleBrand} onChange={(e: any) => setNonCapsuleBrand(e.target.value)} placeholder="Enter Brand name. Please try to spell it as accurately as possible." /></Field>
+          )}
+        </CISectionCard>
+
         <CISectionCard title="Product Information">
           <Field label="Paste the product link">
             <ProductFetch placeholder="https://example.com/product" onFetched={(p: any) => setProduct(p.title || 'Product')} />
           </Field>
-          <Field label="Category (Optional)"><Select variant="outline" value={category} onChange={(e: any) => setCategory(e.target.value)}><option value="">Select a category</option>{['Tops', 'Bottoms', 'Dresses', 'Outerwear'].map(c => <option key={c}>{c}</option>)}</Select></Field>
         </CISectionCard>
 
         <CISectionCard title="What size(s) are you looking for?">

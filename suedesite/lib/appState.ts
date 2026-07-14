@@ -8,4 +8,5 @@ export const appState: Record<string, any> = {
   lookbookTab: null,
   capsuleDrop: null,
   reviewBrand: null,
+  inquiryBrand: null,
 };
