@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server';
+import dns from 'node:dns/promises';
+import net from 'node:net';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -15,6 +17,92 @@ type Product = {
   price: string | null;
   url: string;
 };
+
+// ── SSRF guard ──────────────────────────────────────────────────────────
+// This endpoint fetches a user-supplied URL server-side, so it must refuse to
+// reach internal/loopback/link-local hosts (e.g. cloud metadata at
+// 169.254.169.254, localhost, RFC1918 ranges) — directly or via a redirect.
+
+class BlockedUrlError extends Error {}
+
+function ipv4ToInt(ip: string): number {
+  return ip.split('.').reduce((acc, o) => (acc * 256) + Number(o), 0) >>> 0;
+}
+
+// base/bits CIDR ranges that must never be fetched.
+const BLOCKED_V4: [string, number][] = [
+  ['0.0.0.0', 8], ['10.0.0.0', 8], ['100.64.0.0', 10], ['127.0.0.0', 8],
+  ['169.254.0.0', 16], ['172.16.0.0', 12], ['192.0.0.0', 24], ['192.0.2.0', 24],
+  ['192.88.99.0', 24], ['192.168.0.0', 16], ['198.18.0.0', 15], ['198.51.100.0', 24],
+  ['203.0.113.0', 24], ['224.0.0.0', 4], ['240.0.0.0', 4], ['255.255.255.255', 32],
+];
+
+function isPrivateV4(ip: string): boolean {
+  const n = ipv4ToInt(ip);
+  return BLOCKED_V4.some(([base, bits]) => {
+    const mask = bits === 0 ? 0 : (0xffffffff << (32 - bits)) >>> 0;
+    return (n & mask) === (ipv4ToInt(base) & mask);
+  });
+}
+
+function isPrivateV6(ip: string): boolean {
+  const a = ip.toLowerCase().split('%')[0]; // drop any zone id
+  if (a === '::1' || a === '::') return true;
+  const mapped = a.match(/^::ffff:(\d+\.\d+\.\d+\.\d+)$/); // IPv4-mapped
+  if (mapped) return isPrivateV4(mapped[1]);
+  const head = parseInt(a.split(':')[0] || '0', 16);
+  if ((head & 0xfe00) === 0xfc00) return true; // fc00::/7  unique-local
+  if ((head & 0xffc0) === 0xfe80) return true; // fe80::/10 link-local
+  if ((head & 0xff00) === 0xff00) return true; // ff00::/8  multicast
+  return false;
+}
+
+function isBlockedIp(ip: string): boolean {
+  const v = net.isIP(ip);
+  if (v === 4) return isPrivateV4(ip);
+  if (v === 6) return isPrivateV6(ip);
+  return true; // unrecognisable → refuse
+}
+
+// Resolve the host and reject if ANY resolved address is non-public. (Bare IP
+// literals are checked directly.) Note: a determined attacker could still
+// DNS-rebind between this check and the fetch; this blocks the common cases.
+async function assertPublicHost(hostname: string): Promise<void> {
+  const host = hostname.replace(/^\[|\]$/g, ''); // strip IPv6 brackets
+  if (!host) throw new BlockedUrlError('empty host');
+  const addrs = net.isIP(host)
+    ? [{ address: host }]
+    : await dns.lookup(host, { all: true }).catch(() => []);
+  if (!addrs.length) throw new BlockedUrlError('unresolved host');
+  for (const { address } of addrs) {
+    if (isBlockedIp(address)) throw new BlockedUrlError(`blocked address ${address}`);
+  }
+}
+
+// Follow redirects manually so each hop's host is re-validated before we fetch
+// it — `redirect: 'follow'` would let a public URL bounce to an internal one.
+async function safeFetch(start: URL, signal: AbortSignal): Promise<Response> {
+  let current = start;
+  for (let hop = 0; hop < 5; hop++) {
+    if (current.protocol !== 'http:' && current.protocol !== 'https:') {
+      throw new BlockedUrlError('bad protocol');
+    }
+    await assertPublicHost(current.hostname);
+    const res = await fetch(current.toString(), {
+      signal,
+      redirect: 'manual',
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.9',
+      },
+    });
+    const loc = res.status >= 300 && res.status < 400 ? res.headers.get('location') : null;
+    if (!loc) return res;
+    current = new URL(loc, current);
+  }
+  throw new BlockedUrlError('too many redirects');
+}
 
 function decodeEntities(s: string): string {
   return s
@@ -98,20 +186,15 @@ export async function POST(req: Request) {
   const timeout = setTimeout(() => controller.abort(), 9000);
   let html = '';
   try {
-    const res = await fetch(target.toString(), {
-      signal: controller.signal,
-      redirect: 'follow',
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-        'Accept-Language': 'en-US,en;q=0.9',
-      },
-    });
+    const res = await safeFetch(target, controller.signal);
     if (!res.ok) {
       return NextResponse.json({ ok: false, error: `The site returned an error (${res.status}). Try entering details manually.` }, { status: 502 });
     }
     html = await res.text();
   } catch (e: any) {
+    if (e instanceof BlockedUrlError) {
+      return NextResponse.json({ ok: false, error: "That link isn't allowed. Please enter the details manually." }, { status: 400 });
+    }
     const msg = e?.name === 'AbortError' ? 'The page took too long to respond.' : "Couldn't reach that link.";
     return NextResponse.json({ ok: false, error: `${msg} Try entering details manually.` }, { status: 502 });
     } finally {

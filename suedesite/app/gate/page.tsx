@@ -21,8 +21,11 @@ export default function GatePage() {
         body: JSON.stringify({ password }),
       });
       if (res.ok) {
-        const next = new URLSearchParams(window.location.search).get('next');
-        window.location.href = next && next.startsWith('/') ? next : '/';
+        const next = new URLSearchParams(window.location.search).get('next') || '';
+        // Only same-origin paths: a single leading "/" not followed by "/" or
+        // "\", so protocol-relative targets like "//evil.com" or "/\evil.com"
+        // (which browsers treat as absolute) can't be used for an open redirect.
+        window.location.href = /^\/(?![/\\])/.test(next) ? next : '/';
         return;
       }
       setError(true);

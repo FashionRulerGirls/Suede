@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { updateSession } from '@/lib/supabase/middleware';
-import { GATE_COOKIE, gateToken } from '@/lib/gate';
+import { GATE_COOKIE, gateToken, timingSafeEqualHex } from '@/lib/gate';
 
 export async function middleware(request: NextRequest) {
   // Pre-launch gate: when SITE_GATE_PASSWORD is set, block every page until a
@@ -10,9 +10,9 @@ export async function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl;
     const isGate = pathname === '/gate' || pathname.startsWith('/api/gate');
     if (!isGate) {
-      const token = request.cookies.get(GATE_COOKIE)?.value;
+      const token = request.cookies.get(GATE_COOKIE)?.value ?? '';
       const expected = await gateToken(pw);
-      if (token !== expected) {
+      if (!timingSafeEqualHex(token, expected)) {
         const url = request.nextUrl.clone();
         url.pathname = '/gate';
         const dest = pathname + (request.nextUrl.search || '');

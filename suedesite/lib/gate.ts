@@ -15,3 +15,14 @@ export async function gateToken(password: string): Promise<string> {
     .map((b) => b.toString(16).padStart(2, '0'))
     .join('');
 }
+
+// Constant-time comparison of two equal-length hex strings (SHA-256 tokens).
+// Works in both the edge and node runtimes (no Buffer / node:crypto needed).
+// A length mismatch returns false immediately, which only leaks the expected
+// digest length (a fixed, public 64) — never a secret.
+export function timingSafeEqualHex(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+}
