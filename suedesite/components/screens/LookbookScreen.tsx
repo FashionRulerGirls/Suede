@@ -7,9 +7,10 @@ import { appState } from '@/lib/appState';
 import { SuedeControls } from '@/lib/listControls';
 import { useAuth } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/client';
+import { shopOut } from '@/lib/tracking';
 import { loadPublishedReviews, loadPublishedInquiries } from '@/lib/contentData';
 
-export function InquiryCard({ asker = {}, measurements = {}, product, size, brand, image, question, responses = [], helpful, hideMeasurements = false, match, onOpen, onAsker, onBrand }: any) {
+export function InquiryCard({ asker = {}, measurements = {}, product, productUrl, size, brand, image, question, responses = [], helpful, hideMeasurements = false, match, onOpen, onAsker, onBrand }: any) {
   const link = { background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-primary)', textDecoration: 'underline', textUnderlineOffset: 3 };
   const [voted, setVoted] = React.useState(false);
   const conf = match?.confidence as string | undefined;
@@ -60,7 +61,7 @@ export function InquiryCard({ asker = {}, measurements = {}, product, size, bran
             </span>
             <span style={{ display: 'flex', gap: 22, justifyContent: 'flex-end' }}>
               <button style={link} onClick={onOpen}>Respond</button>
-              <button style={link} onClick={onOpen}>View Product</button>
+              <button style={link} onClick={() => { if (productUrl && shopOut(createClient(), { rawUrl: productUrl, brandName: brand, productName: product, sourcePage: 'lookbook-inquiry', content: 'inquiry-card' })) return; onOpen && onOpen(); }}>View Product</button>
             </span>
           </div>
         </div>

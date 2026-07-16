@@ -4,6 +4,8 @@ import { Avatar } from './Avatar';
 import { StarRating } from './StarRating';
 import { MeasurementSpec } from './MeasurementSpec';
 import { Icon } from './Icon';
+import { createClient } from '@/lib/supabase/client';
+import { shopOut } from '@/lib/tracking';
 
 /* The Lookbook review card — reviewer lockup + measurement match, a fit
    photo with a "+N" stack badge, product/size, excerpt, brand wordmark,
@@ -13,6 +15,7 @@ export function ReviewCard({
   reviewer = {},
   measurements = {},
   product,
+  productUrl,
   size,
   excerpt,
   image,
@@ -79,9 +82,17 @@ export function ReviewCard({
           <p style={{ fontFamily: 'var(--font-body)', fontSize: 13.5, lineHeight: 1.55, color: 'var(--text-muted)', margin: 0 }}>
             {excerpt}
           </p>
-          <button onClick={onSeeFull} style={{ alignSelf: 'flex-end', marginTop: 'auto', background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-primary)', textDecoration: 'underline', textUnderlineOffset: 3 }}>
-            See Full Review
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 18, alignSelf: 'flex-end', marginTop: 'auto' }}>
+            {productUrl && (
+              <button onClick={() => shopOut(createClient(), { rawUrl: productUrl, brandName: brand, productName: product, sourcePage: 'lookbook-review', content: 'review-card' })}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-primary)' }}>
+                Shop <Icon name="external-link" size={12} color="currentColor" />
+              </button>
+            )}
+            <button onClick={onSeeFull} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-primary)', textDecoration: 'underline', textUnderlineOffset: 3 }}>
+              See Full Review
+            </button>
+          </div>
         </div>
         <div style={{ position: 'relative', minWidth: 0, borderRadius: 0, overflow: 'hidden', aspectRatio: '3/4', background: 'var(--linen)' }}>
           {image && <img src={image} alt={product} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
