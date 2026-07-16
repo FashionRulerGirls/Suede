@@ -6,9 +6,14 @@
 -- stores its measurements_snapshot. Re-runnable.
 -- ════════════════════════════════════════════════════════════════════
 
+-- The inquiries table (unlike reviews) never had a hide_measurements column,
+-- so add it first.
+alter table public.inquiries
+  add column if not exists hide_measurements boolean not null default false;
+
 -- strip_hidden_review_measurements() (from 0008) is table-agnostic — it only
 -- touches NEW.hide_measurements / NEW.measurements_snapshot, both of which
--- inquiries also have — so we can bind it to inquiries too.
+-- inquiries now have — so we can bind it to inquiries too.
 drop trigger if exists inquiries_strip_hidden_measurements on public.inquiries;
 create trigger inquiries_strip_hidden_measurements
   before insert or update on public.inquiries
