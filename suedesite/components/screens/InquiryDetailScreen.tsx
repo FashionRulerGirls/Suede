@@ -8,6 +8,7 @@ import { InquiryCard } from '@/components/screens/LookbookScreen';
 import { useAuth } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/client';
 import { loadInquiryById, loadInquiryResponses, postInquiryResponse, loadReactions, setReaction } from '@/lib/contentData';
+import { shopOut } from '@/lib/tracking';
 
 function ResponseRow({ avatar, name, specs, when, body, likes, liked, onLike }: any) {
   const color = liked ? 'var(--rating-positive)' : 'var(--text-muted)';
@@ -109,7 +110,7 @@ export function InquiryDetailScreen({ onRoute, authed = false }: any) {
           <div style={{ aspectRatio: '3/4', overflow: 'hidden', background: 'var(--linen)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             {image ? <img src={image} alt={product} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <Icon name="image" size={40} color="var(--text-muted)" />}
           </div>
-          <Button variant="primary" fullWidth style={{ marginTop: 14 }} onClick={() => { if (productUrl) { window.open(productUrl, '_blank', 'noopener,noreferrer'); return; } const bd = (SUEDE_BRANDS || []).find(b => b.name === brand); if (bd) { appState.brand = bd; onRoute('brand'); } }}>View Product</Button>
+          <Button variant="primary" fullWidth style={{ marginTop: 14 }} onClick={() => { if (productUrl && shopOut(createClient(), { rawUrl: productUrl, brandName: brand, productName: product, memberId: user?.id, sourcePage: 'inquiry', content: 'inquiry-product' })) return; const bd = (SUEDE_BRANDS || []).find(b => b.name === brand); if (bd) { appState.brand = bd; onRoute('brand'); } }}>View Product</Button>
         </div>
 
         {/* Right — inquiry + responses */}

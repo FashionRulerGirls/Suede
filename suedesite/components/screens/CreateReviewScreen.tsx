@@ -123,6 +123,7 @@ export function CreateReviewScreen({ onRoute, authed = false }: any) {
   const [otherSize, setOtherSize] = React.useState(editing ? (editReview.size_other || '') : '');
   const [contentLink, setContentLink] = React.useState('');
   const [productImage, setProductImage] = React.useState(editing ? (editReview.product_image_url || '') : '');
+  const [productUrl, setProductUrl] = React.useState(editing ? (editReview.product_url || '') : '');
   const [productList, setProductList] = React.useState<any[]>([]);
   const [productQuery, setProductQuery] = React.useState('');
   // Load the brand's existing products for the "Search Existing" picker.
@@ -209,6 +210,7 @@ export function CreateReviewScreen({ onRoute, authed = false }: any) {
           brandName: brandType === 'Capsule Brand' ? brandSel : nonCapsuleBrand.trim(),
           productName: productSel.trim(),
           productImage: productImage.trim() || undefined,
+          productUrl: productUrl.trim() || undefined,
           contentLink: contentLink.trim() || undefined,
           sizeScale: scale,
           sizeValue: size,
@@ -255,7 +257,7 @@ export function CreateReviewScreen({ onRoute, authed = false }: any) {
     else void finalize();
   };
   const resetForm = () => {
-    setSubmitted(false); setErrors([]); setReviewText(''); setProductSel(''); setProductImage(''); setNonCapsuleBrand('');
+    setSubmitted(false); setErrors([]); setReviewText(''); setProductSel(''); setProductImage(''); setProductUrl(''); setNonCapsuleBrand('');
     setRatings({ sizing: 0, material: 0, value: 0, photos: 0, service: 0 }); setSize(''); setRec(null); setPhotos([]);
   };
 
@@ -394,13 +396,13 @@ export function CreateReviewScreen({ onRoute, authed = false }: any) {
           )}
           {mode === 'url' && (
             <Field label="Product URL">
-              <ProductFetch placeholder="https://example.com/product" onFetched={(p: any) => { setProductSel(p.title || ''); setProductImage(p.image || ''); }} />
+              <ProductFetch placeholder="https://example.com/product" onFetched={(p: any) => { setProductSel(p.title || ''); setProductImage(p.image || ''); setProductUrl(p.url || ''); }} />
             </Field>
           )}
           {mode === 'manual' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
               <Field label="Product Name"><Input variant="outline" maxLength={120} value={productSel} onChange={(e: any) => setProductSel(e.target.value)} placeholder="e.g. The Nyomi Maxi" /></Field>
-              <Field label="Product URL (Optional)"><Input variant="outline" maxLength={300} placeholder="https:// example.com/product" /></Field>
+              <Field label="Product URL (Optional)"><Input variant="outline" maxLength={300} value={productUrl} onChange={(e: any) => setProductUrl(e.target.value)} placeholder="https://example.com/product" /></Field>
             </div>
           )}
         </SectionCard>

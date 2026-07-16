@@ -7,6 +7,7 @@ import { appState } from '@/lib/appState';
 import { useAuth } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/client';
 import { loadReviewById, loadReviewComments, postReviewComment, loadReviewMedia, formatDate, canEditReview, deleteReview, loadReactions, setReaction } from '@/lib/contentData';
+import { shopOut } from '@/lib/tracking';
 
 function SubRating({ label, value }: any) {
   return (
@@ -236,7 +237,7 @@ export function ReviewDetailScreen({ onRoute, authed = false }: any) {
                 </div>
               )}
             </div>
-            <button onClick={() => { if (productUrl) { window.open(productUrl, '_blank', 'noopener,noreferrer'); return; } const bd = (SUEDE_BRANDS || []).find(b => b.name === brand); if (bd) { appState.brand = bd; onRoute('brand'); } }} style={{ background: 'none', border: 'none', padding: 0, marginTop: 18, cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-primary)', textDecoration: 'underline', textUnderlineOffset: 3 }}>View Product</button>
+            <button onClick={() => { if (productUrl && shopOut(createClient(), { rawUrl: productUrl, brandName: brand, productName: product, memberId: user?.id, sourcePage: 'review', content: 'review-product' })) return; const bd = (SUEDE_BRANDS || []).find(b => b.name === brand); if (bd) { appState.brand = bd; onRoute('brand'); } }} style={{ background: 'none', border: 'none', padding: 0, marginTop: 18, cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-primary)', textDecoration: 'underline', textUnderlineOffset: 3 }}>View Product</button>
           </div>
 
           {subRatings.length > 0 && (
