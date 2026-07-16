@@ -7,6 +7,7 @@ import { appState } from '@/lib/appState';
 import { SuedeControls } from '@/lib/listControls';
 import { InquiryCard } from '@/components/screens/LookbookScreen';
 import { ExploreModal } from '@/components/screens/ExploreModal';
+import { shopOut } from '@/lib/tracking';
 import { useAuth } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/client';
 import { loadBrandReviews, loadBrandInquiries, resolveBrandId, isFollowingBrand, setBrandFollow, brandFollowerCount } from '@/lib/contentData';
@@ -110,6 +111,15 @@ export function BrandScreen({ onRoute, authed = false }: any) {
     catch { setFollowing(!on); setFollowers((n) => n + (on ? -1 : 1)); }
     finally { setFollowBusy(false); }
   };
+  // Send the shopper to the brand's own store, tagged + logged for attribution.
+  const doShop = () => {
+    shopOut(createClient(), {
+      rawUrl: brand.shopUrl,
+      brandId, brandName: brand.name,
+      memberId: user?.id, sourcePage: 'brand',
+      campaign: brand.slug || brand.name, content: 'brand-page',
+    });
+  };
   const [tab, setTab] = React.useState('reviews');
   const [bQuery, setBQuery] = React.useState('');
   const [bSort, setBSort] = React.useState('date');
@@ -201,6 +211,16 @@ export function BrandScreen({ onRoute, authed = false }: any) {
       </div>
       </div>
       </div>
+
+      {/* Shop the brand — outbound, tagged + logged for attribution */}
+      {brand.shopUrl && (
+        <div style={{ display: 'flex', justifyContent: 'center', marginTop: 34 }}>
+          <button onClick={doShop} style={{ display: 'inline-flex', alignItems: 'center', gap: 10, background: 'var(--ink-900)', color: 'var(--paper)', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: 13, letterSpacing: '0.14em', textTransform: 'uppercase', padding: '15px 34px', borderRadius: 'var(--radius-pill)' }}>
+            Shop {brand.name}
+            <Icon name="external-link" size={15} color="var(--paper)" />
+          </button>
+        </div>
+      )}
 
       {/* Stats strip */}
       <div style={{ padding: '44px 0 8px' }}>

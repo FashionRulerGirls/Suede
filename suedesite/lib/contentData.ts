@@ -344,6 +344,7 @@ function mapBrand(b: any, s: any) {
     founded: b.founded_year || '',
     location: b.location || '',
     social: b.social || ('@' + b.slug),
+    shopUrl: b.shop_url || '',
     image: b.hero_image_url || '',
     hero: b.hero_image_url || '',
     is_capsule: b.is_capsule,
