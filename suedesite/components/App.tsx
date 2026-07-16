@@ -72,21 +72,16 @@ function AppInner() {
   const returnToRef = React.useRef<string | null>(null);
   const AUTH_ROUTES = ['signin', 'createaccount', 'forgot', 'verify', 'reset', 'brandsignin'];
 
-  // After an OAuth redirect the identity provider's page (e.g. Google) sits in
-  // browser history, so pressing Back would leave the app. Captured during
-  // render (before the Supabase client strips the code from the URL); we then
-  // add an in-app history entry so Back returns to Suede, not the provider.
-  const cameFromOAuth = React.useState(() => {
-    if (typeof window === 'undefined') return false;
-    return /[?&#](code|access_token|signedin)=/.test(window.location.search + window.location.hash);
-  })[0];
-  React.useEffect(() => {
-    if (!cameFromOAuth) return;
-    try {
-      window.history.replaceState(null, '', window.location.pathname);
-      window.history.pushState(null, '', window.location.pathname);
-    } catch { /* history unavailable */ }
-  }, [cameFromOAuth]);
+  // Suede is a single-URL SPA, so in-app navigation must push its own browser
+  // history entries — otherwise Back escapes to the last non-Suede page instead
+  // of the previous Suede view. Each pushed entry carries the route plus the
+  // appState selection needed to rebuild a detail view (brand/review/…).
+  const SEL_KEYS = ['brand', 'member', 'review', 'inquiry', 'profileView', 'lookbookTab', 'capsuleDrop'];
+  const snapshotSel = () => {
+    const s: Record<string, any> = {};
+    for (const k of SEL_KEYS) s[k] = appState[k];
+    return s;
+  };
 
   const scrollTop = () => {
     const top = () => {
@@ -122,6 +117,7 @@ function AppInner() {
     }
     setRouteRaw(r);
     scrollTop();
+    try { window.history.pushState({ suedeRoute: r, suedeSel: snapshotSel() }, ''); } catch { /* history unavailable */ }
   };
 
   React.useEffect(() => {
@@ -133,6 +129,25 @@ function AppInner() {
     top();
     requestAnimationFrame(top);
   }, [route]);
+
+  // Seed the current history entry with the initial route (and strip any OAuth
+  // return params from the URL), then restore route + selection on Back/Forward.
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const hasAuthParam = /[?&#](code|access_token|signedin)=/.test(window.location.search + window.location.hash);
+    try {
+      window.history.replaceState({ suedeRoute: 'landing' }, '', hasAuthParam ? window.location.pathname : undefined);
+    } catch { /* history unavailable */ }
+    const onPop = (e: PopStateEvent) => {
+      const st: any = e.state;
+      if (st && st.suedeSel) Object.assign(appState, st.suedeSel);
+      setRouteRaw(st && st.suedeRoute ? st.suedeRoute : 'landing');
+      scrollTop();
+    };
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Apply visual tweaks globally via CSS custom properties
   React.useEffect(() => {
