@@ -75,6 +75,7 @@ export function InquiryDetailScreen({ onRoute, authed = false }: any) {
   const size = real ? (full?.size_value || full?.size_other || q.size || '') : (q.size || '6');
   const question = (real ? (full?.body || q.question) : q.question) || 'How much coverage does the dress offer?';
   const productUrl = real ? full?.product_url : null;
+  const price = real ? (full?.product_price || '') : '$245';
   const [draft, setDraft] = React.useState('');
   const [posting, setPosting] = React.useState(false);
   const submitResponse = async () => {
@@ -122,9 +123,27 @@ export function InquiryDetailScreen({ onRoute, authed = false }: any) {
             </div>
             <Icon name="message" size={20} color="var(--text-muted)" />
           </div>
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, border: '1px solid var(--border-default)', borderRadius: 'var(--radius-xs)', padding: '7px 12px', fontFamily: 'var(--font-body)', fontSize: 12, color: 'var(--text-secondary)' }}>
-            <Icon name="search" size={13} color="var(--text-muted)" /> Size {size}
-          </span>
+          <div>
+            <div style={{ fontFamily: 'var(--font-body)', fontSize: 13, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--text-primary)', marginBottom: 14 }}>Purchase Details</div>
+            <div style={{ display: 'flex', gap: 56, flexWrap: 'wrap', rowGap: 18 }}>
+              <div>
+                <div style={{ fontFamily: 'var(--font-body)', fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--text-muted)' }}>Brand</div>
+                <div style={{ fontFamily: 'var(--font-body)', fontSize: 15, color: 'var(--text-primary)', marginTop: 5 }}>{brand}</div>
+              </div>
+              {size && (
+                <div>
+                  <div style={{ fontFamily: 'var(--font-body)', fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--text-muted)' }}>Size sought</div>
+                  <div style={{ fontFamily: 'var(--font-body)', fontSize: 15, color: 'var(--text-primary)', marginTop: 5 }}>{size}</div>
+                </div>
+              )}
+              {price && (
+                <div>
+                  <div style={{ fontFamily: 'var(--font-body)', fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--text-muted)' }}>Price</div>
+                  <div style={{ fontFamily: 'var(--font-body)', fontSize: 15, color: 'var(--text-primary)', marginTop: 5 }}>{price}</div>
+                </div>
+              )}
+            </div>
+          </div>
 
           <div className="sd-iqd-asker" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, marginTop: 24 }}>
             <Avatar src={asker.avatar} name={asker.name} handle={asker.handle} size="lg" showName />

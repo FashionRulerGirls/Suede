@@ -106,6 +106,7 @@ export function ReviewDetailScreen({ onRoute, authed = false }: any) {
   const body = (real ? (full?.body || r.excerpt) : r.full) || r.excerpt || "These trousers are everything. The wide leg is flattering without being overwhelming, and they hit at just the right length for my height. True to size for my measurements—I ordered a medium and it fits perfectly at the waist and hips. The fabric has a beautiful drape with a subtle sheen that elevates any outfit. I've worn them to work with a silk blouse and also dressed them down with sneakers on the weekend. The tailoring is impeccable—you can tell these are made to last. The only minor note is that they do wrinkle easily, so steaming before wear is recommended. Overall, absolutely worth the investment for a versatile wardrobe staple.";
   const dateStr = real ? (full ? formatDate(full.created_at) : '') : '01 February 2026';
   const size = real ? (full?.size_value || full?.size_other || '') : (r.size || '');
+  const price = real ? (full?.product_price || '') : '$285';
   const productUrl = real ? full?.product_url : null;
   const thumbs = real ? media : (image ? [image, image, image, image] : []);
   const subRatings = real
@@ -220,20 +221,21 @@ export function ReviewDetailScreen({ onRoute, authed = false }: any) {
 
           <div style={{ marginTop: 32 }}>
             <div style={{ fontFamily: 'var(--font-body)', fontSize: 13, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--text-primary)', marginBottom: 16 }}>Purchase Details</div>
-            <div style={{ display: 'flex', gap: 80 }}>
+            <div style={{ display: 'flex', gap: 80, flexWrap: 'wrap', rowGap: 20 }}>
               <div>
                 <div style={{ fontFamily: 'var(--font-body)', fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--text-muted)' }}>Brand</div>
                 <div style={{ fontFamily: 'var(--font-body)', fontSize: 15, color: 'var(--text-primary)', marginTop: 5 }}>{brand}</div>
               </div>
-              {real ? (size && (
+              {size && (
                 <div>
                   <div style={{ fontFamily: 'var(--font-body)', fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--text-muted)' }}>Size</div>
                   <div style={{ fontFamily: 'var(--font-body)', fontSize: 15, color: 'var(--text-primary)', marginTop: 5 }}>{size}</div>
                 </div>
-              )) : (
+              )}
+              {price && (
                 <div>
                   <div style={{ fontFamily: 'var(--font-body)', fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--text-muted)' }}>Price</div>
-                  <div style={{ fontFamily: 'var(--font-body)', fontSize: 15, color: 'var(--text-primary)', marginTop: 5 }}>$285</div>
+                  <div style={{ fontFamily: 'var(--font-body)', fontSize: 15, color: 'var(--text-primary)', marginTop: 5 }}>{price}</div>
                 </div>
               )}
             </div>

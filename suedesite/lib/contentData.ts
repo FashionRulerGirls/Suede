@@ -68,6 +68,7 @@ export type NewReview = {
   hideMeasurements: boolean;
   sizeSatisfaction?: any;
   productImage?: string;
+  productPrice?: string;
 };
 
 export async function createReview(sb: SupabaseClient, userId: string, r: NewReview) {
@@ -82,6 +83,7 @@ export async function createReview(sb: SupabaseClient, userId: string, r: NewRev
     product_name: r.productName.trim(),
     product_url: r.productUrl?.trim() || null,
     product_image_url: r.productImage?.trim() || null,
+    product_price: r.productPrice?.trim() || null,
     size_scale: r.sizeScale || null,
     size_value: r.sizeValue || null,
     size_other: r.sizeOther?.trim() || null,
@@ -115,6 +117,7 @@ export async function updateReview(sb: SupabaseClient, userId: string, reviewId:
   }
   if (r.productName !== undefined) patch.product_name = r.productName.trim();
   if (r.productImage !== undefined) patch.product_image_url = r.productImage?.trim() || null;
+  if (r.productPrice !== undefined) patch.product_price = r.productPrice?.trim() || null;
   if (r.sizeScale !== undefined) patch.size_scale = r.sizeScale || null;
   if (r.sizeValue !== undefined) patch.size_value = r.sizeValue || null;
   if (r.sizeOther !== undefined) patch.size_other = r.sizeOther?.trim() || null;
@@ -151,6 +154,7 @@ export type NewInquiry = {
   body: string;
   hideMeasurements?: boolean;
   productImage?: string;
+  productPrice?: string;
 };
 
 export async function createInquiry(sb: SupabaseClient, userId: string, q: NewInquiry) {
@@ -165,6 +169,7 @@ export async function createInquiry(sb: SupabaseClient, userId: string, q: NewIn
     product_name: q.productName.trim(),
     product_url: q.productUrl?.trim() || null,
     product_image_url: q.productImage?.trim() || null,
+    product_price: q.productPrice?.trim() || null,
     category: q.category || null,
     size_scale: q.sizeScale || null,
     size_value: q.sizeValue || null,

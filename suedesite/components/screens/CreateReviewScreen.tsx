@@ -124,6 +124,7 @@ export function CreateReviewScreen({ onRoute, authed = false }: any) {
   const [contentLink, setContentLink] = React.useState('');
   const [productImage, setProductImage] = React.useState(editing ? (editReview.product_image_url || '') : '');
   const [productUrl, setProductUrl] = React.useState(editing ? (editReview.product_url || '') : '');
+  const [productPrice, setProductPrice] = React.useState(editing ? (editReview.product_price || '') : '');
   const [productList, setProductList] = React.useState<any[]>([]);
   const [productQuery, setProductQuery] = React.useState('');
   // Load the brand's existing products for the "Search Existing" picker.
@@ -211,6 +212,7 @@ export function CreateReviewScreen({ onRoute, authed = false }: any) {
           productName: productSel.trim(),
           productImage: productImage.trim() || undefined,
           productUrl: productUrl.trim() || undefined,
+          productPrice: productPrice.trim() || undefined,
           contentLink: contentLink.trim() || undefined,
           sizeScale: scale,
           sizeValue: size,
@@ -257,7 +259,7 @@ export function CreateReviewScreen({ onRoute, authed = false }: any) {
     else void finalize();
   };
   const resetForm = () => {
-    setSubmitted(false); setErrors([]); setReviewText(''); setProductSel(''); setProductImage(''); setProductUrl(''); setNonCapsuleBrand('');
+    setSubmitted(false); setErrors([]); setReviewText(''); setProductSel(''); setProductImage(''); setProductUrl(''); setProductPrice(''); setNonCapsuleBrand('');
     setRatings({ sizing: 0, material: 0, value: 0, photos: 0, service: 0 }); setSize(''); setRec(null); setPhotos([]);
   };
 
@@ -396,7 +398,7 @@ export function CreateReviewScreen({ onRoute, authed = false }: any) {
           )}
           {mode === 'url' && (
             <Field label="Product URL">
-              <ProductFetch placeholder="https://example.com/product" onFetched={(p: any) => { setProductSel(p.title || ''); setProductImage(p.image || ''); setProductUrl(p.url || ''); }} />
+              <ProductFetch placeholder="https://example.com/product" onFetched={(p: any) => { setProductSel(p.title || ''); setProductImage(p.image || ''); setProductUrl(p.url || ''); setProductPrice(p.price || ''); }} />
             </Field>
           )}
           {mode === 'manual' && (
@@ -405,6 +407,9 @@ export function CreateReviewScreen({ onRoute, authed = false }: any) {
               <Field label="Product URL (Optional)"><Input variant="outline" maxLength={300} value={productUrl} onChange={(e: any) => setProductUrl(e.target.value)} placeholder="https://example.com/product" /></Field>
             </div>
           )}
+          <Field label="Price (optional)" hint="What you paid — shown in the item's purchase details.">
+            <Input variant="outline" maxLength={20} value={productPrice} onChange={(e: any) => setProductPrice(e.target.value)} placeholder="e.g. £245" />
+          </Field>
         </SectionCard>
 
         <SectionCard title="Rate This Product">

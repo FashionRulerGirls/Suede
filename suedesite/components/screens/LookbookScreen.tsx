@@ -7,7 +7,6 @@ import { appState } from '@/lib/appState';
 import { SuedeControls } from '@/lib/listControls';
 import { useAuth } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/client';
-import { shopOut } from '@/lib/tracking';
 import { loadPublishedReviews, loadPublishedInquiries } from '@/lib/contentData';
 
 export function InquiryCard({ asker = {}, measurements = {}, product, productUrl, size, brand, image, question, responses = [], helpful, hideMeasurements = false, match, onOpen, onAsker, onBrand }: any) {
@@ -61,7 +60,7 @@ export function InquiryCard({ asker = {}, measurements = {}, product, productUrl
             </span>
             <span style={{ display: 'flex', gap: 22, justifyContent: 'flex-end' }}>
               <button style={link} onClick={onOpen}>Respond</button>
-              <button style={link} onClick={() => { if (productUrl && shopOut(createClient(), { rawUrl: productUrl, brandName: brand, productName: product, sourcePage: 'lookbook-inquiry', content: 'inquiry-card' })) return; onOpen && onOpen(); }}>View Product</button>
+              <button style={link} onClick={onOpen}>See full inquiry</button>
             </span>
           </div>
         </div>

@@ -33,6 +33,7 @@ export function CreateInquiryScreen({ onRoute, authed = false }: any) {
   const [product, setProduct] = React.useState('');
   const [productImage, setProductImage] = React.useState('');
   const [productUrl, setProductUrl] = React.useState('');
+  const [productPrice, setProductPrice] = React.useState('');
   const brands = SUEDE_BRANDS || [];
   const presetBrand = appState.inquiryBrand;
   const [brandType, setBrandType] = React.useState('Capsule Brand');
@@ -82,6 +83,7 @@ export function CreateInquiryScreen({ onRoute, authed = false }: any) {
           productName: product.trim(),
           productImage: productImage.trim() || undefined,
           productUrl: productUrl.trim() || undefined,
+          productPrice: productPrice.trim() || undefined,
           sizeScale: scale,
           sizeValue: size,
           sizeOther: otherSize.trim(),
@@ -97,7 +99,7 @@ export function CreateInquiryScreen({ onRoute, authed = false }: any) {
     }
     setSubmitted(true);
   };
-  const resetForm = () => { setSubmitted(false); setErrors([]); setProduct(''); setProductImage(''); setProductUrl(''); setSize(''); setOtherSize(''); setDetail(''); setBrandSel(''); setNonCapsuleBrand(''); setBrandType('Capsule Brand'); };
+  const resetForm = () => { setSubmitted(false); setErrors([]); setProduct(''); setProductImage(''); setProductUrl(''); setProductPrice(''); setSize(''); setOtherSize(''); setDetail(''); setBrandSel(''); setNonCapsuleBrand(''); setBrandType('Capsule Brand'); };
   const chip = (active: any) => ({
     padding: '13px 0', textAlign: 'center' as any, cursor: 'pointer',
     border: `1px solid ${active ? 'var(--ink-900)' : 'var(--border-default)'}`,
@@ -181,7 +183,10 @@ export function CreateInquiryScreen({ onRoute, authed = false }: any) {
 
         <CISectionCard title="Product Information">
           <Field label="Paste the product link">
-            <ProductFetch placeholder="https://example.com/product" onFetched={(p: any) => { setProduct(p.title || 'Product'); setProductImage(p.image || ''); setProductUrl(p.url || ''); }} />
+            <ProductFetch placeholder="https://example.com/product" onFetched={(p: any) => { setProduct(p.title || 'Product'); setProductImage(p.image || ''); setProductUrl(p.url || ''); setProductPrice(p.price || ''); }} />
+          </Field>
+          <Field label="Price (optional)" hint="Shown in the item's purchase details.">
+            <Input variant="outline" maxLength={20} value={productPrice} onChange={(e: any) => setProductPrice(e.target.value)} placeholder="e.g. £245" />
           </Field>
         </CISectionCard>
 
