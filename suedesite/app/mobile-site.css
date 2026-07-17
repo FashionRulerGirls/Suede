@@ -116,14 +116,19 @@ html, body { max-width: 100%; overflow-x: hidden; }
   #root .sd-brating-pop > span:first-child { display: none !important; }
   #root .sd-rc-body { grid-template-columns: 1fr 104px !important; gap: 14px !important; }
   #root .sd-rc-body > div:first-child { min-width: 0 !important; }
-  #root .sd-iq-body { grid-template-columns: 1fr 104px !important; gap: 14px !important; }
-  #root .sd-iq-body > div:first-child { min-width: 0 !important; }
-  /* Image cell: width follows the fixed 104px column; height just fills the
-     row. (Without this the aspect-ratio derives width from the tall text
+  /* Review image cell: width follows the fixed 104px column; height just fills
+     the row. (Without this the aspect-ratio derives width from the tall text
      height and the photo blows past the card edge.) */
-  #root .sd-rc-body > div:last-child,
-  #root .sd-iq-body > div:last-child { aspect-ratio: auto !important; min-height: 138px !important; }
-  #root .sd-iq-img { aspect-ratio: 3 / 4 !important; max-height: none !important; order: 0; align-self: start !important; }
+  #root .sd-rc-body > div:last-child { aspect-ratio: auto !important; min-height: 138px !important; }
+  /* Inquiry cards restack on mobile: the product photo becomes a full-width
+     3:2 hero on top, and the text (brand / product / question / actions) flows
+     below across the whole card — no more slim side frame + boxed-in text. */
+  #root .sd-iq-body { grid-template-columns: 1fr !important; gap: 16px !important; }
+  #root .sd-iq-body > div:first-child { min-width: 0 !important; order: 2 !important; }
+  #root .sd-iq-body > div:last-child { order: 1 !important; aspect-ratio: 3 / 2 !important; min-height: 0 !important; width: 100% !important; }
+  #root .sd-iq-img { aspect-ratio: 3 / 2 !important; max-height: none !important; width: 100% !important; height: 100% !important; }
+  /* No image → don't reserve an empty hero band; the card becomes clean text. */
+  #root .sd-iq-body > div:last-child:not(:has(img)) { display: none !important; }
   #root .sd-iq-foot { flex-wrap: wrap !important; gap: 12px !important; }
   #root .sd-iq-head { flex-wrap: nowrap !important; align-items: flex-start; }
   #root .sd-iq-head .sd-mspec { flex-wrap: nowrap !important; font-size: 9.5px !important; gap: 4px !important; letter-spacing: 0.02em !important; }
