@@ -110,7 +110,7 @@ export function InquiryDetailScreen({ onRoute, authed = false }: any) {
 
   const asker = q.asker || { name: 'Kikiola Akanbi', handle: '@kikiolaakanbi', avatar: '/assets/avatars/avatar-asaya.jpg' };
   const m = q.measurements || { height: "5'5\"", bust: '33"', waist: '29"', hips: '40"' };
-  const image = real ? '' : (q.image || '/assets/imagery/fit-street.jpg');
+  const image = real ? (full?.product_image_url || q.image || '') : (q.image || '/assets/imagery/fit-street.jpg');
   const brand = (real ? (full?.brand_name || q.brand) : q.brand) || 'Nadi';
   const product = (real ? (full?.product_name || q.product) : q.product) || 'The Nyomi Maxi';
   const size = real ? (full?.size_value || full?.size_other || q.size || '') : (q.size || '6');

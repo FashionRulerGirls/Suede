@@ -219,6 +219,7 @@ export function inquiryRowToCard(row: any) {
     productUrl: row.product_url || '',
     size: row.size_value || row.size_other || '',
     brand: row.brand_name || '',
+    image: row.product_image_url || '',
     measurements: row.measurements_snapshot || {},
     hideMeasurements: !!row.hide_measurements,
     question: row.body,
