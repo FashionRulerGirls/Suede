@@ -258,6 +258,7 @@ Respond ONLY with a valid JSON object in this exact format, no markdown, no prea
         }),
       });
       setSaveStatus('saved');
+      if (typeof window !== 'undefined') window.dispatchEvent(new Event('suede-measurements-saved'));
     } catch { setSaveStatus('ready'); }
   };
 

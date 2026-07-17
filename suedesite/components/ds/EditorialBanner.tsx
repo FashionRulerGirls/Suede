@@ -1,5 +1,6 @@
 'use client';
 import React from 'react';
+import { Logo } from './Logo';
 
 /* Full-bleed editorial banner — a black (or paper) bar with widely
    letter-spaced uppercase text. Suede uses these as manifesto rules
@@ -22,8 +23,13 @@ export function EditorialBanner({ children, tone = 'ink', size = 'md', scroll = 
   };
 
   if (scroll) {
+    // Each repeated phrase is followed by the S·C monogram submark, so the
+    // marquee reads "PHRASE ◦ PHRASE ◦ …" with the mark punctuating the breaks.
     const item = (
-      <span style={{ ...textStyle, paddingRight: 64, flex: 'none' }}>{children}</span>
+      <span style={{ ...textStyle, display: 'inline-flex', alignItems: 'center', flex: 'none' }}>
+        {children}
+        <Logo variant="monogram" height={fs + 2} aria-hidden="true" style={{ margin: '0 32px', opacity: 0.85 }} />
+      </span>
     );
     return (
       <div

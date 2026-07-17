@@ -352,7 +352,7 @@ export function EditProfileScreen({ onRoute, authed = false }: any) {
     if (e1 || e2) { setSaveErr((e1 || e2)!.message); return false; }
     setAvatarFile(null);
     if (reloadProfile) void reloadProfile();
-    if (typeof window !== 'undefined') window.dispatchEvent(new Event('suede-profile-updated'));
+    if (typeof window !== 'undefined') { window.dispatchEvent(new Event('suede-profile-updated')); window.dispatchEvent(new Event('suede-measurements-saved')); }
     return true;
   };
 

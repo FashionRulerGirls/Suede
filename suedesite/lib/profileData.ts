@@ -72,6 +72,18 @@ export async function loadProfileData(sb: SupabaseClient, userId: string) {
   };
 }
 
+// True once the member has saved their core body measurements (height + the
+// three girths). Used to flip the nav CTA from "Complete" to "Update".
+export async function hasCoreMeasurements(sb: SupabaseClient, userId: string): Promise<boolean> {
+  const { data } = await sb
+    .from('measurements')
+    .select('height_in, bust_in, waist_in, hips_in')
+    .eq('user_id', userId)
+    .maybeSingle();
+  const m = data as any;
+  return !!(m && m.height_in != null && m.bust_in != null && m.waist_in != null && m.hips_in != null);
+}
+
 // ── usual sizes ────────────────────────────────────────────────────
 // Stored (and displayed) as { Tops, Bottoms, Waist, Plus } → string[]; only
 // non-empty groups are kept. All three writers (edit-profile, quiz,

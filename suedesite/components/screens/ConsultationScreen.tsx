@@ -206,7 +206,7 @@ export function ConsultationScreen({ onRoute, authed }: any) {
     setSaving(true);
     const sb = createClient();
     if (sb && user) {
-      try { await saveConsultationMeasurements(sb, user.id, measurements); } catch { /* offline/demo */ }
+      try { await saveConsultationMeasurements(sb, user.id, measurements); if (typeof window !== 'undefined') window.dispatchEvent(new Event('suede-measurements-saved')); } catch { /* offline/demo */ }
     }
     await addAssistantMessage("Your measurements have been saved to your SUEDE profile! 🎉\n\nNow when you browse reviews, you'll be matched with reviewers who share your measurements. Happy shopping!");
     setSaving(false);

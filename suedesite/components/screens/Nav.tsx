@@ -9,6 +9,7 @@ import { appState } from '@/lib/appState';
 import { useAuth } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/client';
 import { unreadNotificationCount, loadBrands, loadCollectiveMembers, loadPublishedReviews, loadPublishedInquiries } from '@/lib/contentData';
+import { hasCoreMeasurements } from '@/lib/profileData';
 
 export function Nav({ route, onRoute, authed = false }: any) {
   const { user, profile } = useAuth();
@@ -28,6 +29,19 @@ export function Nav({ route, onRoute, authed = false }: any) {
     return () => { alive = false; window.removeEventListener('suede-notifs-read', onRead); };
   }, [real, user?.id]);
   const notifCount = real ? realUnread : SUEDE_NOTIF_COUNT;
+  // Once the member has saved their core measurements, the nav CTA says
+  // "Update" rather than "Complete". Refreshes when measurements are saved.
+  const [measuresDone, setMeasuresDone] = React.useState(false);
+  React.useEffect(() => {
+    if (!real || !user) { setMeasuresDone(false); return; }
+    let alive = true;
+    const sb = createClient();
+    if (!sb) return;
+    const refresh = () => hasCoreMeasurements(sb, user.id).then((v) => { if (alive) setMeasuresDone(v); }).catch(() => {});
+    refresh();
+    window.addEventListener('suede-measurements-saved', refresh);
+    return () => { alive = false; window.removeEventListener('suede-measurements-saved', refresh); };
+  }, [real, user?.id]);
   const avatarSrc = real ? (profile?.avatar_url || undefined) : '/assets/avatars/avatar-rose.jpg';
   const avatarName = profile?.display_name || profile?.username || '';
   const [open, setOpen] = React.useState(false);
@@ -329,7 +343,7 @@ export function Nav({ route, onRoute, authed = false }: any) {
         <div style={{ borderTop: '1px solid var(--border-subtle)', padding: '8px' }}>
           <button onClick={() => { setOpen(false); setMeasure(true); }}
             style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '13px 14px', borderRadius: 'var(--radius-sm)', border: 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left' }}>
-            <span style={{ fontFamily: 'var(--font-serif)', fontWeight: 300, fontSize: 16, color: 'var(--text-primary)' }}>Complete Profile Measurements</span>
+            <span style={{ fontFamily: 'var(--font-serif)', fontWeight: 300, fontSize: 16, color: 'var(--text-primary)' }}>{measuresDone ? 'Update Profile Measurements' : 'Complete Profile Measurements'}</span>
             <Icon name="chevron-right" size={16} color="var(--text-muted)" />
           </button>
         </div>
