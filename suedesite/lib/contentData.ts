@@ -661,21 +661,47 @@ export async function loadReviewComments(sb: SupabaseClient, reviewId: string) {
   }));
 }
 
-export async function loadInquiryResponses(sb: SupabaseClient, inquiryId: string) {
-  const { data } = await sb
-    .from('inquiry_responses')
-    .select('id, body, created_at, author:profiles!author_id(username, display_name, avatar_url)')
-    .eq('inquiry_id', inquiryId)
-    .order('created_at', { ascending: true });
-  return (data || []).map((c: any) => ({
+// A cited review, joined onto an inquiry response, shaped for the embedded
+// preview card (and carrying _id so a click can open the full review).
+const RESPONSE_SELECT =
+  'id, body, created_at, review_id, author:profiles!author_id(username, display_name, avatar_url), ' +
+  'review:reviews!review_id(id, author_id, brand_name, product_name, product_url, size_value, size_other, ' +
+  'body, recommend, rating_sizing, rating_material, rating_value, rating_photos, rating_service)';
+
+function citedReview(row: any) {
+  const rv = row.review;
+  if (!rv || !rv.id) return null;
+  return {
+    _id: rv.id,
+    brand: rv.brand_name || '',
+    product: rv.product_name || '',
+    size: rv.size_value || rv.size_other || '',
+    rating: ratingAverage(rv),
+    recommend: rv.recommend,
+    excerpt: rv.body || '',
+  };
+}
+
+function responseRowToCard(c: any) {
+  return {
     id: c.id,
     avatar: c.author?.avatar_url || '',
     name: c.author?.display_name || c.author?.username || 'Member',
     specs: '',
     when: relativeTime(c.created_at),
     body: c.body,
+    review: citedReview(c),
     likes: 0,
-  }));
+  };
+}
+
+export async function loadInquiryResponses(sb: SupabaseClient, inquiryId: string) {
+  const { data } = await sb
+    .from('inquiry_responses')
+    .select(RESPONSE_SELECT)
+    .eq('inquiry_id', inquiryId)
+    .order('created_at', { ascending: true });
+  return (data || []).map(responseRowToCard);
 }
 
 export async function postReviewComment(sb: SupabaseClient, userId: string, reviewId: string, body: string) {
@@ -689,15 +715,15 @@ export async function postReviewComment(sb: SupabaseClient, userId: string, revi
   return { id: c.id, avatar: c.author?.avatar_url || '', name: c.author?.display_name || c.author?.username || 'You', when: relativeTime(c.created_at), body: c.body, likes: 0 };
 }
 
-export async function postInquiryResponse(sb: SupabaseClient, userId: string, inquiryId: string, body: string) {
+export async function postInquiryResponse(sb: SupabaseClient, userId: string, inquiryId: string, body: string, reviewId?: string | null) {
   const { data, error } = await sb
     .from('inquiry_responses')
-    .insert({ inquiry_id: inquiryId, author_id: userId, body: body.trim() })
-    .select('id, body, created_at, author:profiles!author_id(username, display_name, avatar_url)')
+    .insert({ inquiry_id: inquiryId, author_id: userId, body: body.trim(), review_id: reviewId || null })
+    .select(RESPONSE_SELECT)
     .single();
   if (error) throw error;
-  const c = data as any;
-  return { id: c.id, avatar: c.author?.avatar_url || '', name: c.author?.display_name || c.author?.username || 'You', specs: '', when: relativeTime(c.created_at), body: c.body, likes: 0 };
+  const card = responseRowToCard(data as any);
+  return { ...card, name: card.name === 'Member' ? 'You' : card.name };
 }
 
 // ── notifications ──────────────────────────────────────────────────
