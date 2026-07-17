@@ -110,7 +110,7 @@ export function ReviewCard({
           {likes != null && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: 'var(--font-body)', fontSize: 13 }}><Icon name="heart" size={15} color="var(--text-muted)" />{likes}</span>}
           {comments != null && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: 'var(--font-body)', fontSize: 13 }}><Icon name="message" size={15} color="var(--text-muted)" />{comments}</span>}
         </div>
-        {brand && <span onClick={onBrand} style={{ fontFamily: 'var(--font-display)', fontSize: 15, letterSpacing: 'var(--ls-wide)', color: 'var(--text-primary)', textTransform: 'uppercase', justifySelf: 'center', cursor: onBrand ? 'pointer' : 'default' }}>{brand}</span>}
+        {brand && <span className="sd-rc-brand" onClick={onBrand} style={{ fontFamily: 'var(--font-display)', fontSize: 15, letterSpacing: 'var(--ls-wide)', color: 'var(--text-primary)', textTransform: 'uppercase', justifySelf: 'center', cursor: onBrand ? 'pointer' : 'default' }}>{brand}</span>}
         {rating != null && <span style={{ justifySelf: 'end' }}><StarRating value={rating} compact size={15} /></span>}
       </div>
     </article>

@@ -370,6 +370,15 @@ export async function loadBrands(sb: SupabaseClient, opts: { capsuleOnly?: boole
   return (brands || []).map((b: any) => mapBrand(b, statsById[b.id]));
 }
 
+// Full brand record by name — used to complete the brand page when we only
+// arrived with a name (e.g. clicking a brand on a review/inquiry card).
+export async function loadBrandByName(sb: SupabaseClient, name: string) {
+  const n = (name || '').trim();
+  if (!n) return null;
+  const { data } = await sb.from('brands').select('*').ilike('name', n).limit(1).maybeSingle();
+  return data ? mapBrand(data, null) : null;
+}
+
 // ── follows (brands + members) ─────────────────────────────────────
 async function count(sb: SupabaseClient, table: string, col: string, value: string) {
   const { count: n } = await sb.from(table).select('*', { count: 'exact', head: true }).eq(col, value);

@@ -10,7 +10,7 @@ import { ExploreModal } from '@/components/screens/ExploreModal';
 import { shopOut } from '@/lib/tracking';
 import { useAuth } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/client';
-import { loadBrandReviews, loadBrandInquiries, resolveBrandId, isFollowingBrand, setBrandFollow, brandFollowerCount } from '@/lib/contentData';
+import { loadBrandReviews, loadBrandInquiries, resolveBrandId, isFollowingBrand, setBrandFollow, brandFollowerCount, loadBrandByName } from '@/lib/contentData';
 
 function BrandStat({ value, label, icon, breakdown }: any) {
   const [hover, setHover] = React.useState(false);
@@ -74,7 +74,10 @@ function RatingRotator({ items }: any) {
 }
 
 export function BrandScreen({ onRoute, authed = false }: any) {
-  const brand = appState.brand || SUEDE_BRANDS[1];
+  // When we arrived with only a brand name (e.g. from a review/inquiry card),
+  // pull the full brand record so the page shows its tagline, shop link, etc.
+  const [brandRow, setBrandRow] = React.useState<any>(null);
+  const brand = brandRow || appState.brand || SUEDE_BRANDS[1];
   const { user } = useAuth();
   // Guests / demo see the sample feed; real signed-in members see this brand's
   // live reviews & inquiries from the database.
@@ -86,6 +89,15 @@ export function BrandScreen({ onRoute, authed = false }: any) {
   const [followers, setFollowers] = React.useState(0);
   const [followBusy, setFollowBusy] = React.useState(false);
   const [explore, setExplore] = React.useState(false);
+  React.useEffect(() => {
+    const sb = createClient();
+    const name = appState.brand?.name;
+    if (!sb || !name) return;
+    let active = true;
+    loadBrandByName(sb, name).then((b) => { if (active && b) setBrandRow({ ...(appState.brand || {}), ...b }); }).catch(() => {});
+    return () => { active = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   React.useEffect(() => {
     const sb = createClient();
     if (!sb || !user || !brand?.name) { setDbReviews([]); setDbInq([]); setBrandId(null); setFollowing(false); setFollowers(0); return; }
