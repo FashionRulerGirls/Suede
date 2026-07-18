@@ -121,13 +121,13 @@ html, body { max-width: 100%; overflow-x: hidden; }
      height and the photo blows past the card edge.) */
   #root .sd-rc-body > div:last-child { aspect-ratio: auto !important; min-height: 138px !important; }
   /* Inquiry cards restack on mobile: the product photo becomes a full-width
-     2:1 hero band on top, and the text (brand / product / question / actions)
+     3:4 portrait on top, and the text (brand / product / question / actions)
      flows below across the whole card — no more slim side frame + boxed-in
-     text. The band is kept short so it doesn't dominate the card. */
+     text. 3:4 matches product-photo proportions so the shot isn't cut off. */
   #root .sd-iq-body { grid-template-columns: 1fr !important; gap: 16px !important; }
   #root .sd-iq-body > div:first-child { min-width: 0 !important; order: 2 !important; }
-  #root .sd-iq-body > div:last-child { order: 1 !important; aspect-ratio: 2 / 1 !important; min-height: 0 !important; width: 100% !important; }
-  #root .sd-iq-img { aspect-ratio: 2 / 1 !important; max-height: none !important; width: 100% !important; height: 100% !important; }
+  #root .sd-iq-body > div:last-child { order: 1 !important; aspect-ratio: 3 / 4 !important; min-height: 0 !important; width: 100% !important; }
+  #root .sd-iq-img { aspect-ratio: 3 / 4 !important; max-height: none !important; width: 100% !important; height: 100% !important; }
   /* No image → don't reserve an empty hero band; the card becomes clean text. */
   #root .sd-iq-body > div:last-child:not(:has(img)) { display: none !important; }
   #root .sd-iq-foot { flex-wrap: wrap !important; gap: 12px !important; }
