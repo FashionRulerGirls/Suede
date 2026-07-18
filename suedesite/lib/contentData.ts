@@ -294,6 +294,18 @@ export async function attachMatches(sb: SupabaseClient, viewerId: string | undef
   return cards.map((c) => ({ ...c, match: c.authorId && c.authorId !== viewerId ? (map[c.authorId] || null) : null }));
 }
 
+// Count the community responses on each inquiry card so the feed shows a real
+// "N Responses" instead of always 0. One query for the whole batch, tallied in
+// JS (PostgREST has no group-count without an RPC).
+export async function attachInquiryStats(sb: SupabaseClient, cards: any[]) {
+  const ids = Array.from(new Set(cards.map((c) => c._id).filter(Boolean)));
+  if (!ids.length) return cards;
+  const { data } = await sb.from('inquiry_responses').select('inquiry_id').in('inquiry_id', ids);
+  const counts: Record<string, number> = {};
+  for (const r of (data || []) as any[]) counts[r.inquiry_id] = (counts[r.inquiry_id] || 0) + 1;
+  return cards.map((c) => ({ ...c, responseCount: counts[c._id] || 0 }));
+}
+
 export async function loadReviewMedia(sb: SupabaseClient, reviewId: string): Promise<{ id: string; url: string; kind: string; position: number; poster?: string | null }[]> {
   const { data } = await sb
     .from('media')
@@ -528,7 +540,7 @@ export async function loadMemberReviews(sb: SupabaseClient, memberId: string, vi
 }
 export async function loadMemberInquiries(sb: SupabaseClient, memberId: string, viewerId?: string) {
   const { data } = await sb.from('inquiries').select(INQUIRY_SELECT).eq('author_id', memberId).neq('status', 'removed').order('created_at', { ascending: false });
-  return attachMatches(sb, viewerId, (data || []).map(inquiryRowToCard));
+  return attachInquiryStats(sb, await attachMatches(sb, viewerId, (data || []).map(inquiryRowToCard)));
 }
 
 export async function loadUserReviews(sb: SupabaseClient, userId: string) {
@@ -548,7 +560,7 @@ export async function loadUserInquiries(sb: SupabaseClient, userId: string) {
     .eq('author_id', userId)
     .neq('status', 'removed')
     .order('created_at', { ascending: false });
-  return (data || []).map(inquiryRowToCard);
+  return attachInquiryStats(sb, (data || []).map(inquiryRowToCard));
 }
 
 // Community-wide published feed (The Lookbook). viewerId enables Suede Match.
@@ -569,7 +581,7 @@ export async function loadPublishedInquiries(sb: SupabaseClient, viewerId?: stri
     .neq('status', 'removed')
     .order('created_at', { ascending: false })
     .limit(limit);
-  return attachMatches(sb, viewerId, (data || []).map(inquiryRowToCard));
+  return attachInquiryStats(sb, await attachMatches(sb, viewerId, (data || []).map(inquiryRowToCard)));
 }
 
 // Reviews / inquiries for a single brand (matched by id or free-text name).
@@ -586,7 +598,7 @@ export async function loadBrandInquiries(sb: SupabaseClient, brandName: string, 
   let q = sb.from('inquiries').select(INQUIRY_SELECT).neq('status', 'removed');
   q = id ? q.or(`brand_id.eq.${id},brand_name.ilike.${pgrstQuote(brandName)}`) : q.ilike('brand_name', brandName);
   const { data } = await q.order('created_at', { ascending: false });
-  return attachMatches(sb, viewerId, (data || []).map(inquiryRowToCard));
+  return attachInquiryStats(sb, await attachMatches(sb, viewerId, (data || []).map(inquiryRowToCard)));
 }
 
 // Distinct product names already seen for a brand (across its reviews and

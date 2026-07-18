@@ -9,12 +9,15 @@ import { useAuth } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/client';
 import { loadPublishedReviews, loadPublishedInquiries } from '@/lib/contentData';
 
-export function InquiryCard({ asker = {}, measurements = {}, product, productUrl, size, brand, image, question, responses = [], helpful, hideMeasurements = false, match, onOpen, onAsker, onBrand }: any) {
+export function InquiryCard({ asker = {}, measurements = {}, product, productUrl, size, brand, image, question, responses = [], responseCount, helpful, hideMeasurements = false, match, onOpen, onAsker, onBrand }: any) {
   const link = { background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-primary)', textDecoration: 'underline', textUnderlineOffset: 3 };
   const [voted, setVoted] = React.useState(false);
   const conf = match?.confidence as string | undefined;
   const matchDot = conf === 'high' ? 'var(--rating-positive)' : conf === 'medium' ? 'var(--denim)' : conf === 'low' ? 'var(--text-muted)' : 'var(--rating-positive)';
   const matchTip = match ? `${conf!.charAt(0).toUpperCase() + conf!.slice(1)} confidence · ${match.score}% match` : 'High Confidence';
+  // Real count from the DB (responseCount) when present; the demo/sample cards
+  // still pass an inline responses[] array.
+  const respCount = responseCount != null ? responseCount : (responses || []).length;
   const helpfulCount = helpful != null ? helpful : (responses || []).reduce((s: any, x: any) => s + (x.likes || 0), 0);
   return (
     <article style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-card)', padding: 22, height: '100%', display: 'flex', flexDirection: 'column', gap: 18 }}>
@@ -53,7 +56,7 @@ export function InquiryCard({ asker = {}, measurements = {}, product, productUrl
           <p style={{ fontFamily: 'var(--font-body)', fontSize: 13.5, lineHeight: 1.6, color: 'var(--text-secondary)', margin: '14px 0 0', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', minHeight: 44 }}>{question}</p>
           <div className="sd-iq-foot" style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 10, marginTop: 'auto', paddingTop: 18 }}>
             <span style={{ display: 'inline-flex', flexDirection: 'column', gap: 8 }}>
-              <span style={{ fontFamily: 'var(--font-body)', fontSize: 12, letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--text-muted)' }}>{responses.length} {responses.length === 1 ? 'Response' : 'Responses'}</span>
+              <span style={{ fontFamily: 'var(--font-body)', fontSize: 12, letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--text-muted)' }}>{respCount} {respCount === 1 ? 'Response' : 'Responses'}</span>
               <button onClick={(e) => { e.stopPropagation(); setVoted(v => !v); }} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: 13, color: voted ? 'var(--rating-positive)' : 'var(--text-muted)' }}>
                 <Icon name="thumbs-up" size={15} color={voted ? 'var(--rating-positive)' : 'var(--text-muted)'} />{helpfulCount + (voted ? 1 : 0)} Helpful
               </button>
