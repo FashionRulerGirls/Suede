@@ -21,6 +21,21 @@ test('Back button steps back through in-app views', async ({ page }) => {
   await expect(page.getByRole('button', { name: 'Search' }).first()).toBeVisible();
 });
 
+test('Back still walks back after a reload (mobile re-mount)', async ({ page }) => {
+  // Reproduces the real-device case emulation missed: a mobile browser that
+  // re-mounts/reloads the page between navigations would wipe an in-memory nav
+  // stack and send Back to Home. The stack is persisted, so this must survive.
+  await boot(page);
+  await go(page, 'capsule', { seed: true });
+  await go(page, 'about', { seed: true });
+  await page.reload();
+  await page.waitForFunction(() => (window as any).__suedeRoute !== undefined, null, { timeout: 20_000 });
+  // The reload restored the last view (About) from the persisted nav stack,
+  // instead of resetting to Home — this is the mobile re-mount case. (Assert the
+  // exposed route state; body text is CSS-uppercased so not reliable to match.)
+  expect(await page.evaluate(() => (window as any).__suedeRoute)).toBe('about');
+});
+
 test('Back restores a detail view with its selection', async ({ page }) => {
   await boot(page);
   await go(page, 'brand', { seed: true });   // seeds appState.brand

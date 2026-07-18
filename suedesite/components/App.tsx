@@ -89,6 +89,26 @@ function AppInner() {
     for (const k of SEL_KEYS) s[k] = appState[k];
     return s;
   };
+  // Mirror the nav stack to sessionStorage so it survives a mobile browser
+  // re-mounting / reloading the page (which would otherwise wipe the in-memory
+  // stack and send Back to Home).
+  const NAV_KEY = 'suede_nav_v1';
+  const persistNav = () => {
+    try {
+      // Sanitise each entry's selection independently: the route strings must
+      // always persist even if one selection object isn't JSON-serialisable,
+      // so a reload can never lose the route and fall back to Home.
+      const slim = {
+        idx: navRef.current.idx,
+        stack: navRef.current.stack.map((e) => {
+          let sel: any = {};
+          try { sel = JSON.parse(JSON.stringify(e.sel || {})); } catch { sel = {}; }
+          return { route: e.route, sel };
+        }),
+      };
+      sessionStorage.setItem(NAV_KEY, JSON.stringify(slim));
+    } catch { /* quota / unavailable */ }
+  };
 
   const scrollTop = () => {
     const top = () => {
@@ -130,7 +150,10 @@ function AppInner() {
     nav.stack = nav.stack.slice(0, nav.idx + 1);
     nav.stack.push({ route: r, sel: snapshotSel() });
     nav.idx = nav.stack.length - 1;
-    try { window.history.pushState({ i: nav.idx }, ''); } catch { /* history unavailable */ }
+    persistNav();
+    // Store the index AND the route string: the route survives a reload even
+    // if the stack doesn't, so Back can never fall through to Home.
+    try { window.history.pushState({ i: nav.idx, route: r }, ''); } catch { /* history unavailable */ }
   };
 
   React.useEffect(() => {
@@ -141,6 +164,7 @@ function AppInner() {
     };
     top();
     requestAnimationFrame(top);
+    if (process.env.NODE_ENV !== 'production') (window as any).__suedeRoute = route;
   }, [route]);
 
   // Seed the current history entry with the initial route (and strip any OAuth
@@ -148,24 +172,49 @@ function AppInner() {
   React.useEffect(() => {
     if (typeof window === 'undefined') return;
     const hasAuthParam = /[?&#](code|access_token|signedin)=/.test(window.location.search + window.location.hash);
-    // Seed the stack + the current history entry with index 0.
-    navRef.current = { stack: [{ route: 'landing', sel: snapshotSel() }], idx: 0 };
-    try {
-      window.history.replaceState({ i: 0 }, '', hasAuthParam ? window.location.pathname : undefined);
-    } catch { /* history unavailable */ }
+    // If the browser re-mounted/reloaded us inside an existing session, restore
+    // the persisted stack and land on the entry the current history index
+    // points at — instead of resetting everything to Home.
+    let restored: any = null;
+    try { const raw = sessionStorage.getItem(NAV_KEY); if (raw) restored = JSON.parse(raw); } catch { /* ignore */ }
+    const stack = restored && Array.isArray(restored.stack) ? restored.stack : null;
+    // Which entry are we on? Prefer this history entry's own index (survives a
+    // Back that reloads the document, landing us on a specific past entry);
+    // fall back to the last persisted index (a plain reload). Either way we
+    // restore from the persisted stack instead of resetting to Home.
+    const existing: any = window.history.state;
+    const idxFromState = existing && typeof existing.i === 'number' ? existing.i : null;
+    const idx = stack && idxFromState != null && stack[idxFromState] ? idxFromState
+      : (stack && typeof restored.idx === 'number' && stack[restored.idx] ? restored.idx : null);
+    if (!hasAuthParam && stack && idx != null) {
+      navRef.current = { stack, idx };
+      const cur = stack[idx];
+      if (cur.sel) Object.assign(appState, cur.sel);
+      setRouteRaw(cur.route);
+      try { window.history.replaceState({ i: idx, route: cur.route }, ''); } catch { /* history unavailable */ }
+    } else {
+      navRef.current = { stack: [{ route: 'landing', sel: snapshotSel() }], idx: 0 };
+      try {
+        window.history.replaceState({ i: 0, route: 'landing' }, '', hasAuthParam ? window.location.pathname : undefined);
+      } catch { /* history unavailable */ }
+      persistNav();
+    }
     const onPop = (e: PopStateEvent) => {
       const st: any = e.state;
       const nav = navRef.current;
-      // Resolve the target from our in-memory stack by index. If we can't (e.g.
-      // a foreign entry, or the stack was reset by a reload), keep the current
-      // view rather than yanking the user to Home.
       const i = st && typeof st.i === 'number' ? st.i : null;
-      if (i == null || !nav.stack[i]) return;
-      nav.idx = i;
-      const entry = nav.stack[i];
-      if (entry.sel) Object.assign(appState, entry.sel);
-      setRouteRaw(entry.route);
-      scrollTop();
+      const entry = i != null ? nav.stack[i] : null;
+      if (entry) {
+        nav.idx = i as number;
+        persistNav(); // remember where we landed, so a reload-after-Back restores it
+        if (entry.sel) Object.assign(appState, entry.sel);
+        setRouteRaw(entry.route);
+        scrollTop();
+        return;
+      }
+      // Stack entry missing (reload dropped it) — honor the route saved in the
+      // history entry itself so Back still walks to the right view, never Home.
+      if (st && typeof st.route === 'string') { setRouteRaw(st.route); scrollTop(); }
     };
     window.addEventListener('popstate', onPop);
     return () => window.removeEventListener('popstate', onPop);
