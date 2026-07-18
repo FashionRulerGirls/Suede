@@ -67,7 +67,7 @@ export function AboutScreen() {
 
       {/* Stats */}
       <div className="sd-about-stats" style={{ maxWidth: 1100, margin: '0 auto', padding: '72px 40px', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 40, textAlign: 'center' }}>
-        {[['25%', 'chance of online apparel orders being returned to the seller'], ['$21 – $46', 'lost per returned product'], ['38%', 'of consumers return clothing they purchased online due to poor fit']].map(([v, l]) => (
+        {[['25%', 'of online clothing orders get sent back'], ['$21 – $46', 'the cost of each return — baked back into what you pay'], ['38%', 'of shoppers have returned clothes that simply didn’t fit']].map(([v, l]) => (
           <div key={l}>
             <div style={{ fontFamily: 'var(--font-serif)', fontSize: 44, color: 'var(--text-heading)' }}>{v}</div>
             <p style={{ fontFamily: 'var(--font-body)', fontSize: 14, lineHeight: 1.6, color: 'var(--text-muted)', margin: '14px auto 0', maxWidth: 240 }}>{l}</p>
@@ -87,8 +87,8 @@ export function AboutScreen() {
           <p style={{ fontFamily: 'var(--font-body)', fontWeight: 600, fontSize: 15, color: 'var(--text-primary)', margin: '24px 0 18px' }}>I built the platform I wanted to shop on.</p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <p style={{ fontFamily: 'var(--font-body)', fontSize: 14.5, lineHeight: 1.7, color: 'var(--text-secondary)', margin: 0 }}>I'm Kikiola — ex-McKinsey, cybersecurity professional by day, fashion girl the rest of the time. I love finding a good piece, but I don't love the hours it takes to find one, or the gamble that comes after — the sizing chart that doesn't line up with the garment, the product photos that don't line up with reality, the reviews that simply don't exist… or if they do, they don't have any sizing context.</p>
-            <p style={{ fontFamily: 'var(--font-body)', fontSize: 14.5, lineHeight: 1.7, color: 'var(--text-secondary)', margin: 0 }}>Somewhere along the way the math stopped working. Brands want full price and give you nothing in return — no transparency on fit, no real information on quality, just a campaign shoot and a size guide written by AI. The cost of being wrong got too high, and scrolling TikTok for an hour to crowdsource a size wasn't a lifestyle I wanted.</p>
-            <p style={{ fontFamily: 'var(--font-body)', fontSize: 14.5, lineHeight: 1.7, color: 'var(--text-secondary)', margin: 0 }}>Suede is my answer. A place to find brands worth knowing, and to read reviews from people who actually share my measurements. I built it to fix one of my biggest pain points as a shopper — and, honestly, to find out where you shop, how you shop there, and what's worth the spend. Call it enabling my bad habits. I call it maximizing my time.</p>
+            <p style={{ fontFamily: 'var(--font-body)', fontSize: 14.5, lineHeight: 1.7, color: 'var(--text-secondary)', margin: 0 }}>Somewhere along the way the math stopped working. Brands want full price and give you almost nothing to go on — no transparency on fit, no real information on quality, just a campaign shoot and a size guide written by AI. The cost of being wrong got too high, and scrolling TikTok for an hour to crowdsource a size wasn't a lifestyle I wanted.</p>
+            <p style={{ fontFamily: 'var(--font-body)', fontSize: 14.5, lineHeight: 1.7, color: 'var(--text-secondary)', margin: 0 }}>Suede is my answer. A place to find brands worth knowing, and to read reviews from people who actually share my measurements. I built it to fix one of my biggest pain points as a shopper — and, honestly, to see where everyone's actually shopping and what's worth the spend. Call it enabling my bad habits. I call it maximizing my time.</p>
           </div>
         </div>
       </div>
