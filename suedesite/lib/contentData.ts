@@ -84,6 +84,7 @@ export async function createReview(sb: SupabaseClient, userId: string, r: NewRev
     product_url: r.productUrl?.trim() || null,
     product_image_url: r.productImage?.trim() || null,
     product_price: r.productPrice?.trim() || null,
+    content_link: r.contentLink?.trim() || null,
     size_scale: r.sizeScale || null,
     size_value: r.sizeValue || null,
     size_other: r.sizeOther?.trim() || null,
@@ -118,6 +119,7 @@ export async function updateReview(sb: SupabaseClient, userId: string, reviewId:
   if (r.productName !== undefined) patch.product_name = r.productName.trim();
   if (r.productImage !== undefined) patch.product_image_url = r.productImage?.trim() || null;
   if (r.productPrice !== undefined) patch.product_price = r.productPrice?.trim() || null;
+  if (r.contentLink !== undefined) patch.content_link = r.contentLink?.trim() || null;
   if (r.sizeScale !== undefined) patch.size_scale = r.sizeScale || null;
   if (r.sizeValue !== undefined) patch.size_value = r.sizeValue || null;
   if (r.sizeOther !== undefined) patch.size_other = r.sizeOther?.trim() || null;
@@ -199,6 +201,7 @@ export function reviewRowToCard(row: any) {
     reviewer: personFromAuthor(row.author),
     product: row.product_name,
     productUrl: row.product_url || '',
+    contentLink: row.content_link || '',
     size: row.size_value || row.size_other || '',
     brand: row.brand_name || '',
     rating: ratingAverage(row),

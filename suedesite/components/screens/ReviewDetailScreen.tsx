@@ -1,7 +1,7 @@
 'use client';
 /* Suede — Full Review detail page. */
 import React from 'react';
-import { Avatar, MeasurementSpec, StarRating, Button, Icon, Lightbox } from '@/components/ds';
+import { Avatar, MeasurementSpec, StarRating, Button, Icon, Lightbox, SocialVideo } from '@/components/ds';
 import { SUEDE_BRANDS } from '@/lib/data';
 import { appState } from '@/lib/appState';
 import { useAuth } from '@/lib/auth';
@@ -108,6 +108,7 @@ export function ReviewDetailScreen({ onRoute, authed = false }: any) {
   const size = real ? (full?.size_value || full?.size_other || '') : (r.size || '');
   const price = real ? (full?.product_price || '') : '$285';
   const productUrl = real ? full?.product_url : null;
+  const contentLink = real ? (full?.content_link || '') : (r.contentLink || '');
   const thumbs = real ? media : (image ? [image, image, image, image] : []);
   const subRatings = real
     ? ([['Sizing Accuracy', 'rating_sizing'], ['Material Quality', 'rating_material'], ['Value for Price', 'rating_value'], ['True to Photos', 'rating_photos'], ['Customer service', 'rating_service']] as const)
@@ -202,6 +203,16 @@ export function ReviewDetailScreen({ onRoute, authed = false }: any) {
               );
             })}
           </div>
+          )}
+
+          {/* Seen in real life — the member's linked TikTok / Instagram video */}
+          {contentLink && (
+            <div style={{ marginTop: 22 }}>
+              <div style={{ fontFamily: 'var(--font-body)', fontSize: 12, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--text-secondary)', marginBottom: 12 }}>Seen in real life</div>
+              <div style={{ maxWidth: 220 }}>
+                <SocialVideo url={contentLink} poster={firstImage || undefined} label="" />
+              </div>
+            </div>
           )}
         </div>
 
