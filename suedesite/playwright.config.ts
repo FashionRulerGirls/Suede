@@ -34,7 +34,10 @@ export default defineConfig({
       name: 'mobile',
       use: {
         ...devices['iPhone 13'],
-        launchOptions: { executablePath: CHROMIUM },
+        // iPhone 13 defaults to WebKit, but we only have Chromium here — keep
+        // the mobile viewport/UA/touch emulation and run it on Chromium.
+        defaultBrowserType: 'chromium',
+        launchOptions: { executablePath: CHROMIUM, args: ['--no-sandbox'] },
       },
     },
   ],

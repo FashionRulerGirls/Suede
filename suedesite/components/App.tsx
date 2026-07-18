@@ -35,6 +35,7 @@ import {
 } from '@/components/screens/AuthFlowScreens';
 import { ApplyScreen } from '@/components/screens/ApplyScreen';
 import { BrandSignInScreen } from '@/components/screens/BrandSignInScreen';
+import { ClaimBrandScreen } from '@/components/screens/ClaimBrandScreen';
 import {
   useTweaks,
   TweaksPanel,
@@ -71,6 +72,12 @@ function AppInner() {
   const authed = !!user || testAuthed;
   const returnToRef = React.useRef<string | null>(null);
   const AUTH_ROUTES = ['signin', 'createaccount', 'forgot', 'verify', 'reset', 'brandsignin'];
+  // In-memory navigation stack. History entries only carry a small integer
+  // index ({ i }) — mobile browsers silently drop oversized/non-serialisable
+  // pushState payloads, which is why stuffing the full selection snapshot into
+  // history made Back fall through to Home on phones. Route + selection live
+  // here instead, keyed by that index.
+  const navRef = React.useRef<{ stack: { route: string; sel: any }[]; idx: number }>({ stack: [{ route: 'landing', sel: {} }], idx: 0 });
 
   // Suede is a single-URL SPA, so in-app navigation must push its own browser
   // history entries — otherwise Back escapes to the last non-Suede page instead
@@ -117,7 +124,13 @@ function AppInner() {
     }
     setRouteRaw(r);
     scrollTop();
-    try { window.history.pushState({ suedeRoute: r, suedeSel: snapshotSel() }, ''); } catch { /* history unavailable */ }
+    // Push a new entry onto our stack (dropping any forward history), and store
+    // only its index in browser history so mobile can't lose the payload.
+    const nav = navRef.current;
+    nav.stack = nav.stack.slice(0, nav.idx + 1);
+    nav.stack.push({ route: r, sel: snapshotSel() });
+    nav.idx = nav.stack.length - 1;
+    try { window.history.pushState({ i: nav.idx }, ''); } catch { /* history unavailable */ }
   };
 
   React.useEffect(() => {
@@ -135,13 +148,23 @@ function AppInner() {
   React.useEffect(() => {
     if (typeof window === 'undefined') return;
     const hasAuthParam = /[?&#](code|access_token|signedin)=/.test(window.location.search + window.location.hash);
+    // Seed the stack + the current history entry with index 0.
+    navRef.current = { stack: [{ route: 'landing', sel: snapshotSel() }], idx: 0 };
     try {
-      window.history.replaceState({ suedeRoute: 'landing' }, '', hasAuthParam ? window.location.pathname : undefined);
+      window.history.replaceState({ i: 0 }, '', hasAuthParam ? window.location.pathname : undefined);
     } catch { /* history unavailable */ }
     const onPop = (e: PopStateEvent) => {
       const st: any = e.state;
-      if (st && st.suedeSel) Object.assign(appState, st.suedeSel);
-      setRouteRaw(st && st.suedeRoute ? st.suedeRoute : 'landing');
+      const nav = navRef.current;
+      // Resolve the target from our in-memory stack by index. If we can't (e.g.
+      // a foreign entry, or the stack was reset by a reload), keep the current
+      // view rather than yanking the user to Home.
+      const i = st && typeof st.i === 'number' ? st.i : null;
+      if (i == null || !nav.stack[i]) return;
+      nav.idx = i;
+      const entry = nav.stack[i];
+      if (entry.sel) Object.assign(appState, entry.sel);
+      setRouteRaw(entry.route);
       scrollTop();
     };
     window.addEventListener('popstate', onPop);
@@ -230,6 +253,7 @@ function AppInner() {
     reset: ResetPasswordScreen,
     apply: ApplyScreen,
     brandsignin: BrandSignInScreen,
+    claimbrand: ClaimBrandScreen,
   };
   const Screen = screens[route] || LandingScreen;
 
