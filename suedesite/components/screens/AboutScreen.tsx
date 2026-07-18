@@ -38,11 +38,11 @@ export function AboutScreen() {
             <div>
               <div style={{ fontFamily: 'var(--font-serif)', fontSize: 22, letterSpacing: '0.04em', color: 'var(--text-heading)' }}>SWAYED</div>
               <div style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-muted)', margin: '8px 0 8px', fontStyle: 'italic' }}>/SWEID/ · Said the same way</div>
-              <p style={{ fontFamily: 'var(--font-body)', fontSize: 14, lineHeight: 1.6, color: 'var(--text-secondary)', margin: 0 }}><b style={{ fontWeight: 600 }}>Verb.</b> To be moved toward something because of what you know, not what you were told.</p>
+              <p style={{ fontFamily: 'var(--font-body)', fontSize: 14, lineHeight: 1.6, color: 'var(--text-secondary)', margin: 0 }}><b style={{ fontWeight: 600 }}>Verb.</b> To be moved toward something by proof — someone who actually wore it — not a brand's pitch.</p>
             </div>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-            <p style={{ fontFamily: 'var(--font-body)', fontSize: 15, lineHeight: 1.7, color: 'var(--text-secondary)', margin: 0 }}>The name means both. Suede is a material you <b style={{ fontWeight: 600, color: 'var(--text-primary)' }}>choose on purpose</b> — the pick of someone who cares what a thing is actually made of, not just how it looks in a photo. To be swayed is to be moved by what you know, not what you were told.</p>
+            <p style={{ fontFamily: 'var(--font-body)', fontSize: 15, lineHeight: 1.7, color: 'var(--text-secondary)', margin: 0 }}>The name means both. Suede is a material you <b style={{ fontWeight: 600, color: 'var(--text-primary)' }}>choose on purpose</b> — the pick of someone who cares what a thing is actually made of, not just how it looks in a photo. To be swayed is to be moved by proof — not a pitch.</p>
             <p style={{ fontFamily: 'var(--font-body)', fontSize: 15, lineHeight: 1.7, color: 'var(--text-secondary)', margin: 0 }}>That's the whole idea. Suede runs on <b style={{ fontWeight: 600, color: 'var(--text-primary)' }}>real evidence</b> — not ads, not trend cycles, not a model whose body is nothing like yours. Just reviews from people who share your measurements, bought the piece, and actually wore it.</p>
           </div>
         </div>
