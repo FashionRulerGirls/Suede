@@ -33,7 +33,7 @@ export function AboutScreen() {
             <div>
               <div style={{ fontFamily: 'var(--font-serif)', fontSize: 22, letterSpacing: '0.04em', color: 'var(--text-heading)' }}>SUEDE</div>
               <div style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-muted)', margin: '8px 0 8px', fontStyle: 'italic' }}>/SWEID/</div>
-              <p style={{ fontFamily: 'var(--font-body)', fontSize: 14, lineHeight: 1.6, color: 'var(--text-secondary)', margin: 0 }}><b style={{ fontWeight: 600 }}>noun.</b> A softened leather, brushed to reveal its inner texture. Considered, tactile, quiet in its luxury.</p>
+              <p style={{ fontFamily: 'var(--font-body)', fontSize: 14, lineHeight: 1.6, color: 'var(--text-secondary)', margin: 0 }}><b style={{ fontWeight: 600 }}>noun.</b> A softened leather, brushed to reveal its inner texture. Considered, tactile, made to be noticed up close.</p>
             </div>
             <div>
               <div style={{ fontFamily: 'var(--font-serif)', fontSize: 22, letterSpacing: '0.04em', color: 'var(--text-heading)' }}>SWAYED</div>
@@ -55,12 +55,12 @@ export function AboutScreen() {
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 12, fontFamily: 'var(--font-body)', fontSize: 12, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.6)' }}>
               <span style={{ width: 24, height: 1, background: 'rgba(255,255,255,0.6)' }} />II · Our Origin
             </div>
-            <p style={{ fontFamily: 'var(--font-body)', fontSize: 15, lineHeight: 1.7, color: 'rgba(255,255,255,0.78)', marginTop: 24 }}>Before it was Suede, it was a few questions in a checkout cart — will this actually fit me? Is it worth the price? Can I trust the brand?</p>
+            <p style={{ fontFamily: 'var(--font-body)', fontSize: 15, lineHeight: 1.7, color: 'rgba(255,255,255,0.78)', marginTop: 24 }}>Before it was Suede, it was a few questions in a full shopping cart — will this actually fit me? Is it worth the price? Can I trust the brand?</p>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-            <p style={{ fontFamily: 'var(--font-body)', fontSize: 15, lineHeight: 1.7, color: 'rgba(255,255,255,0.8)', margin: 0 }}>Fashion has never been easier to find or <b style={{ fontWeight: 600, color: 'var(--white)' }}>harder to buy well.</b> We're surrounded by photos and starved of real information. Reviews are anonymous, size charts lie, and the person modeling the dress never looks like the person buying it.</p>
+            <p style={{ fontFamily: 'var(--font-body)', fontSize: 15, lineHeight: 1.7, color: 'rgba(255,255,255,0.8)', margin: 0 }}>Fashion has never been easier to find or <b style={{ fontWeight: 600, color: 'var(--white)' }}>harder to buy well.</b> We're surrounded by photos and starved of real information. Reviews come from strangers with no sense of your body, size charts lie, and the person modeling the dress never looks like the person buying it.</p>
             <p style={{ fontFamily: 'var(--font-body)', fontSize: 15, lineHeight: 1.7, color: 'rgba(255,255,255,0.8)', margin: 0 }}>Suede fixes that. Reviews come from <b style={{ fontWeight: 600, color: 'var(--white)' }}>people who share your measurements</b> — because fit is usually the first question, and everything after it depends on getting that one right.</p>
-            <p style={{ fontFamily: 'var(--font-body)', fontSize: 15, lineHeight: 1.7, color: 'rgba(255,255,255,0.8)', margin: 0 }}>It's built around three spaces: <b style={{ fontWeight: 600, color: 'var(--white)' }}>the Capsule</b>, brands worth knowing; <b style={{ fontWeight: 600, color: 'var(--white)' }}>the Lookbook</b>, reviews matched to your measurements; and <b style={{ fontWeight: 600, color: 'var(--white)' }}>the Collective</b>, the people behind them.</p>
+            <p style={{ fontFamily: 'var(--font-body)', fontSize: 15, lineHeight: 1.7, color: 'rgba(255,255,255,0.8)', margin: 0 }}>It's built around three spaces: <b style={{ fontWeight: 600, color: 'var(--white)' }}>the Capsule</b>, brands worth knowing; <b style={{ fontWeight: 600, color: 'var(--white)' }}>the Lookbook</b>, reviews matched to your measurements; and <b style={{ fontWeight: 600, color: 'var(--white)' }}>the Collective</b>, the members behind the reviews.</p>
           </div>
         </div>
       </div>
