@@ -17,10 +17,10 @@ export function AboutScreen() {
       <div className="sd-about-hero" style={{ maxWidth: 1460, margin: '0 auto', padding: '60px 52px 56px', display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 40, alignItems: 'start' }}>
         <div style={{ borderLeft: '1px solid var(--ink-900)', paddingLeft: 28 }}>
           <span style={{ fontFamily: 'var(--font-body)', fontSize: 12, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--text-secondary)' }}>About Us</span>
-          <h1 style={{ fontFamily: 'var(--font-serif)', fontWeight: 100, fontSize: 35, lineHeight: 1.1, letterSpacing: '-0.01em', color: 'var(--text-heading)', margin: '20px 0 0', textTransform: 'uppercase' }}>The Trust Layer for Fashion</h1>
+          <h1 style={{ fontFamily: 'var(--font-serif)', fontWeight: 100, fontSize: 35, lineHeight: 1.1, letterSpacing: '-0.01em', color: 'var(--text-heading)', margin: '20px 0 0', textTransform: 'uppercase' }}>Reviews from people your size</h1>
         </div>
         <p className="sd-about-hero-p" style={{ fontFamily: 'var(--font-body)', fontSize: 15, lineHeight: 1.7, color: 'var(--text-secondary)', textAlign: 'right', marginTop: 60 }}>
-          A fashion discovery and review platform that uses <b style={{ fontWeight: 600, color: 'var(--text-primary)' }}>body measurements</b> to help you shop with confidence.
+          Honest reviews from people who share your <b style={{ fontWeight: 600, color: 'var(--text-primary)' }}>measurements</b> — so you know how something fits before you buy it, not after.
         </p>
       </div>
 
@@ -42,9 +42,8 @@ export function AboutScreen() {
             </div>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-            <p style={{ fontFamily: 'var(--font-body)', fontSize: 15, lineHeight: 1.7, color: 'var(--text-secondary)', margin: 0 }}>The name carries both. Suede is a material <b style={{ fontWeight: 600, color: 'var(--text-primary)' }}>chosen with intention</b> — for people who notice the difference and value craft over churn. To be swayed is to be moved by what you know, not what you were told.</p>
-            <p style={{ fontFamily: 'var(--font-body)', fontSize: 15, lineHeight: 1.7, color: 'var(--text-secondary)', margin: 0 }}>So we built Suede on <b style={{ fontWeight: 600, color: 'var(--text-primary)' }}>real evidence</b> — not headlines, trend cycles, or a stranger whose body is nothing like yours. Just honest reviews from people who share your measurements, bought the piece, and wore it.</p>
-            <p style={{ fontFamily: 'var(--font-body)', fontSize: 15, lineHeight: 1.7, color: 'var(--text-secondary)', margin: 0 }}>The result: you shop with <b style={{ fontWeight: 600, color: 'var(--text-primary)' }}>firsthand confidence</b> — and find the right thing, for the right reason.</p>
+            <p style={{ fontFamily: 'var(--font-body)', fontSize: 15, lineHeight: 1.7, color: 'var(--text-secondary)', margin: 0 }}>The name means both. Suede is a material you <b style={{ fontWeight: 600, color: 'var(--text-primary)' }}>choose on purpose</b> — considered, quiet about its luxury. To be swayed is to be moved by what you know, not what you were told.</p>
+            <p style={{ fontFamily: 'var(--font-body)', fontSize: 15, lineHeight: 1.7, color: 'var(--text-secondary)', margin: 0 }}>That's the whole idea. Suede runs on <b style={{ fontWeight: 600, color: 'var(--text-primary)' }}>real evidence</b> — not ads, not trend cycles, not a model whose body is nothing like yours. Just reviews from people who share your measurements, bought the piece, and actually wore it.</p>
           </div>
         </div>
       </div>
@@ -56,13 +55,12 @@ export function AboutScreen() {
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 12, fontFamily: 'var(--font-body)', fontSize: 12, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.6)' }}>
               <span style={{ width: 24, height: 1, background: 'rgba(255,255,255,0.6)' }} />II · Our Origin
             </div>
-            <p style={{ fontFamily: 'var(--font-body)', fontSize: 15, lineHeight: 1.7, color: 'rgba(255,255,255,0.78)', marginTop: 24 }}>Before it was Suede, it was a series of questions asked in a digital shopping cart — will this actually fit me? Is it worth the price? Can I really trust the brand?</p>
+            <p style={{ fontFamily: 'var(--font-body)', fontSize: 15, lineHeight: 1.7, color: 'rgba(255,255,255,0.78)', marginTop: 24 }}>Before it was Suede, it was a few questions in a checkout cart — will this actually fit me? Is it worth the price? Can I trust the brand?</p>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-            <p style={{ fontFamily: 'var(--font-body)', fontSize: 15, lineHeight: 1.7, color: 'rgba(255,255,255,0.8)', margin: 0 }}>The internet has made fashion <b style={{ fontWeight: 600, color: 'var(--white)' }}>infinitely more accessible and infinitely harder to buy well.</b> We are surrounded by imagery and short on evidence. Reviews are anonymous, sizing charts lie, and the person modeling the dress almost never looks like the person considering it.</p>
-            <p style={{ fontFamily: 'var(--font-body)', fontSize: 15, lineHeight: 1.7, color: 'rgba(255,255,255,0.8)', margin: 0 }}>Suede began as a direct answer to that gap. A platform built on a simple premise: reviews should come from <b style={{ fontWeight: 600, color: 'var(--white)' }}>people who share your measurements</b>. Because fit is often the first question, and every question after it depends on getting that one right.</p>
-            <p style={{ fontFamily: 'var(--font-body)', fontSize: 15, lineHeight: 1.7, color: 'rgba(255,255,255,0.8)', margin: 0 }}>Today, Suede is built around three rooms — The Capsule, a curated directory of brands worth knowing; The Lookbook, a discovery feed of measurement-matched reviews; and The Collective, a community powered by Suede's proprietary Match algorithm.</p>
-            <p style={{ fontFamily: 'var(--font-body)', fontSize: 15, lineHeight: 1.7, color: 'rgba(255,255,255,0.8)', margin: 0 }}>Join the community, and instantly experience the <b style={{ fontWeight: 600, color: 'var(--white)' }}>power of Suede.</b></p>
+            <p style={{ fontFamily: 'var(--font-body)', fontSize: 15, lineHeight: 1.7, color: 'rgba(255,255,255,0.8)', margin: 0 }}>Fashion has never been easier to find or <b style={{ fontWeight: 600, color: 'var(--white)' }}>harder to buy well.</b> We're surrounded by photos and starved of real information. Reviews are anonymous, size charts lie, and the person modeling the dress never looks like the person buying it.</p>
+            <p style={{ fontFamily: 'var(--font-body)', fontSize: 15, lineHeight: 1.7, color: 'rgba(255,255,255,0.8)', margin: 0 }}>Suede fixes that. Reviews come from <b style={{ fontWeight: 600, color: 'var(--white)' }}>people who share your measurements</b> — because fit is usually the first question, and everything after it depends on getting that one right.</p>
+            <p style={{ fontFamily: 'var(--font-body)', fontSize: 15, lineHeight: 1.7, color: 'rgba(255,255,255,0.8)', margin: 0 }}>It's built around three spaces: <b style={{ fontWeight: 600, color: 'var(--white)' }}>the Capsule</b>, brands worth knowing; <b style={{ fontWeight: 600, color: 'var(--white)' }}>the Lookbook</b>, reviews matched to your measurements; and <b style={{ fontWeight: 600, color: 'var(--white)' }}>the Collective</b>, the people behind them.</p>
           </div>
         </div>
       </div>
