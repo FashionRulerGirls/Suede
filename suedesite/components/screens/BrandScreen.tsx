@@ -150,7 +150,9 @@ export function BrandScreen({ onRoute, authed = false }: any) {
   const [flipped, setFlipped] = React.useState(false);
   const [docNote, setDocNote] = React.useState<string | null>(null);
   const [rateOpen, setRateOpen] = React.useState(false);
-  const website = 'www.' + brand.name.toLowerCase().replace(/[^a-z]/g, '') + '.com';
+  // Prefer the brand's real store URL (tracked); fall back to a guessed domain.
+  const shopHost = (brand.shopUrl || '').replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/+$/, '');
+  const website = shopHost || ('www.' + brand.name.toLowerCase().replace(/[^a-z]/g, '') + '.com');
 
   return (
     <div className="sd-brand-wrap" style={{ maxWidth: 1240, margin: '0 auto', padding: '28px 40px 0' }}>
@@ -224,16 +226,6 @@ export function BrandScreen({ onRoute, authed = false }: any) {
       </div>
       </div>
 
-      {/* Shop the brand — outbound, tagged + logged for attribution */}
-      {brand.shopUrl && (
-        <div style={{ display: 'flex', justifyContent: 'center', marginTop: 34 }}>
-          <button onClick={doShop} style={{ display: 'inline-flex', alignItems: 'center', gap: 10, background: 'var(--ink-900)', color: 'var(--paper)', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: 13, letterSpacing: '0.14em', textTransform: 'uppercase', padding: '15px 34px', borderRadius: 'var(--radius-pill)' }}>
-            Shop {brand.name}
-            <Icon name="external-link" size={15} color="var(--paper)" />
-          </button>
-        </div>
-      )}
-
       {/* Stats strip */}
       <div style={{ padding: '44px 0 8px' }}>
         <div className="sd-stats" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 24, maxWidth: 900, margin: '0 auto' }}>
@@ -269,7 +261,7 @@ export function BrandScreen({ onRoute, authed = false }: any) {
           })}
         </div>
         <div style={{ textAlign: 'center', marginTop: 28 }}>
-          <button onClick={() => window.open('https://' + website, '_blank', 'noopener,noreferrer')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: 15, color: 'var(--text-primary)', textDecoration: 'underline', textUnderlineOffset: 4 }}>{website}</button>
+          <button onClick={() => { if (brand.shopUrl) { doShop(); } else { window.open('https://' + website, '_blank', 'noopener,noreferrer'); } }} style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: 15, color: 'var(--text-primary)', textDecoration: 'underline', textUnderlineOffset: 4 }}>{website}</button>
         </div>
       </div>
 
