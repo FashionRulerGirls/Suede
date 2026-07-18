@@ -78,7 +78,7 @@ export function AboutScreen() {
       {/* III — Our Founder */}
       <div className="sd-about-2col sd-about-pad" style={{ maxWidth: 1240, margin: '0 auto', padding: '20px 40px 0', display: 'grid', gridTemplateColumns: '1fr 1.3fr', gap: 60, alignItems: 'start' }}>
         <div style={{ aspectRatio: '3/4', overflow: 'hidden', background: 'var(--linen)', borderRadius: 'var(--radius-sm)' }}>
-          <img src="/assets/imagery/fit-street.jpg" alt="Kikiola, Founder & CEO" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          <img src="/assets/imagery/founder-kikiola.jpg" alt="Kikiola, Founder & CEO" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 20%' }} />
         </div>
         <div>
           <Eyebrow>III · Our Founder</Eyebrow>
