@@ -36,7 +36,12 @@ export function BrandSignInScreen({ onRoute }: any) {
         </div>
       </div>
 
-      <div style={{ textAlign: 'center', padding: '24px 0 40px' }}>
+      <div style={{ textAlign: 'center', padding: '24px 0 12px' }}>
+        <span style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: 'rgba(26,26,26,0.5)' }}>
+          Already listed but no account yet? <button onClick={() => onRoute('claimbrand')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 'inherit', color: 'var(--text-primary)', textDecoration: 'underline', textUnderlineOffset: 3 }}>Claim your brand</button>
+        </span>
+      </div>
+      <div style={{ textAlign: 'center', padding: '0 0 40px' }}>
         <span style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: 'rgba(26,26,26,0.5)' }}>
           New here? <button onClick={() => onRoute('apply')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 'inherit', color: 'var(--text-primary)', textDecoration: 'underline', textUnderlineOffset: 3 }}>Apply to The Capsule</button>
         </span>

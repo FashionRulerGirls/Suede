@@ -314,6 +314,13 @@ export function BrandScreen({ onRoute, authed = false }: any) {
       })()}
       </div>
 
+      {/* Owner CTA — route to the claim form with this brand preselected. */}
+      <div style={{ maxWidth: 1240, margin: '0 auto', padding: '8px 40px 48px', textAlign: 'center' }}>
+        <span style={{ fontFamily: 'var(--font-body)', fontSize: 13.5, color: 'var(--text-muted)' }}>
+          Own {brand?.name || 'this brand'}? <button onClick={() => { appState.claimBrand = { name: brand?.name }; onRoute('claimbrand'); }} style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 'inherit', color: 'var(--text-primary)', textDecoration: 'underline', textUnderlineOffset: 3 }}>Claim this brand</button>
+        </span>
+      </div>
+
       <ExploreModal brand={explore ? brand : null} authed={authed} onClose={() => setExplore(false)} onRoute={onRoute} />
     </div>
   );

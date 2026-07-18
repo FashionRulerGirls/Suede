@@ -154,7 +154,7 @@ export function ApplyScreen({ onRoute }: any) {
 
       <div style={{ gridColumn: '1 / -1', textAlign: 'right', padding: '2px 0 40px' }}>
         <span style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: 'rgba(26,26,26,0.5)' }}>
-          Already apart of the Capsule? <button onClick={() => onRoute('brandsignin')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 'inherit', color: 'var(--text-primary)', textDecoration: 'underline', textUnderlineOffset: 3 }}>Sign in or claim your brand</button>
+          Already apart of the Capsule? <button onClick={() => onRoute('brandsignin')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 'inherit', color: 'var(--text-primary)', textDecoration: 'underline', textUnderlineOffset: 3 }}>Sign in</button> or <button onClick={() => onRoute('claimbrand')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 'inherit', color: 'var(--text-primary)', textDecoration: 'underline', textUnderlineOffset: 3 }}>claim your brand</button>
         </span>
       </div>
     </div>

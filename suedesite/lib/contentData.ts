@@ -825,6 +825,41 @@ export async function submitBrandApplication(sb: SupabaseClient, p: {
   if (error) throw error;
 }
 
+// Host of a URL or bare domain, minus a leading "www." — for comparing a
+// claimant's work-email domain against the brand's site.
+function hostOf(raw?: string | null): string {
+  let s = (raw || '').trim().toLowerCase();
+  if (!s) return '';
+  if (!/^https?:\/\//.test(s)) s = 'https://' + s;
+  try { return new URL(s).hostname.replace(/^www\./, ''); } catch { return ''; }
+}
+
+// A "claim your brand" request. We flag whether the work-email domain matches
+// the brand's site (an easy-approve signal); actual ownership is granted later
+// from the admin dashboard. Returns the match result so the UI can reflect it.
+export async function submitBrandClaim(sb: SupabaseClient, p: {
+  brandId?: string | null; brandName: string; claimantName: string; role?: string;
+  workEmail: string; instagram?: string; note?: string; shopUrl?: string | null;
+}, userId?: string) {
+  const emailDomain = (p.workEmail.split('@')[1] || '').trim().toLowerCase();
+  const brandHost = hostOf(p.shopUrl);
+  const domainMatch = !!emailDomain && !!brandHost &&
+    (emailDomain === brandHost || brandHost.endsWith('.' + emailDomain) || emailDomain.endsWith('.' + brandHost));
+  const { error } = await sb.from('brand_claims').insert({
+    brand_id: p.brandId || null,
+    brand_name: p.brandName.trim(),
+    claimant_name: p.claimantName.trim(),
+    role: p.role?.trim() || null,
+    work_email: p.workEmail.trim(),
+    instagram: p.instagram?.trim() || null,
+    note: p.note?.trim() || null,
+    domain_match: domainMatch,
+    user_id: userId || null,
+  });
+  if (error) throw error;
+  return { domainMatch };
+}
+
 export async function submitBrandSuggestion(sb: SupabaseClient, p: {
   name: string; url?: string; why?: string;
 }, userId?: string) {

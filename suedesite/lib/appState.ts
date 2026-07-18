@@ -9,4 +9,5 @@ export const appState: Record<string, any> = {
   capsuleDrop: null,
   reviewBrand: null,
   inquiryBrand: null,
+  claimBrand: null,
 };
