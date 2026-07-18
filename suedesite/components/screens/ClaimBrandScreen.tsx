@@ -133,7 +133,7 @@ export function ClaimBrandScreen({ onRoute }: any) {
       <aside className="sd-apply-aside" style={{ display: 'flex', flexDirection: 'column', gap: 24, position: 'sticky', top: 110 }}>
         <Logo variant="monogram" height={52} style={{ alignSelf: 'flex-start' }} />
         <span style={{ fontFamily: 'var(--font-body)', fontSize: 12, letterSpacing: '0.165em', textTransform: 'uppercase', color: 'var(--ink-500)' }}>Claim your brand</span>
-        <h1 style={{ fontFamily: 'var(--font-serif)', fontWeight: 100, fontSize: 48, lineHeight: 1, letterSpacing: '-0.02em', color: '#111114', margin: 0 }}>Take the reins</h1>
+        <h1 style={{ fontFamily: 'var(--font-serif)', fontWeight: 100, fontSize: 48, lineHeight: 1, letterSpacing: '-0.02em', color: '#111114', margin: 0 }}>Access the Capsule</h1>
         <p style={{ fontFamily: 'var(--font-body)', fontSize: 16, lineHeight: 1.6, color: 'var(--ink-500)', margin: 0 }}>
           Already listed on Suede? Claim your brand to manage your page, respond to reviews and inquiries, and see how shoppers are engaging with you.
         </p>
