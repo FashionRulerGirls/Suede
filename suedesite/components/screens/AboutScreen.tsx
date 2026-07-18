@@ -17,7 +17,7 @@ export function AboutScreen() {
       <div className="sd-about-hero" style={{ maxWidth: 1460, margin: '0 auto', padding: '60px 52px 56px', display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 40, alignItems: 'start' }}>
         <div style={{ borderLeft: '1px solid var(--ink-900)', paddingLeft: 28 }}>
           <span style={{ fontFamily: 'var(--font-body)', fontSize: 12, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--text-secondary)' }}>About Us</span>
-          <h1 style={{ fontFamily: 'var(--font-serif)', fontWeight: 100, fontSize: 35, lineHeight: 1.1, letterSpacing: '-0.01em', color: 'var(--text-heading)', margin: '20px 0 0', textTransform: 'uppercase' }}>Reviews from people your size</h1>
+          <h1 style={{ fontFamily: 'var(--font-serif)', fontWeight: 100, fontSize: 35, lineHeight: 1.1, letterSpacing: '-0.01em', color: 'var(--text-heading)', margin: '20px 0 0', textTransform: 'uppercase' }}>The Trust Layer for Fashion</h1>
         </div>
         <p className="sd-about-hero-p" style={{ fontFamily: 'var(--font-body)', fontSize: 15, lineHeight: 1.7, color: 'var(--text-secondary)', textAlign: 'right', marginTop: 60 }}>
           Honest reviews from people who share your <b style={{ fontWeight: 600, color: 'var(--text-primary)' }}>measurements</b> — so you know how something fits before you buy it, not after.
