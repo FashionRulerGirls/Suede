@@ -45,12 +45,28 @@ function EmbedLightbox({ src, url, platform, onClose }: { src: string; url: stri
 export function SocialVideo({ url, poster, label = 'Seen in real life', style }: { url: string; poster?: string; label?: string; style?: any }) {
   const platform = detectPlatform(url);
   const [open, setOpen] = React.useState(false);
+  const [src, setSrc] = React.useState<string | null>(() => embedInfo(url)?.src || null);
+  const [loading, setLoading] = React.useState(false);
   if (!platform) return null;
-  const info = embedInfo(url);
   const platformLabel = platform === 'tiktok' ? 'TikTok' : 'Instagram';
-  const onClick = () => {
-    if (info) setOpen(true);
-    else window.open(url, '_blank', 'noopener,noreferrer'); // no embeddable id → link out
+  const onClick = async () => {
+    if (src) { setOpen(true); return; }
+    // TikTok share/short/photo links hide the id behind a redirect — resolve it
+    // via oEmbed. Anything unresolvable links out to the post.
+    if (platform === 'tiktok') {
+      setLoading(true);
+      try {
+        const r = await fetch('/api/tiktok-oembed?u=' + encodeURIComponent(url));
+        const d = await r.json();
+        if (d?.ok && d.videoId) {
+          setSrc(`https://www.tiktok.com/player/v1/${d.videoId}?music_info=1&description=1`);
+          setOpen(true);
+          return;
+        }
+      } catch { /* fall through to link-out */ }
+      finally { setLoading(false); }
+    }
+    window.open(url, '_blank', 'noopener,noreferrer');
   };
   return (
     <>
@@ -62,14 +78,14 @@ export function SocialVideo({ url, poster, label = 'Seen in real life', style }:
           <Icon name={platform} size={13} color="var(--white)" />{platformLabel}
         </span>
         {/* play button */}
-        <span style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 52, height: 52, borderRadius: '50%', background: 'rgba(255,255,255,0.92)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <Icon name="play" size={22} color="var(--ink-900)" />
+        <span style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 52, height: 52, borderRadius: '50%', background: 'rgba(255,255,255,0.92)', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: loading ? 0.6 : 1 }}>
+          <Icon name={loading ? 'refresh' : 'play'} size={22} color="var(--ink-900)" />
         </span>
         {label && (
           <span style={{ position: 'absolute', left: 12, right: 12, bottom: 12, fontFamily: 'var(--font-body)', fontSize: 12, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)' }}>{label}</span>
         )}
       </button>
-      {open && info && <EmbedLightbox src={info.src} url={url} platform={platform} onClose={() => setOpen(false)} />}
+      {open && src && <EmbedLightbox src={src} url={url} platform={platform} onClose={() => setOpen(false)} />}
     </>
   );
 }
