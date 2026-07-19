@@ -604,6 +604,31 @@ export async function loadBrandInquiries(sb: SupabaseClient, brandName: string, 
   return attachInquiryStats(sb, await attachMatches(sb, viewerId, (data || []).map(inquiryRowToCard)));
 }
 
+// Videos attached to a brand's reviews — uploaded clips (media table) plus
+// linked TikTok / Instagram posts — ordered by review recency, for the brand
+// page "Seen in real life" strip.
+export type BrandVideo =
+  | { type: 'upload'; url: string; poster: string | null; reviewId: string }
+  | { type: 'social'; url: string; reviewId: string };
+export async function loadBrandVideos(sb: SupabaseClient, brandName: string, brandId?: string | null, limit = 12): Promise<BrandVideo[]> {
+  const id = brandId ?? (await resolveBrandId(sb, brandName));
+  let q = sb.from('reviews').select('id, content_link, created_at').eq('status', 'published');
+  q = id ? q.or(`brand_id.eq.${id},brand_name.ilike.${pgrstQuote(brandName)}`) : q.ilike('brand_name', brandName);
+  const { data: reviews } = await q.order('created_at', { ascending: false }).limit(80);
+  const revs = (reviews || []) as any[];
+  if (!revs.length) return [];
+  const order = new Map<string, number>();
+  revs.forEach((r, i) => order.set(r.id, i));
+  const { data: media } = await sb.from('media')
+    .select('parent_id, url, poster_url')
+    .eq('parent_type', 'review').eq('kind', 'video').in('parent_id', revs.map((r) => r.id));
+  const items: (BrandVideo & { _o: number })[] = [];
+  for (const m of (media || []) as any[]) items.push({ type: 'upload', url: m.url, poster: m.poster_url || null, reviewId: m.parent_id, _o: order.get(m.parent_id) ?? 999 });
+  for (const r of revs) if (r.content_link) items.push({ type: 'social', url: r.content_link, reviewId: r.id, _o: order.get(r.id) ?? 999 });
+  items.sort((a, b) => a._o - b._o);
+  return items.slice(0, limit).map(({ _o, ...rest }) => rest as BrandVideo);
+}
+
 // Distinct product names already seen for a brand (across its reviews and
 // inquiries) — powers the "Search Existing" product picker on the review form.
 export type BrandProduct = { name: string; image: string | null };
