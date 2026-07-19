@@ -21,7 +21,7 @@ export function BrandSignInScreen({ onRoute }: any) {
           <Field label="Email"><Input variant="outline" size="lg" maxLength={120} placeholder="you@brand.com" /></Field>
           <Field label="Password"><Input variant="outline" size="lg" maxLength={72} type="password" placeholder="••••••••" /></Field>
           <button onClick={() => onRoute('forgot')} style={{ alignSelf: 'flex-end', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: 12, color: 'var(--ink-500)', textDecoration: 'underline', textUnderlineOffset: 3 }}>Forgot Password?</button>
-          <Button variant="primary" fullWidth onClick={() => { window.location.href = '/brand-portal/index.html'; }}>Sign in</Button>
+          <Button variant="primary" fullWidth onClick={() => { window.location.href = '/portal'; }}>Sign in</Button>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 16, color: 'var(--ink-400)' }}>
@@ -31,8 +31,8 @@ export function BrandSignInScreen({ onRoute }: any) {
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <Button variant="secondary" fullWidth icon="google" onClick={() => { window.location.href = '/brand-portal/index.html'; }}>Continue with Google</Button>
-          <Button variant="secondary" fullWidth icon="apple" onClick={() => { window.location.href = '/brand-portal/index.html'; }}>Continue with Apple</Button>
+          <Button variant="secondary" fullWidth icon="google" onClick={() => { window.location.href = '/portal'; }}>Continue with Google</Button>
+          <Button variant="secondary" fullWidth icon="apple" onClick={() => { window.location.href = '/portal'; }}>Continue with Apple</Button>
         </div>
       </div>
 

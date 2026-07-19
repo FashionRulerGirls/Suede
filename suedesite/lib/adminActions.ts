@@ -202,6 +202,30 @@ export async function dismissBrandFlag(sb: SupabaseClient, name: string, adminId
   if (error) throw error;
 }
 
+// ── Brand Claims — approve assigns brands.owner_id (§6b / claim flow) ─
+export async function loadBrandClaims(sb: SupabaseClient) {
+  const { data } = await sb.from('brand_claims')
+    .select('id, brand_id, brand_name, claimant_name, role, work_email, instagram, note, domain_match, status, user_id, created_at')
+    .eq('status', 'pending').order('created_at', { ascending: false });
+  return (data || []).map((c: any) => ({
+    id: c.id, brandId: c.brand_id, brand: c.brand_name, name: c.claimant_name, role: c.role,
+    email: c.work_email, instagram: c.instagram, note: c.note, domainMatch: c.domain_match,
+    userId: c.user_id, created_at: c.created_at,
+    assignable: !!(c.brand_id && c.user_id), // need a known brand + a claimant account to hand over
+  }));
+}
+// Approve: hand the brand to the claimant (owner_id) and mark the claim approved.
+export async function approveBrandClaim(sb: SupabaseClient, id: string, brandId: string, userId: string, adminId: string) {
+  const { error: e1 } = await sb.from('brands').update({ owner_id: userId }).eq('id', brandId);
+  if (e1) throw e1;
+  const { error: e2 } = await sb.from('brand_claims').update({ status: 'approved', reviewed_at: new Date().toISOString(), reviewed_by: adminId }).eq('id', id);
+  if (e2) throw e2;
+}
+export async function rejectBrandClaim(sb: SupabaseClient, id: string, adminId: string) {
+  const { error } = await sb.from('brand_claims').update({ status: 'rejected', reviewed_at: new Date().toISOString(), reviewed_by: adminId }).eq('id', id);
+  if (error) throw error;
+}
+
 // ── Brand-submitted flags on reviews/inquiries — §7 (admin side) ─────
 export async function loadContentFlags(sb: SupabaseClient) {
   const { data } = await sb.from('moderation_flags')

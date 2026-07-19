@@ -13,10 +13,11 @@ import {
   promoteBrandByName, flagBrandName,
   loadFlagForReview, mergeBrandName, correctBrandName, dismissBrandFlag,
   loadContentFlags, resolveContentFlag,
+  loadBrandClaims, approveBrandClaim, rejectBrandClaim,
 } from '@/lib/adminActions';
 
 type Gate = 'checking' | 'anon' | 'denied' | 'ok';
-type Section = 'overview' | 'growth' | 'reviews' | 'inquiries' | 'brands' | 'requests' | 'applications' | 'flags' | 'feedback' | 'members' | 'export';
+type Section = 'overview' | 'growth' | 'reviews' | 'inquiries' | 'brands' | 'requests' | 'claims' | 'applications' | 'flags' | 'feedback' | 'members' | 'export';
 
 const fmtDate = (iso?: string) => (iso ? new Date(iso).toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' }) : '—');
 
@@ -47,6 +48,7 @@ export default function AdminPage() {
     ['inquiries', 'Inquiry Activity', 'message'],
     ['brands', 'Brand Management', 'shirt'],
     ['requests', 'Capsule Requests', 'plus'],
+    ['claims', 'Brand Claims', 'lock'],
     ['applications', 'Applications', 'inbox'],
     ['flags', 'Brand Flags', 'eye-off'],
     ['feedback', 'Platform Feedback', 'message'],
@@ -78,6 +80,7 @@ export default function AdminPage() {
         {section === 'inquiries' && <InquiriesSection sb={sb!} />}
         {section === 'brands' && <BrandsSection sb={sb!} adminId={adminId} />}
         {section === 'requests' && <RequestsSection sb={sb!} />}
+        {section === 'claims' && <ClaimsSection sb={sb!} adminId={adminId} />}
         {section === 'applications' && <ApplicationsSection sb={sb!} adminId={adminId} />}
         {section === 'flags' && <ContentFlagsSection sb={sb!} adminId={adminId} />}
         {section === 'feedback' && <FeedbackSection sb={sb!} />}
@@ -343,6 +346,47 @@ function RequestsSection({ sb }: any) {
           <ActionBtn ghost busy={busy === r.id} onClick={() => act(r.id, () => rejectCapsuleRequest(sb, r.id))}>Reject</ActionBtn>
         </span>,
       ])} loading={!rows} empty="No pending requests." />
+    </>
+  );
+}
+
+function ClaimsSection({ sb, adminId }: any) {
+  const [k, bump] = useReload();
+  const [rows] = useAsync(() => loadBrandClaims(sb), [k]);
+  const [busy, setBusy] = React.useState<string | null>(null);
+  const act = async (id: string, fn: () => Promise<void>) => { setBusy(id); try { await fn(); bump(); } catch { /* ignore */ } setBusy(null); };
+  if (!rows) return <><H>Brand Claims</H><Muted>Loading…</Muted></>;
+  return (
+    <>
+      <H sub="Owners claiming their brand. Approving hands over the brand page.">Brand Claims</H>
+      {!rows.length ? <Muted>No pending claims.</Muted> : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {rows.map((c: any) => (
+            <Card key={c.id}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', alignItems: 'flex-start' }}>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <span style={{ fontFamily: 'var(--font-serif)', fontSize: 18, color: 'var(--text-heading)' }}>{c.brand}</span>
+                    {c.domainMatch && <Pill>email domain ✓</Pill>}
+                  </div>
+                  <div style={{ fontSize: 13.5, color: 'var(--text-secondary)', marginTop: 6, lineHeight: 1.6 }}>
+                    {c.name}{c.role ? ` · ${c.role}` : ''}<br />
+                    {c.email}{c.instagram ? ` · ${c.instagram}` : ''}<br />
+                    {c.note && <span style={{ color: 'var(--text-muted)' }}>{c.note}</span>}
+                  </div>
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 6 }}>{fmtDate(c.created_at)}</div>
+                </div>
+                <div style={{ display: 'flex', gap: 8, flex: 'none', alignItems: 'center' }}>
+                  {c.assignable
+                    ? <ActionBtn busy={busy === c.id} onClick={() => act(c.id, () => approveBrandClaim(sb, c.id, c.brandId, c.userId, adminId))}>Approve &amp; assign</ActionBtn>
+                    : <span style={{ fontSize: 12, color: 'var(--text-muted)', maxWidth: 160 }}>Needs a matched brand + a claimant account before it can be assigned.</span>}
+                  <ActionBtn ghost busy={busy === c.id} onClick={() => act(c.id, () => rejectBrandClaim(sb, c.id, adminId))}>Reject</ActionBtn>
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+      )}
     </>
   );
 }

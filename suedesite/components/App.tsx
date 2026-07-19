@@ -260,6 +260,13 @@ function AppInner() {
     if (recovery) setRouteRaw('reset');
   }, [recovery]);
 
+  // Deep link from the brand portal: /?claim=1 opens the claim-your-brand form.
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (new URLSearchParams(window.location.search).get('claim') === '1') setRoute('claimbrand');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // First time a member is seen signed in on this device, send them straight
   // to their profile to finish setup. (Recovery sessions are excluded.)
   React.useEffect(() => {
