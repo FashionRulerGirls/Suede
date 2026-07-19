@@ -6,12 +6,11 @@ import { SUEDE_BRANDS, SUEDE_REVIEWS, SUEDE_INQUIRIES } from '@/lib/data';
 import { appState } from '@/lib/appState';
 import { SuedeControls } from '@/lib/listControls';
 import { InquiryCard } from '@/components/screens/LookbookScreen';
-import { SeenInRealLife } from '@/components/screens/SeenInRealLife';
 import { ExploreModal } from '@/components/screens/ExploreModal';
 import { shopOut } from '@/lib/tracking';
 import { useAuth } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/client';
-import { loadBrandReviews, loadBrandInquiries, resolveBrandId, isFollowingBrand, setBrandFollow, brandFollowerCount, loadBrandByName, loadBrandVideos } from '@/lib/contentData';
+import { loadBrandReviews, loadBrandInquiries, resolveBrandId, isFollowingBrand, setBrandFollow, brandFollowerCount, loadBrandByName } from '@/lib/contentData';
 
 function BrandStat({ value, label, icon, breakdown }: any) {
   const [hover, setHover] = React.useState(false);
@@ -90,7 +89,6 @@ export function BrandScreen({ onRoute, authed = false }: any) {
   const [followers, setFollowers] = React.useState(0);
   const [followBusy, setFollowBusy] = React.useState(false);
   const [explore, setExplore] = React.useState(false);
-  const [videos, setVideos] = React.useState<any[]>([]);
   React.useEffect(() => {
     const sb = createClient();
     const name = appState.brand?.name;
@@ -102,11 +100,10 @@ export function BrandScreen({ onRoute, authed = false }: any) {
   }, []);
   React.useEffect(() => {
     const sb = createClient();
-    if (!sb || !user || !brand?.name) { setDbReviews([]); setDbInq([]); setBrandId(null); setFollowing(false); setFollowers(0); setVideos([]); return; }
+    if (!sb || !user || !brand?.name) { setDbReviews([]); setDbInq([]); setBrandId(null); setFollowing(false); setFollowers(0); return; }
     let active = true;
     loadBrandReviews(sb, brand.name, user.id).then((r) => { if (active) setDbReviews(r); }).catch(() => {});
     loadBrandInquiries(sb, brand.name, user.id).then((q) => { if (active) setDbInq(q); }).catch(() => {});
-    loadBrandVideos(sb, brand.name).then((v) => { if (active) setVideos(v); }).catch(() => {});
     resolveBrandId(sb, brand.name).then(async (id) => {
       if (!active || !id) return;
       setBrandId(id);
@@ -267,9 +264,6 @@ export function BrandScreen({ onRoute, authed = false }: any) {
           <button onClick={() => { if (brand.shopUrl) { doShop(); } else { window.open('https://' + website, '_blank', 'noopener,noreferrer'); } }} style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: 15, color: 'var(--text-primary)', textDecoration: 'underline', textUnderlineOffset: 4 }}>{website}</button>
         </div>
       </div>
-
-      {/* Seen in real life — brand's review videos, Amazon-style, above the feed */}
-      <div style={{ marginTop: 20 }}><SeenInRealLife items={videos} /></div>
 
       <div>
       {/* Tabs */}
