@@ -6,15 +6,22 @@ import {
   amIAdmin, loadOverview, loadGrowth, loadReviewActivity, loadInquiryActivity,
   loadMemberDirectory, toCSV, downloadCSV, type Overview,
 } from '@/lib/adminData';
+import {
+  loadCapsuleRequests, approveCapsuleRequest, rejectCapsuleRequest,
+  loadApplications, markApplicationReviewed, loadFeedback, markFeedbackReviewed,
+  loadCapsuleBrands, loadNonCapsuleBrands, updateBrand, removeFromCapsule,
+  promoteBrandByName, flagBrandName,
+} from '@/lib/adminActions';
 
 type Gate = 'checking' | 'anon' | 'denied' | 'ok';
-type Section = 'overview' | 'growth' | 'reviews' | 'inquiries' | 'members' | 'export';
+type Section = 'overview' | 'growth' | 'reviews' | 'inquiries' | 'brands' | 'requests' | 'applications' | 'feedback' | 'members' | 'export';
 
 const fmtDate = (iso?: string) => (iso ? new Date(iso).toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' }) : '—');
 
 export default function AdminPage() {
   const [gate, setGate] = React.useState<Gate>('checking');
   const [section, setSection] = React.useState<Section>('overview');
+  const [adminId, setAdminId] = React.useState<string>('');
   const sb = React.useMemo(() => createClient(), []);
 
   React.useEffect(() => {
@@ -24,7 +31,7 @@ export default function AdminPage() {
       const { data: { user } } = await sb.auth.getUser();
       if (!user) { if (active) setGate('anon'); return; }
       const ok = await amIAdmin(sb);
-      if (active) setGate(ok ? 'ok' : 'denied');
+      if (active) { setAdminId(user.id); setGate(ok ? 'ok' : 'denied'); }
     })();
     return () => { active = false; };
   }, [sb]);
@@ -36,6 +43,10 @@ export default function AdminPage() {
     ['growth', 'Growth', 'sparkle'],
     ['reviews', 'Review Activity', 'reviews'],
     ['inquiries', 'Inquiry Activity', 'message'],
+    ['brands', 'Brand Management', 'shirt'],
+    ['requests', 'Capsule Requests', 'plus'],
+    ['applications', 'Applications', 'inbox'],
+    ['feedback', 'Platform Feedback', 'message'],
     ['members', 'Member Directory', 'user'],
     ['export', 'Data Export', 'upload'],
   ];
@@ -62,6 +73,10 @@ export default function AdminPage() {
         {section === 'growth' && <GrowthSection sb={sb!} />}
         {section === 'reviews' && <ReviewsSection sb={sb!} />}
         {section === 'inquiries' && <InquiriesSection sb={sb!} />}
+        {section === 'brands' && <BrandsSection sb={sb!} adminId={adminId} />}
+        {section === 'requests' && <RequestsSection sb={sb!} />}
+        {section === 'applications' && <ApplicationsSection sb={sb!} adminId={adminId} />}
+        {section === 'feedback' && <FeedbackSection sb={sb!} />}
         {section === 'members' && <MembersSection sb={sb!} />}
         {section === 'export' && <ExportSection sb={sb!} />}
       </main>
@@ -286,6 +301,197 @@ function ExportSection({ sb }: any) {
           </Card>
         ))}
       </div>
+    </>
+  );
+}
+
+// ── Phase 2: action queues ──────────────────────────────────────────
+function ActionBtn({ children, onClick, busy, ghost, danger }: any) {
+  return (
+    <button onClick={onClick} disabled={busy} style={{
+      border: ghost || danger ? '1px solid var(--border-default)' : 'none', cursor: 'pointer',
+      background: ghost || danger ? 'transparent' : 'var(--ink-900)',
+      color: danger ? 'var(--rating-critical)' : ghost ? 'var(--text-secondary)' : 'var(--white)',
+      borderRadius: 'var(--radius-xs)', padding: '7px 14px', fontFamily: 'var(--font-body)', fontSize: 13, opacity: busy ? 0.6 : 1, whiteSpace: 'nowrap',
+    }}>{busy ? '…' : children}</button>
+  );
+}
+function Pill({ ok, children }: any) {
+  return <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: 999, fontSize: 11.5, background: ok ? 'var(--linen)' : 'var(--ink-900)', color: ok ? 'var(--text-muted)' : 'var(--white)' }}>{children}</span>;
+}
+function useReload(): [number, () => void] {
+  const [k, bump] = React.useReducer((x: number) => x + 1, 0);
+  return [k, bump];
+}
+
+function RequestsSection({ sb }: any) {
+  const [k, bump] = useReload();
+  const [rows] = useAsync(() => loadCapsuleRequests(sb), [k]);
+  const [busy, setBusy] = React.useState<string | null>(null);
+  const act = async (id: string, fn: () => Promise<void>) => { setBusy(id); try { await fn(); bump(); } catch { /* ignore */ } setBusy(null); };
+  return (
+    <>
+      <H sub="Members' requests to add a brand to The Capsule.">Capsule Requests</H>
+      <Table head={['Suggested brand', 'Submitted by', 'Date', 'Actions']} rows={(rows || []).map((r: any) => [
+        <span><b style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{r.name}</b>{r.url && <> · <a href={r.url} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--text-muted)', textDecoration: 'underline' }}>site</a></>}</span>,
+        r.by, fmtDate(r.created_at),
+        <span style={{ display: 'flex', gap: 8 }}>
+          <ActionBtn busy={busy === r.id} onClick={() => act(r.id, () => approveCapsuleRequest(sb, r.id, r.name, r.url))}>Approve</ActionBtn>
+          <ActionBtn ghost busy={busy === r.id} onClick={() => act(r.id, () => rejectCapsuleRequest(sb, r.id))}>Reject</ActionBtn>
+        </span>,
+      ])} loading={!rows} empty="No pending requests." />
+    </>
+  );
+}
+
+function ApplicationsSection({ sb, adminId }: any) {
+  const [k, bump] = useReload();
+  const [rows] = useAsync(() => loadApplications(sb), [k]);
+  const [open, setOpen] = React.useState<string | null>(null);
+  const [busy, setBusy] = React.useState<string | null>(null);
+  const mark = async (id: string) => { setBusy(id); try { await markApplicationReviewed(sb, id, adminId); bump(); } catch { /* ignore */ } setBusy(null); };
+  if (!rows) return <><H>Applications</H><Muted>Loading…</Muted></>;
+  return (
+    <>
+      <H sub="Structured applications to join The Capsule.">Applications</H>
+      {!rows.length ? <Muted>No applications yet.</Muted> : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {rows.map((a: any) => (
+            <Card key={a.id}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontFamily: 'var(--font-serif)', fontSize: 18, color: 'var(--text-heading)' }}>{a.brand}</div>
+                  <div style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 3 }}>{a.email} · {fmtDate(a.created_at)}</div>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <Pill ok={a.status === 'Reviewed'}>{a.status}</Pill>
+                  <button onClick={() => setOpen(open === a.id ? null : a.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', fontSize: 13, textDecoration: 'underline' }}>{open === a.id ? 'Hide' : 'Detail'}</button>
+                  {a.status !== 'Reviewed' && <ActionBtn busy={busy === a.id} onClick={() => mark(a.id)}>Mark reviewed</ActionBtn>}
+                </div>
+              </div>
+              {open === a.id && (
+                <div style={{ marginTop: 14, paddingTop: 14, borderTop: '1px solid var(--border-subtle)', display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(200px,1fr))', gap: 12, fontSize: 13.5 }}>
+                  <Detail label="Role" value={a.role} />
+                  <Detail label="Founding year" value={a.foundingYear} />
+                  <Detail label="Website" value={a.website} link />
+                  <div style={{ gridColumn: '1 / -1' }}><Detail label="Why The Capsule" value={a.why} /></div>
+                </div>
+              )}
+            </Card>
+          ))}
+        </div>
+      )}
+    </>
+  );
+}
+function Detail({ label, value, link }: any) {
+  return (
+    <div>
+      <div style={{ fontSize: 11, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 4 }}>{label}</div>
+      {link && value ? <a href={value} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--text-primary)', textDecoration: 'underline', wordBreak: 'break-all' }}>{value}</a>
+        : <div style={{ color: 'var(--text-secondary)', lineHeight: 1.5 }}>{value || '—'}</div>}
+    </div>
+  );
+}
+
+function FeedbackSection({ sb }: any) {
+  const [k, bump] = useReload();
+  const [rows] = useAsync(() => loadFeedback(sb), [k]);
+  const [busy, setBusy] = React.useState<string | null>(null);
+  const mark = async (id: string) => { setBusy(id); try { await markFeedbackReviewed(sb, id); bump(); } catch { /* ignore */ } setBusy(null); };
+  if (!rows) return <><H>Platform Feedback</H><Muted>Loading…</Muted></>;
+  return (
+    <>
+      <H sub="Improvement ideas submitted from across the site.">Platform Feedback</H>
+      {!rows.length ? <Muted>No feedback yet.</Muted> : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {rows.map((f: any) => (
+            <Card key={f.id}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, alignItems: 'flex-start' }}>
+                <div style={{ minWidth: 0 }}>
+                  <p style={{ fontSize: 14.5, color: 'var(--text-primary)', lineHeight: 1.55, margin: 0 }}>{f.message}</p>
+                  <div style={{ fontSize: 12.5, color: 'var(--text-muted)', marginTop: 8 }}>{f.by} · {fmtDate(f.created_at)}</div>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 'none' }}>
+                  <Pill ok={f.status === 'Reviewed'}>{f.status}</Pill>
+                  {f.status !== 'Reviewed' && <ActionBtn busy={busy === f.id} onClick={() => mark(f.id)}>Mark reviewed</ActionBtn>}
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+      )}
+    </>
+  );
+}
+
+function BrandsSection({ sb, adminId }: any) {
+  const [tab, setTab] = React.useState<'capsule' | 'noncap'>('capsule');
+  return (
+    <>
+      <H sub="The brand directory.">Brand Management</H>
+      <div style={{ display: 'inline-flex', border: '1px solid var(--border-default)', borderRadius: 'var(--radius-xs)', overflow: 'hidden', marginBottom: 20 }}>
+        {([['capsule', 'Capsule'], ['noncap', 'Non-Capsule']] as const).map(([id, label]) => (
+          <button key={id} onClick={() => setTab(id)} style={{ padding: '8px 18px', border: 'none', cursor: 'pointer', background: tab === id ? 'var(--ink-900)' : 'var(--surface-card)', color: tab === id ? 'var(--white)' : 'var(--text-secondary)', fontFamily: 'var(--font-body)', fontSize: 13 }}>{label}</button>
+        ))}
+      </div>
+      {tab === 'capsule' ? <CapsuleBrands sb={sb} /> : <NonCapsuleBrands sb={sb} adminId={adminId} />}
+    </>
+  );
+}
+
+function CapsuleBrands({ sb }: any) {
+  const [k, bump] = useReload();
+  const [rows] = useAsync(() => loadCapsuleBrands(sb), [k]);
+  const [edit, setEdit] = React.useState<any>(null);
+  const [busy, setBusy] = React.useState<string | null>(null);
+  const save = async () => { setBusy(edit.id); try { await updateBrand(sb, edit.id, { name: edit.name, slug: edit.slug, website: edit.website, instagram: edit.instagram }); setEdit(null); bump(); } catch { /* ignore */ } setBusy(null); };
+  const remove = async (id: string) => { setBusy(id); try { await removeFromCapsule(sb, id); bump(); } catch { /* ignore */ } setBusy(null); };
+  return (
+    <>
+      <Table head={['Brand', 'Slug', 'Actions']} rows={(rows || []).map((b: any) => [
+        <b style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{b.name}</b>, b.slug,
+        <span style={{ display: 'flex', gap: 8 }}>
+          <ActionBtn ghost onClick={() => setEdit({ ...b })}>Edit</ActionBtn>
+          <ActionBtn danger busy={busy === b.id} onClick={() => remove(b.id)}>Remove</ActionBtn>
+        </span>,
+      ])} loading={!rows} empty="No Capsule brands." />
+      {edit && (
+        <div onClick={() => setEdit(null)} style={{ position: 'fixed', inset: 0, zIndex: 80, background: 'rgba(20,18,15,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ background: 'var(--surface-card)', width: 'min(460px,100%)', padding: 26, borderRadius: 'var(--radius-xs)' }}>
+            <div style={{ fontFamily: 'var(--font-serif)', fontSize: 20, color: 'var(--text-heading)', marginBottom: 18 }}>Edit brand</div>
+            {[['name', 'Brand name'], ['slug', 'Slug'], ['website', 'Website URL'], ['instagram', 'Instagram handle']].map(([key, label]) => (
+              <label key={key} style={{ display: 'block', marginBottom: 14 }}>
+                <span style={{ fontSize: 12, color: 'var(--text-muted)', display: 'block', marginBottom: 5 }}>{label}</span>
+                <input value={edit[key] || ''} onChange={(e) => setEdit({ ...edit, [key]: e.target.value })} style={{ width: '100%', boxSizing: 'border-box', border: '1px solid var(--border-default)', borderRadius: 'var(--radius-xs)', padding: '10px 12px', fontFamily: 'var(--font-body)', fontSize: 14 }} />
+              </label>
+            ))}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 8 }}>
+              <ActionBtn ghost onClick={() => setEdit(null)}>Cancel</ActionBtn>
+              <ActionBtn busy={busy === edit.id} onClick={save}>Save</ActionBtn>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+function NonCapsuleBrands({ sb, adminId }: any) {
+  const [k, bump] = useReload();
+  const [rows] = useAsync(() => loadNonCapsuleBrands(sb), [k]);
+  const [busy, setBusy] = React.useState<string | null>(null);
+  const act = async (name: string, fn: () => Promise<void>) => { setBusy(name); try { await fn(); bump(); } catch { /* ignore */ } setBusy(null); };
+  return (
+    <>
+      <p style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: -8, marginBottom: 16 }}>Brand names that appear via reviews but aren't in The Capsule.</p>
+      <Table head={['Brand', 'Reviews', 'Actions']} rows={(rows || []).map((b: any) => [
+        <b style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{b.name}</b>, b.reviews,
+        <span style={{ display: 'flex', gap: 8 }}>
+          <ActionBtn busy={busy === b.name} onClick={() => act(b.name, () => promoteBrandByName(sb, b.name))}>Promote to Capsule</ActionBtn>
+          <ActionBtn ghost busy={busy === b.name} onClick={() => act(b.name, () => flagBrandName(sb, b.name, adminId))}>Flag for Review</ActionBtn>
+        </span>,
+      ])} loading={!rows} empty="No non-Capsule brands." />
     </>
   );
 }
