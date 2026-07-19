@@ -28,6 +28,8 @@ export function CreateInquiryScreen({ onRoute, authed = false }: any) {
   const [scale, setScale] = React.useState('Letter');
   const [size, setSize] = React.useState('');
   const [otherSize, setOtherSize] = React.useState('');
+  // When the form was opened — powers the admin "avg time to submit" metric.
+  const startedRef = React.useRef(new Date().toISOString());
   const [hideMeasure, setHideMeasure] = React.useState(false);
   const [detail, setDetail] = React.useState('');
   const [product, setProduct] = React.useState('');
@@ -89,6 +91,7 @@ export function CreateInquiryScreen({ onRoute, authed = false }: any) {
           sizeOther: otherSize.trim(),
           body: detail,
           hideMeasurements: hideMeasure,
+          startedAt: startedRef.current,
         });
       } catch (err: any) {
         setSaving(false);

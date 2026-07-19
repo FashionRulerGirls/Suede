@@ -104,6 +104,8 @@ export function CreateReviewScreen({ onRoute, authed = false }: any) {
   const editing = !!editReview;
   const editId = editReview?.id;
   React.useEffect(() => { appState.reviewBrand = null; appState.editReview = null; }, []);
+  // When the form was opened — powers the admin "avg time to submit" metric.
+  const startedRef = React.useRef(new Date().toISOString());
   const [mode, setMode] = React.useState(editing ? 'manual' : 'search');
   const [ratings, setRatings] = React.useState(editing
     ? { sizing: editReview.rating_sizing || 0, material: editReview.rating_material || 0, value: editReview.rating_value || 0, photos: editReview.rating_photos || 0, service: editReview.rating_service || 0 }
@@ -222,6 +224,7 @@ export function CreateReviewScreen({ onRoute, authed = false }: any) {
           recommend: rec === 'yes' ? true : rec === 'no' ? false : null,
           hideMeasurements: hideMeasure,
           sizeSatisfaction: satisfaction ?? null,
+          startedAt: startedRef.current,
         };
         // Photo upload is best-effort: if storage isn't reachable/configured
         // the review itself still saves, and we warn instead of failing.

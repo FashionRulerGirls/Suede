@@ -69,6 +69,7 @@ export type NewReview = {
   sizeSatisfaction?: any;
   productImage?: string;
   productPrice?: string;
+  startedAt?: string;
 };
 
 export async function createReview(sb: SupabaseClient, userId: string, r: NewReview) {
@@ -98,6 +99,7 @@ export async function createReview(sb: SupabaseClient, userId: string, r: NewRev
     hide_measurements: !!r.hideMeasurements,
     measurements_snapshot: snap,
     size_satisfaction: r.sizeSatisfaction ?? null,
+    review_started_at: r.startedAt || null,
   }).select('id').single();
   if (error) throw error;
   return data;
@@ -157,6 +159,7 @@ export type NewInquiry = {
   hideMeasurements?: boolean;
   productImage?: string;
   productPrice?: string;
+  startedAt?: string;
 };
 
 export async function createInquiry(sb: SupabaseClient, userId: string, q: NewInquiry) {
@@ -179,6 +182,7 @@ export async function createInquiry(sb: SupabaseClient, userId: string, q: NewIn
     body: q.body.trim(),
     hide_measurements: !!q.hideMeasurements,
     measurements_snapshot: snap,
+    inquiry_started_at: q.startedAt || null,
   }).select('id').single();
   if (error) throw error;
   return data;
