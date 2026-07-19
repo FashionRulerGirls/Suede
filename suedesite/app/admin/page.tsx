@@ -11,10 +11,12 @@ import {
   loadApplications, markApplicationReviewed, loadFeedback, markFeedbackReviewed,
   loadCapsuleBrands, loadNonCapsuleBrands, updateBrand, removeFromCapsule,
   promoteBrandByName, flagBrandName,
+  loadFlagForReview, mergeBrandName, correctBrandName, dismissBrandFlag,
+  loadContentFlags, resolveContentFlag,
 } from '@/lib/adminActions';
 
 type Gate = 'checking' | 'anon' | 'denied' | 'ok';
-type Section = 'overview' | 'growth' | 'reviews' | 'inquiries' | 'brands' | 'requests' | 'applications' | 'feedback' | 'members' | 'export';
+type Section = 'overview' | 'growth' | 'reviews' | 'inquiries' | 'brands' | 'requests' | 'applications' | 'flags' | 'feedback' | 'members' | 'export';
 
 const fmtDate = (iso?: string) => (iso ? new Date(iso).toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' }) : '—');
 
@@ -46,6 +48,7 @@ export default function AdminPage() {
     ['brands', 'Brand Management', 'shirt'],
     ['requests', 'Capsule Requests', 'plus'],
     ['applications', 'Applications', 'inbox'],
+    ['flags', 'Brand Flags', 'eye-off'],
     ['feedback', 'Platform Feedback', 'message'],
     ['members', 'Member Directory', 'user'],
     ['export', 'Data Export', 'upload'],
@@ -76,6 +79,7 @@ export default function AdminPage() {
         {section === 'brands' && <BrandsSection sb={sb!} adminId={adminId} />}
         {section === 'requests' && <RequestsSection sb={sb!} />}
         {section === 'applications' && <ApplicationsSection sb={sb!} adminId={adminId} />}
+        {section === 'flags' && <ContentFlagsSection sb={sb!} adminId={adminId} />}
         {section === 'feedback' && <FeedbackSection sb={sb!} />}
         {section === 'members' && <MembersSection sb={sb!} />}
         {section === 'export' && <ExportSection sb={sb!} />}
@@ -246,11 +250,10 @@ function MembersSection({ sb }: any) {
   return (
     <>
       <H sub="All registered members. Read-only.">Member Directory</H>
-      <Table head={['Member', 'Joined', 'Profile', 'Reviews', 'Inquiries']} rows={(rows || []).map((r: any) => [
+      <Table head={['Member', 'Email', 'Joined', 'Profile', 'Reviews', 'Inquiries']} rows={(rows || []).map((r: any) => [
         <span><b style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{r.name}</b> <span style={{ color: 'var(--text-muted)' }}>{r.handle}</span></span>,
-        fmtDate(r.created_at), r.complete ? 'Complete' : 'Incomplete', r.reviews, r.inquiries,
+        r.email || '—', fmtDate(r.created_at), r.complete ? 'Complete' : 'Incomplete', r.reviews, r.inquiries,
       ])} loading={!rows} empty="No members yet." />
-      <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 14 }}>Email addresses live in Supabase auth and need a secure server function to surface here — coming in a follow-up.</p>
     </>
   );
 }
@@ -265,7 +268,7 @@ function ExportSection({ sb }: any) {
   const exports: [string, string, () => Promise<{ name: string; csv: string }>][] = [
     ['members', 'Members', async () => {
       const m = await loadMemberDirectory(sb, 100000);
-      return { name: 'suede-members.csv', csv: toCSV(['handle', 'name', 'joined', 'profile_complete', 'reviews', 'inquiries'], m.map((r: any) => [r.handle, r.name, r.created_at, r.complete ? 'Y' : 'N', r.reviews, r.inquiries])) };
+      return { name: 'suede-members.csv', csv: toCSV(['handle', 'name', 'email', 'joined', 'profile_complete', 'reviews', 'inquiries'], m.map((r: any) => [r.handle, r.name, r.email, r.created_at, r.complete ? 'Y' : 'N', r.reviews, r.inquiries])) };
     }],
     ['reviews', 'Reviews', async () => {
       const r = await loadReviewActivity(sb, 100000);
@@ -426,16 +429,62 @@ function FeedbackSection({ sb }: any) {
 }
 
 function BrandsSection({ sb, adminId }: any) {
-  const [tab, setTab] = React.useState<'capsule' | 'noncap'>('capsule');
+  const [tab, setTab] = React.useState<'capsule' | 'noncap' | 'flag'>('capsule');
   return (
     <>
       <H sub="The brand directory.">Brand Management</H>
       <div style={{ display: 'inline-flex', border: '1px solid var(--border-default)', borderRadius: 'var(--radius-xs)', overflow: 'hidden', marginBottom: 20 }}>
-        {([['capsule', 'Capsule'], ['noncap', 'Non-Capsule']] as const).map(([id, label]) => (
+        {([['capsule', 'Capsule'], ['noncap', 'Non-Capsule'], ['flag', 'Flag for Review']] as const).map(([id, label]) => (
           <button key={id} onClick={() => setTab(id)} style={{ padding: '8px 18px', border: 'none', cursor: 'pointer', background: tab === id ? 'var(--ink-900)' : 'var(--surface-card)', color: tab === id ? 'var(--white)' : 'var(--text-secondary)', fontFamily: 'var(--font-body)', fontSize: 13 }}>{label}</button>
         ))}
       </div>
-      {tab === 'capsule' ? <CapsuleBrands sb={sb} /> : <NonCapsuleBrands sb={sb} adminId={adminId} />}
+      {tab === 'capsule' ? <CapsuleBrands sb={sb} /> : tab === 'noncap' ? <NonCapsuleBrands sb={sb} adminId={adminId} /> : <FlagForReview sb={sb} adminId={adminId} />}
+    </>
+  );
+}
+
+function FlagForReview({ sb, adminId }: any) {
+  const [k, bump] = useReload();
+  const [rows] = useAsync(() => loadFlagForReview(sb), [k]);
+  const [busy, setBusy] = React.useState<string | null>(null);
+  const act = async (name: string, fn: () => Promise<void>) => { setBusy(name); try { await fn(); bump(); } catch { /* ignore */ } setBusy(null); };
+  const correct = async (name: string) => { const v = window.prompt(`Correct name for "${name}":`, name); if (v && v.trim() && v.trim() !== name) await act(name, () => correctBrandName(sb, name, v.trim())); };
+  const reasonColor: any = { duplicate: 'var(--denim)', misspelling: 'var(--denim)', junk: 'var(--rating-critical)' };
+  if (!rows) return <Muted>Scanning brand names…</Muted>;
+  return (
+    <>
+      <p style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: -8, marginBottom: 16 }}>Advisory — likely duplicate, misspelled, or junk brand entries. Nothing changes without your action.</p>
+      {!rows.length ? <Muted>No brand-name issues detected. 🎉</Muted> : (
+        <Table head={['Brand', 'Reviews', 'Reason', 'Suggestion', 'Actions']} rows={rows.map((r: any) => [
+          <b style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{r.name}</b>, r.reviews,
+          <span style={{ color: reasonColor[r.reason] || 'var(--text-muted)', textTransform: 'capitalize' }}>{r.reason}</span>,
+          r.suggestion || '—',
+          <span style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {r.suggestion && <ActionBtn busy={busy === r.name} onClick={() => act(r.name, () => mergeBrandName(sb, r.name, r.suggestion))}>Merge → {r.suggestion}</ActionBtn>}
+            <ActionBtn ghost busy={busy === r.name} onClick={() => correct(r.name)}>Correct</ActionBtn>
+            <ActionBtn ghost busy={busy === r.name} onClick={() => act(r.name, () => dismissBrandFlag(sb, r.name, adminId))}>Dismiss</ActionBtn>
+          </span>,
+        ])} loading={false} empty="" />
+      )}
+    </>
+  );
+}
+
+function ContentFlagsSection({ sb, adminId }: any) {
+  const [k, bump] = useReload();
+  const [rows] = useAsync(() => loadContentFlags(sb), [k]);
+  const [busy, setBusy] = React.useState<string | null>(null);
+  const act = async (id: string, fn: () => Promise<void>) => { setBusy(id); try { await fn(); bump(); } catch { /* ignore */ } setBusy(null); };
+  return (
+    <>
+      <H sub="Reviews & inquiries flagged by brands for attention.">Brand Flags</H>
+      <Table head={['Type', 'Reason', 'Detail', 'Date', 'Actions']} rows={(rows || []).map((f: any) => [
+        <span style={{ textTransform: 'capitalize' }}>{f.type}</span>, f.reason || '—', f.detail || '—', fmtDate(f.created_at),
+        <span style={{ display: 'flex', gap: 8 }}>
+          <ActionBtn danger busy={busy === f.id} onClick={() => act(f.id, () => resolveContentFlag(sb, f.id, adminId, 'remove', f.type, f.entityId))}>Remove content</ActionBtn>
+          <ActionBtn ghost busy={busy === f.id} onClick={() => act(f.id, () => resolveContentFlag(sb, f.id, adminId, 'dismiss'))}>Dismiss</ActionBtn>
+        </span>,
+      ])} loading={!rows} empty="No open brand flags. (Brand-side flag submission is not built yet.)" />
     </>
   );
 }

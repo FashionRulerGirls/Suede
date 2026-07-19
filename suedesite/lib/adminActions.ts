@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { resolveBrandId } from '@/lib/contentData';
 
 /* Admin dashboard Phase 2 — action queues. Loaders + mutations for Capsule
    requests, Capsule applications, platform feedback, and brand management.
@@ -114,6 +115,108 @@ export async function flagBrandName(sb: SupabaseClient, name: string, adminId: s
     entity_type: 'brand_name', entity_id: '00000000-0000-0000-0000-000000000000',
     reason: 'admin_flag', source: 'user', detail: { brand_name: name }, raised_by: adminId,
   });
+  if (error) throw error;
+}
+
+// ── Flag for Review — §5c (brand-name attribution) ──────────────────
+const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]/g, '');
+const PLACEHOLDERS = new Set(['na', 'n/a', 'brand', 'thebrand', 'unknown', 'test', 'none', 'null', '???']);
+
+// Bounded Levenshtein (early-exit once past `max`).
+function editDistance(a: string, b: string, max = 3): number {
+  if (Math.abs(a.length - b.length) > max) return max + 1;
+  let prev = Array.from({ length: b.length + 1 }, (_, i) => i);
+  for (let i = 1; i <= a.length; i++) {
+    const cur = [i]; let best = i;
+    for (let j = 1; j <= b.length; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + cost);
+      best = Math.min(best, cur[j]);
+    }
+    if (best > max) return max + 1;
+    prev = cur;
+  }
+  return prev[b.length];
+}
+
+export type BrandFlag = { name: string; reviews: number; reason: 'duplicate' | 'misspelling' | 'junk'; suggestion: string | null };
+
+// Advisory only — surfaces likely bad/duplicate brand-name entries. No name is
+// changed without an explicit admin action below.
+export async function loadFlagForReview(sb: SupabaseClient): Promise<BrandFlag[]> {
+  const [{ data: caps }, { data: revs }, { data: flags }] = await Promise.all([
+    sb.from('brands').select('name').eq('is_capsule', true),
+    sb.from('reviews').select('brand_name').not('brand_name', 'is', null),
+    sb.from('moderation_flags').select('detail, status').eq('entity_type', 'brand_name'),
+  ]);
+  const capNames = (caps || []).map((c: any) => (c.name || '').trim()).filter(Boolean);
+  const dismissed = new Set((flags || []).filter((f: any) => f.status === 'dismissed').map((f: any) => norm(f.detail?.brand_name || '')));
+  const capSet = new Set(capNames.map(norm));
+
+  const counts = new Map<string, number>();
+  for (const r of (revs || []) as any[]) {
+    const n = (r.brand_name || '').trim();
+    if (!n || capSet.has(norm(n))) continue;
+    counts.set(n, (counts.get(n) || 0) + 1);
+  }
+  const nonCap = Array.from(counts.keys());
+  const out: BrandFlag[] = [];
+  for (const n of nonCap) {
+    if (dismissed.has(norm(n))) continue;
+    const nn = norm(n);
+    // junk
+    if (n.length < 3 || /^[^a-zA-Z0-9]+$/.test(n) || PLACEHOLDERS.has(nn)) { out.push({ name: n, reviews: counts.get(n)!, reason: 'junk', suggestion: null }); continue; }
+    // misspelling of a capsule brand
+    let miss: string | null = null;
+    for (const c of capNames) { const d = editDistance(nn, norm(c), 2); if (d >= 1 && d <= 2) { miss = c; break; } }
+    if (miss) { out.push({ name: n, reviews: counts.get(n)!, reason: 'misspelling', suggestion: miss }); continue; }
+    // duplicate of another non-capsule variant (normalized match or edit-distance ≤2)
+    let dup: string | null = null;
+    for (const m of nonCap) {
+      if (m === n) continue;
+      if (norm(m) === nn || editDistance(nn, norm(m), 2) <= 2) { dup = (counts.get(m)! >= counts.get(n)!) ? m : null; if (dup) break; }
+    }
+    if (dup) out.push({ name: n, reviews: counts.get(n)!, reason: 'duplicate', suggestion: dup });
+  }
+  return out.sort((a, b) => b.reviews - a.reviews);
+}
+
+// Reassign every review under `fromName` to the canonical `toName` (+ brand_id).
+export async function mergeBrandName(sb: SupabaseClient, fromName: string, toName: string) {
+  const id = await resolveBrandId(sb, toName);
+  const { error } = await sb.from('reviews').update({ brand_name: toName, brand_id: id }).ilike('brand_name', fromName);
+  if (error) throw error;
+}
+// Rename a brand across its reviews (and link brand_id if the new name is known).
+export async function correctBrandName(sb: SupabaseClient, fromName: string, newName: string) {
+  const id = await resolveBrandId(sb, newName);
+  const { error } = await sb.from('reviews').update({ brand_name: newName.trim(), brand_id: id }).ilike('brand_name', fromName);
+  if (error) throw error;
+}
+// Mark a name accurate so it stops being auto-flagged.
+export async function dismissBrandFlag(sb: SupabaseClient, name: string, adminId: string) {
+  const { error } = await sb.from('moderation_flags').insert({
+    entity_type: 'brand_name', entity_id: '00000000-0000-0000-0000-000000000000',
+    reason: 'dismissed', source: 'auto', status: 'dismissed', detail: { brand_name: name }, raised_by: adminId, resolved_by: adminId,
+  });
+  if (error) throw error;
+}
+
+// ── Brand-submitted flags on reviews/inquiries — §7 (admin side) ─────
+export async function loadContentFlags(sb: SupabaseClient) {
+  const { data } = await sb.from('moderation_flags')
+    .select('id, entity_type, entity_id, reason, detail, status, created_at')
+    .in('entity_type', ['review', 'inquiry']).eq('status', 'open').order('created_at', { ascending: false });
+  return (data || []).map((f: any) => ({
+    id: f.id, type: f.entity_type, entityId: f.entity_id, reason: f.reason,
+    detail: f.detail?.note || '', created_at: f.created_at,
+  }));
+}
+export async function resolveContentFlag(sb: SupabaseClient, id: string, adminId: string, action: 'dismiss' | 'remove', entityType?: string, entityId?: string) {
+  if (action === 'remove' && entityType && entityId) {
+    await sb.from(entityType === 'review' ? 'reviews' : 'inquiries').update({ status: 'removed' }).eq('id', entityId);
+  }
+  const { error } = await sb.from('moderation_flags').update({ status: action === 'remove' ? 'resolved' : 'dismissed', resolved_by: adminId }).eq('id', id);
   if (error) throw error;
 }
 

@@ -148,8 +148,17 @@ export async function loadInquiryActivity(sb: SupabaseClient, limit = 200) {
 }
 
 export async function loadMemberDirectory(sb: SupabaseClient, limit = 500) {
-  const [{ data: profs }, { data: meas }, { data: revs }, { data: inqs }] = await Promise.all([
-    sb.from('profiles').select('id, display_name, username, created_at').order('created_at', { ascending: false }).limit(limit),
+  // admin_members() is a SECURITY DEFINER RPC that includes emails (from
+  // auth.users) for admins only. Falls back to the profiles table if the
+  // function isn't present yet (migration 0022 not run).
+  const { data: rpcRows, error: rpcErr } = await sb.rpc('admin_members');
+  let base: any[];
+  if (!rpcErr && rpcRows) base = (rpcRows as any[]).slice(0, limit);
+  else {
+    const { data } = await sb.from('profiles').select('id, display_name, username, created_at').order('created_at', { ascending: false }).limit(limit);
+    base = (data || []).map((p: any) => ({ ...p, email: '' }));
+  }
+  const [{ data: meas }, { data: revs }, { data: inqs }] = await Promise.all([
     sb.from('measurements').select('user_id, bust_in, waist_in, hips_in'),
     sb.from('reviews').select('author_id'),
     sb.from('inquiries').select('author_id'),
@@ -157,9 +166,9 @@ export async function loadMemberDirectory(sb: SupabaseClient, limit = 500) {
   const complete = new Set((meas || []).filter((m: any) => m.bust_in != null && m.waist_in != null && m.hips_in != null).map((m: any) => m.user_id));
   const rc: Record<string, number> = {}; for (const r of (revs || []) as any[]) rc[r.author_id] = (rc[r.author_id] || 0) + 1;
   const qc: Record<string, number> = {}; for (const q of (inqs || []) as any[]) qc[q.author_id] = (qc[q.author_id] || 0) + 1;
-  return (profs || []).map((p: any) => ({
+  return base.map((p: any) => ({
     id: p.id, name: p.display_name || p.username || 'Member', handle: p.username ? '@' + p.username : '',
-    created_at: p.created_at, complete: complete.has(p.id), reviews: rc[p.id] || 0, inquiries: qc[p.id] || 0,
+    email: p.email || '', created_at: p.created_at, complete: complete.has(p.id), reviews: rc[p.id] || 0, inquiries: qc[p.id] || 0,
   }));
 }
 
