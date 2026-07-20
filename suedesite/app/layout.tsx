@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import './mobile-site.css';
+import { RegisterSW } from '@/components/RegisterSW';
 
 const SITE_URL = 'https://suedecapsule.com';
 const SITE_DESC =
@@ -23,11 +24,15 @@ export const metadata: Metadata = {
     title: 'Suede — Discovery Site',
     description: SITE_DESC,
   },
+  manifest: '/manifest.webmanifest',
+  appleWebApp: { capable: true, title: 'Suede', statusBarStyle: 'default' },
+  icons: { apple: '/icons/apple-touch-icon.png' },
 };
 
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
+  themeColor: '#14120F',
 };
 
 export default function RootLayout({
@@ -37,7 +42,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>{children}<RegisterSW /></body>
     </html>
   );
 }
