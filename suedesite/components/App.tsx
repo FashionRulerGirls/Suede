@@ -282,16 +282,16 @@ function AppInner() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // First time a member is seen signed in on this device, send them straight
-  // to their profile to finish setup. (Recovery sessions are excluded.)
+  // First time a member is seen signed in on this device, send them straight to
+  // the profile setup form (measurements, sizes, bio) — not the read-only
+  // profile view. (Recovery sessions are excluded.)
   React.useEffect(() => {
     if (!user || recovery) return;
     try {
       const key = 'suede_onboarded_' + user.id;
       if (!localStorage.getItem(key)) {
         localStorage.setItem(key, '1');
-        setRouteRaw('yourprofile');
-        scrollTop();
+        setRoute('editprofile');
       }
     } catch { /* storage unavailable */ }
     // eslint-disable-next-line react-hooks/exhaustive-deps
