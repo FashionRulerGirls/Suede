@@ -300,7 +300,7 @@ export function BrandScreen({ onRoute, authed = false }: any) {
             <div style={{ textAlign: 'center', padding: '54px 0 28px' }}>
               <p style={{ fontFamily: 'var(--font-serif)', fontSize: 22, color: 'var(--text-heading)', margin: '0 0 6px' }}>No {tab === 'reviews' ? 'reviews' : 'inquiries'} yet</p>
               <p style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-muted)', margin: '0 0 20px' }}>Be the first to {tab === 'reviews' ? `review ${brand.name}` : `ask about ${brand.name}`}.</p>
-              <Button variant="primary" size="sm" onClick={() => onRoute(tab === 'reviews' ? 'createreview' : 'createinquiry')}>{tab === 'reviews' ? 'Write a Review' : 'Leave an Inquiry'}</Button>
+              <Button variant="primary" size="sm" onClick={() => { if (tab === 'reviews') { appState.reviewBrand = brand; onRoute('createreview'); } else { appState.inquiryBrand = brand; onRoute('createinquiry'); } }}>{tab === 'reviews' ? 'Write a Review' : 'Leave an Inquiry'}</Button>
             </div>
           );
         }
