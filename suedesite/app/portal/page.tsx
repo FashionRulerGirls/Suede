@@ -152,9 +152,8 @@ function EditPage({ sb, brand, uid, onSaved }: any) {
         {field('longBio', 'Long bio', true, 'The full story, shown on the back of your brand card.')}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
           {field('website', 'Website')}{field('instagram', 'Instagram')}
-          {field('category', 'Category')}{field('location', 'Location')}
+          {field('location', 'Location')}{field('founder', 'Founder')}
         </div>
-        {field('founder', 'Founder')}
         <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginTop: 8 }}>
           <button onClick={save} disabled={busy} style={{ ...btnPrimary, opacity: busy ? 0.6 : 1 }}>{busy ? 'Saving…' : 'Save changes'}</button>
           {saved && <span style={{ fontSize: 13, color: 'var(--rating-positive)' }}>Saved ✓</span>}
