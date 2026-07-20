@@ -470,6 +470,32 @@ export async function setMemberFollow(sb: SupabaseClient, followerId: string, fo
 export const memberFollowerCount = (sb: SupabaseClient, userId: string) => count(sb, 'member_follows', 'followee_id', userId);
 const memberFollowingCount = (sb: SupabaseClient, userId: string) => count(sb, 'member_follows', 'follower_id', userId);
 
+// The members who follow this user — for the "Your Followers" list. Embeds the
+// follower's profile (member_follows.follower_id → profiles) and batches in each
+// one's published-review count.
+export async function loadMemberFollowers(sb: SupabaseClient, userId: string, limit = 200) {
+  const { data } = await sb.from('member_follows')
+    .select('created_at, follower:profiles!follower_id(id, username, display_name, avatar_url, bio)')
+    .eq('followee_id', userId)
+    .order('created_at', { ascending: false })
+    .limit(limit);
+  const people = (data || []).map((r: any) => r.follower).filter(Boolean);
+  const ids = people.map((p: any) => p.id);
+  const rc: Record<string, number> = {};
+  if (ids.length) {
+    const { data: revs } = await sb.from('reviews').select('author_id').in('author_id', ids);
+    for (const r of (revs || []) as any[]) rc[r.author_id] = (rc[r.author_id] || 0) + 1;
+  }
+  return people.map((p: any) => ({
+    id: p.id,
+    name: p.display_name || p.username || 'Member',
+    handle: p.username ? '@' + p.username : '',
+    avatar: p.avatar_url || '',
+    bio: p.bio || '',
+    reviews: rc[p.id] || 0,
+  }));
+}
+
 // ── member directory (The Collective + member profiles) ────────────
 function measurementsDisplay(m: any) {
   if (!m) return {};

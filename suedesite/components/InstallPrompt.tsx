@@ -1,5 +1,6 @@
 'use client';
 import React from 'react';
+import { Icon } from '@/components/ds';
 
 /* "Add Suede to Home Screen" affordance.
 
@@ -89,7 +90,7 @@ export function InstallMenuItem({ onBeforeAction }: { onBeforeAction?: () => voi
       <button onClick={handle}
         style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '13px 14px', borderRadius: 'var(--radius-sm)', border: 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left' }}>
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 12 }}>
-          <span aria-hidden style={{ fontSize: 17, lineHeight: 1 }}>📲</span>
+          <Icon name="plus" size={17} color="var(--text-primary)" />
           <span style={{ fontFamily: 'var(--font-serif)', fontWeight: 300, fontSize: 16, color: 'var(--text-primary)' }}>Add Suede to Home Screen</span>
         </span>
       </button>

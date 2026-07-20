@@ -10,7 +10,7 @@ import { InquiryCard } from '@/components/screens/LookbookScreen';
 import { useAuth } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/client';
 import { loadProfileData, inchesToHeight, inchesDisplay } from '@/lib/profileData';
-import { loadUserReviews, loadUserInquiries, countFollowedBrands, memberFollowerCount, loadFollowedBrandNames, loadPublishedReviews, loadPublishedInquiries, loadBrands } from '@/lib/contentData';
+import { loadUserReviews, loadUserInquiries, countFollowedBrands, memberFollowerCount, loadFollowedBrandNames, loadPublishedReviews, loadPublishedInquiries, loadBrands, loadMemberFollowers } from '@/lib/contentData';
 
 function YProfStat({ value, label, links, onValue }: any) {
   const valueStyle = { fontFamily: 'var(--font-meta)', fontWeight: 500, fontSize: 30, lineHeight: 1, color: 'var(--text-heading)' } as const;
@@ -43,6 +43,8 @@ export function YourProfileScreen({ onRoute }: any) {
   // Real brand rows (image + live review/follower counts) for the "Brands You
   // Follow" cards — replaces the static SUEDE_BRANDS sample data.
   const [dbBrands, setDbBrands] = React.useState<any[] | null>(null);
+  // Real members who follow this user, for the "Your Followers" list.
+  const [dbFollowers, setDbFollowers] = React.useState<any[]>([]);
   React.useEffect(() => {
     const sb = createClient();
     if (!sb || !user) { setDb(null); setDbReviews([]); setDbInquiries([]); setFollowedBrands(0); setFollowerCount(0); return; }
@@ -54,6 +56,7 @@ export function YourProfileScreen({ onRoute }: any) {
     memberFollowerCount(sb, user.id).then((n) => { if (active) setFollowerCount(n); }).catch(() => {});
     loadFollowedBrandNames(sb, user.id).then((names) => { if (active) setFollowedNames(names); }).catch(() => {});
     loadBrands(sb).then((bs) => { if (active) setDbBrands(bs); }).catch(() => {});
+    loadMemberFollowers(sb, user.id).then((f) => { if (active) setDbFollowers(f); }).catch(() => {});
     return () => { active = false; };
   }, [user?.id]);
   // Community content for the Capsule Feed — loaded lazily when a feed view opens.
@@ -139,7 +142,9 @@ export function YourProfileScreen({ onRoute }: any) {
     const followedBrands = real
       ? (dbBrands || []).filter(b => followedSet.has(b.name.toLowerCase()) && b.name.toLowerCase().includes(ql))
       : (SUEDE_BRANDS || []).slice(0, Number(m.brands) || 8).filter(b => b.name.toLowerCase().includes(ql));
-    const followers = real ? [] : (SUEDE_MEMBERS || []).filter(p => (p.name + ' ' + p.handle).toLowerCase().includes(ql));
+    const followers = real
+      ? dbFollowers.filter(p => (p.name + ' ' + p.handle).toLowerCase().includes(ql))
+      : (SUEDE_MEMBERS || []).filter(p => (p.name + ' ' + p.handle).toLowerCase().includes(ql));
     // Capsule Feed = community reviews/inquiries from the brands you follow.
     // Collective Feed (from members who follow you) is empty until the member
     // graph exists.
@@ -237,14 +242,14 @@ export function YourProfileScreen({ onRoute }: any) {
           ) : (
           <div className="sd-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 28, paddingBottom: 28 }}>
             {followers.map((p: any, i: number) => {
-              const avatar = avatarPool[i % avatarPool.length];
+              const avatar = p.avatar || avatarPool[i % avatarPool.length];
               return (
                 <button key={p.handle} onClick={() => openMember(p, avatar)} style={{ display: 'flex', alignItems: 'center', gap: 16, background: 'var(--surface-card)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-sm)', padding: '16px 20px', cursor: 'pointer', textAlign: 'left', transition: 'border-color var(--dur-fast) var(--ease-out)' }}
                   onMouseEnter={(e) => e.currentTarget.style.borderColor = 'var(--ink-900)'} onMouseLeave={(e) => e.currentTarget.style.borderColor = 'var(--border-subtle)'}>
                   <Avatar src={avatar} name={p.name} size="md" />
                   <span style={{ display: 'flex', flexDirection: 'column', gap: 3, minWidth: 0, flex: 1 }}>
                     <span style={{ fontFamily: 'var(--font-serif)', fontSize: 18, color: 'var(--text-primary)' }}>{p.name}</span>
-                    <span style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-muted)' }}>{p.handle} · {p.reviews} reviews</span>
+                    <span style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-muted)' }}>{p.handle}{p.reviews != null ? ` · ${p.reviews} reviews` : ''}</span>
                   </span>
                   <Icon name="chevron-right" size={16} color="var(--text-muted)" />
                 </button>
