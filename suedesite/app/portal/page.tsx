@@ -129,7 +129,7 @@ function Dashboard({ sb, brand }: any) {
 
 // ── edit brand page ─────────────────────────────────────────────────
 function EditPage({ sb, brand, uid, onSaved }: any) {
-  const blank = () => ({ tagline: brand.tagline, longBio: brand.longBio, website: brand.website, instagram: brand.instagram, category: brand.category, location: brand.location, founder: brand.founder });
+  const blank = () => ({ tagline: brand.tagline, longBio: brand.longBio, website: brand.website, instagram: brand.instagram, location: brand.location, founder: brand.founder, foundedYear: brand.foundedYear });
   const [f, setF] = React.useState(blank);
   const [busy, setBusy] = React.useState(false);
   const [saved, setSaved] = React.useState(false);
@@ -152,8 +152,9 @@ function EditPage({ sb, brand, uid, onSaved }: any) {
         {field('longBio', 'Long bio', true, 'The full story, shown on the back of your brand card.')}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
           {field('website', 'Website')}{field('instagram', 'Instagram')}
-          {field('location', 'Location')}{field('founder', 'Founder')}
+          {field('location', 'Location')}{field('foundedYear', 'Founded year')}
         </div>
+        {field('founder', 'Founder', true, 'Who founded the brand and what defines it — shown on your brand page.')}
         <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginTop: 8 }}>
           <button onClick={save} disabled={busy} style={{ ...btnPrimary, opacity: busy ? 0.6 : 1 }}>{busy ? 'Saving…' : 'Save changes'}</button>
           {saved && <span style={{ fontSize: 13, color: 'var(--rating-positive)' }}>Saved ✓</span>}

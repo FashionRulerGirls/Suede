@@ -7,13 +7,13 @@ import { uploadBrandDocument } from '@/lib/storage';
    owner-edit on brands, member-insert on review_comments / inquiry_responses,
    and the user-report insert on moderation_flags. */
 
-export type PortalBrand = { id: string; name: string; slug: string; tagline: string; longBio: string; website: string; instagram: string; category: string; location: string; founder: string };
+export type PortalBrand = { id: string; name: string; slug: string; tagline: string; longBio: string; website: string; instagram: string; location: string; founder: string; foundedYear: string };
 
 export async function loadMyBrands(sb: SupabaseClient, ownerId: string): Promise<PortalBrand[]> {
   const { data } = await sb.from('brands').select('*').eq('owner_id', ownerId).order('name');
   return (data || []).map((b: any) => ({
     id: b.id, name: b.name, slug: b.slug, tagline: b.tagline || '', longBio: b.long_bio || '', website: b.shop_url || '',
-    instagram: b.social || '', category: b.category || '', location: b.location || '', founder: b.founder || '',
+    instagram: b.social || '', location: b.location || '', founder: b.founder || '', foundedYear: b.founded_year || '',
   }));
 }
 
@@ -50,15 +50,15 @@ export async function loadBrandOverview(sb: SupabaseClient, brand: { id: string;
 }
 
 // Update a brand's public page fields (owner-edit RLS).
-export async function saveBrandFields(sb: SupabaseClient, brandId: string, f: { tagline?: string; longBio?: string; website?: string; instagram?: string; category?: string; location?: string; founder?: string }) {
+export async function saveBrandFields(sb: SupabaseClient, brandId: string, f: { tagline?: string; longBio?: string; website?: string; instagram?: string; location?: string; founder?: string; foundedYear?: string }) {
   const patch: Record<string, any> = {};
   if (f.tagline !== undefined) patch.tagline = f.tagline.trim() || null;
   if (f.longBio !== undefined) patch.long_bio = f.longBio.trim() || null;
   if (f.website !== undefined) patch.shop_url = f.website.trim() || null;
   if (f.instagram !== undefined) patch.social = f.instagram.trim() || null;
-  if (f.category !== undefined) patch.category = f.category.trim() || null;
   if (f.location !== undefined) patch.location = f.location.trim() || null;
   if (f.founder !== undefined) patch.founder = f.founder.trim() || null;
+  if (f.foundedYear !== undefined) patch.founded_year = f.foundedYear.trim() || null;
   const { error } = await sb.from('brands').update(patch).eq('id', brandId);
   if (error) throw error;
 }
