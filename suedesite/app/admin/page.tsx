@@ -57,9 +57,25 @@ export default function AdminPage() {
   ];
 
   return (
-    <div style={{ minHeight: '100vh', background: '#faf8f5', display: 'grid', gridTemplateColumns: '240px 1fr', fontFamily: 'var(--font-body)' }}>
-      <aside style={{ borderRight: '1px solid var(--border-subtle)', background: 'var(--surface-card)', padding: '24px 16px', display: 'flex', flexDirection: 'column', gap: 6, position: 'sticky', top: 0, height: '100vh' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '4px 10px 20px' }}>
+    <div className="admin-shell" style={{ minHeight: '100vh', background: '#faf8f5', display: 'grid', gridTemplateColumns: '240px 1fr', fontFamily: 'var(--font-body)' }}>
+      <style>{`
+        @media (max-width: 820px) {
+          .admin-shell { grid-template-columns: 1fr !important; }
+          .admin-aside {
+            position: sticky !important; top: 0; z-index: 20; height: auto !important;
+            flex-direction: row !important; align-items: center; gap: 4px !important;
+            overflow-x: auto; -webkit-overflow-scrolling: touch;
+            border-right: none !important; border-bottom: 1px solid var(--border-subtle);
+            padding: 8px 10px !important;
+          }
+          .admin-aside::-webkit-scrollbar { display: none; }
+          .admin-brand { display: none !important; }
+          .admin-aside button { flex: 0 0 auto; white-space: nowrap; padding: 8px 12px !important; }
+          .admin-main { padding: 20px 16px !important; }
+        }
+      `}</style>
+      <aside className="admin-aside" style={{ borderRight: '1px solid var(--border-subtle)', background: 'var(--surface-card)', padding: '24px 16px', display: 'flex', flexDirection: 'column', gap: 6, position: 'sticky', top: 0, height: '100vh' }}>
+        <div className="admin-brand" style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '4px 10px 20px' }}>
           <Logo variant="monogram" height={26} />
           <span style={{ fontFamily: 'var(--font-body)', fontSize: 12, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--text-muted)' }}>Admin</span>
         </div>
@@ -73,7 +89,7 @@ export default function AdminPage() {
           </button>
         ))}
       </aside>
-      <main style={{ padding: '32px 40px', minWidth: 0 }}>
+      <main className="admin-main" style={{ padding: '32px 40px', minWidth: 0 }}>
         {section === 'overview' && <OverviewSection sb={sb!} />}
         {section === 'growth' && <GrowthSection sb={sb!} />}
         {section === 'reviews' && <ReviewsSection sb={sb!} />}
@@ -592,7 +608,7 @@ function NonCapsuleBrands({ sb, adminId }: any) {
 function Table({ head, rows, loading, empty }: any) {
   return (
     <div style={{ background: 'var(--surface-card)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-xs)', overflow: 'auto', maxHeight: '70vh' }}>
-      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+      <table style={{ width: '100%', minWidth: 560, borderCollapse: 'collapse' }}>
         <thead><tr>{head.map((h: string) => <th key={h} style={th}>{h}</th>)}</tr></thead>
         <tbody>
           {loading ? <tr><td style={td} colSpan={head.length}>Loading…</td></tr>
