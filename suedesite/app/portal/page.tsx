@@ -35,7 +35,7 @@ export default function PortalPage() {
     <Shell><Center>
       <p style={{ fontSize: 15, color: 'var(--text-secondary)', maxWidth: 380, lineHeight: 1.6 }}>This account isn’t linked to a brand yet. Claim your brand and we’ll hand over the page once it’s verified.</p>
       <div style={{ display: 'flex', gap: 12, marginTop: 8 }}>
-        <a href="/?claim=1" style={btnPrimary}>Claim your brand</a>
+        <a href="/claim" style={btnPrimary}>Claim your brand</a>
         <button onClick={() => sb?.auth.signOut().then(check)} style={btnGhost}>Sign out</button>
       </div>
     </Center></Shell>
@@ -103,7 +103,7 @@ function SignIn({ sb, onDone }: any) {
         <input placeholder="Password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && submit()} style={{ ...inp, marginTop: 12 }} />
         {err && <div style={{ color: 'var(--rating-critical)', fontSize: 13, marginTop: 10 }}>{err}</div>}
         <button onClick={submit} disabled={busy} style={{ ...btnPrimary, width: '100%', marginTop: 16, opacity: busy ? 0.6 : 1 }}>{busy ? 'Signing in…' : 'Sign in'}</button>
-        <div style={{ textAlign: 'center', marginTop: 16, fontSize: 13.5, color: 'var(--text-muted)' }}>New here? <a href="/?claim=1" style={{ color: 'var(--text-primary)', textDecoration: 'underline' }}>Claim your brand</a></div>
+        <div style={{ textAlign: 'center', marginTop: 16, fontSize: 13.5, color: 'var(--text-muted)' }}>New here? <a href="/claim" style={{ color: 'var(--text-primary)', textDecoration: 'underline' }}>Claim your brand</a></div>
       </div>
     </div></Shell>
   );

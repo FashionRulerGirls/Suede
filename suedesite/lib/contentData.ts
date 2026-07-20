@@ -403,6 +403,14 @@ export async function loadBrandDocs(sb: SupabaseClient, brandId: string) {
   return (data || []) as { id: string; label: string; url: string }[];
 }
 
+// Full brand record by slug — used to load a brand on a direct /brand/<slug> visit.
+export async function loadBrandBySlug(sb: SupabaseClient, slug: string) {
+  const s = (slug || '').trim();
+  if (!s) return null;
+  const { data } = await sb.from('brands').select('*').eq('slug', s).limit(1).maybeSingle();
+  return data ? mapBrand(data, null) : null;
+}
+
 // Full brand record by name — used to complete the brand page when we only
 // arrived with a name (e.g. clicking a brand on a review/inquiry card).
 export async function loadBrandByName(sb: SupabaseClient, name: string) {

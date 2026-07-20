@@ -45,6 +45,9 @@ import {
   TweakText,
 } from '@/components/TweaksPanel';
 import { appState } from '@/lib/appState';
+import { createClient } from '@/lib/supabase/client';
+import { loadBrandBySlug, loadReviewById, loadInquiryById, reviewRowToCard, inquiryRowToCard } from '@/lib/contentData';
+import { pathForRoute, routeFromPath } from '@/lib/routePaths';
 import { AuthProvider, useAuth } from '@/lib/auth';
 import {
   SUEDE_BRANDS,
@@ -78,6 +81,23 @@ function AppInner() {
   // history made Back fall through to Home on phones. Route + selection live
   // here instead, keyed by that index.
   const navRef = React.useRef<{ stack: { route: string; sel: any }[]; idx: number }>({ stack: [{ route: 'landing', sel: {} }], idx: 0 });
+  // Entity screens read the mutable appState; bump to re-render after an async
+  // deep-link load (direct visit / refresh / back to a URL we must reload).
+  const [, forceRender] = React.useReducer((x: number) => x + 1, 0);
+  // Load the entity for a /brand/<slug> · /review/<id> · /inquiry/<id> path so a
+  // direct visit or refresh shows the right thing (not just when arriving via a
+  // card click, which already seeds appState).
+  const loadEntityForPath = async (parsed: { route: string; param?: string }) => {
+    const sb = createClient();
+    if (!sb || !parsed.param) return;
+    try {
+      if (parsed.route === 'brand') { const b = await loadBrandBySlug(sb, parsed.param); if (b) appState.brand = b; }
+      else if (parsed.route === 'review') { const row = await loadReviewById(sb, parsed.param); if (row) appState.review = reviewRowToCard(row); }
+      else if (parsed.route === 'inquiry') { const row = await loadInquiryById(sb, parsed.param); if (row) appState.inquiry = inquiryRowToCard(row); }
+      else if (parsed.route === 'member') { appState.member = { ...(appState.member || {}), handle: '@' + parsed.param }; }
+    } catch { /* screen falls back to its default */ }
+    forceRender();
+  };
 
   // Suede is a single-URL SPA, so in-app navigation must push its own browser
   // history entries — otherwise Back escapes to the last non-Suede page instead
@@ -151,9 +171,9 @@ function AppInner() {
     nav.stack.push({ route: r, sel: snapshotSel() });
     nav.idx = nav.stack.length - 1;
     persistNav();
-    // Store the index AND the route string: the route survives a reload even
-    // if the stack doesn't, so Back can never fall through to Home.
-    try { window.history.pushState({ i: nav.idx, route: r }, ''); } catch { /* history unavailable */ }
+    // Store the index AND the route string, and set the real URL path so the
+    // address bar is shareable/bookmarkable and reflects where you are.
+    try { window.history.pushState({ i: nav.idx, route: r }, '', pathForRoute(r)); } catch { /* history unavailable */ }
   };
 
   React.useEffect(() => {
@@ -172,30 +192,19 @@ function AppInner() {
   React.useEffect(() => {
     if (typeof window === 'undefined') return;
     const hasAuthParam = /[?&#](code|access_token|signedin)=/.test(window.location.search + window.location.hash);
-    // If the browser re-mounted/reloaded us inside an existing session, restore
-    // the persisted stack and land on the entry the current history index
-    // points at — instead of resetting everything to Home.
-    let restored: any = null;
-    try { const raw = sessionStorage.getItem(NAV_KEY); if (raw) restored = JSON.parse(raw); } catch { /* ignore */ }
-    const stack = restored && Array.isArray(restored.stack) ? restored.stack : null;
-    // Which entry are we on? Prefer this history entry's own index (survives a
-    // Back that reloads the document, landing us on a specific past entry);
-    // fall back to the last persisted index (a plain reload). Either way we
-    // restore from the persisted stack instead of resetting to Home.
-    const existing: any = window.history.state;
-    const idxFromState = existing && typeof existing.i === 'number' ? existing.i : null;
-    const idx = stack && idxFromState != null && stack[idxFromState] ? idxFromState
-      : (stack && typeof restored.idx === 'number' && stack[restored.idx] ? restored.idx : null);
-    if (!hasAuthParam && stack && idx != null) {
-      navRef.current = { stack, idx };
-      const cur = stack[idx];
-      if (cur.sel) Object.assign(appState, cur.sel);
-      setRouteRaw(cur.route);
-      try { window.history.replaceState({ i: idx, route: cur.route }, ''); } catch { /* history unavailable */ }
+    // The URL is the source of truth for where you land on a direct visit /
+    // refresh / shared link. Parse it; deep-link entities load asynchronously.
+    const parsed = hasAuthParam ? null : routeFromPath(window.location.pathname);
+    if (parsed && parsed.route !== 'landing') {
+      navRef.current = { stack: [{ route: parsed.route, sel: {} }], idx: 0 };
+      try { window.history.replaceState({ i: 0, route: parsed.route }, '', window.location.pathname); } catch { /* history unavailable */ }
+      persistNav();
+      setRouteRaw(parsed.route);
+      if (parsed.param) { void loadEntityForPath(parsed).then(() => scrollTop()); }
     } else {
       navRef.current = { stack: [{ route: 'landing', sel: snapshotSel() }], idx: 0 };
       try {
-        window.history.replaceState({ i: 0, route: 'landing' }, '', hasAuthParam ? window.location.pathname : undefined);
+        window.history.replaceState({ i: 0, route: 'landing' }, '', hasAuthParam ? window.location.pathname : '/');
       } catch { /* history unavailable */ }
       persistNav();
     }
@@ -212,9 +221,15 @@ function AppInner() {
         scrollTop();
         return;
       }
-      // Stack entry missing (reload dropped it) — honor the route saved in the
-      // history entry itself so Back still walks to the right view, never Home.
-      if (st && typeof st.route === 'string') { setRouteRaw(st.route); scrollTop(); }
+      // Stack entry missing (e.g. after a reload) — derive the target from the
+      // URL the browser just navigated to, loading the entity if it's a deep
+      // link, so Back/Forward still land on the right view (never Home).
+      const parsed = routeFromPath(window.location.pathname);
+      if (parsed) {
+        setRouteRaw(parsed.route);
+        if (parsed.param) void loadEntityForPath(parsed);
+        scrollTop();
+      } else if (st && typeof st.route === 'string') { setRouteRaw(st.route); scrollTop(); }
     };
     window.addEventListener('popstate', onPop);
     return () => window.removeEventListener('popstate', onPop);

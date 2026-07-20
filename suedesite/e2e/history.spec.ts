@@ -22,6 +22,7 @@ test('Back button steps back through in-app views', async ({ page }) => {
 });
 
 test('Back still walks back after a reload (mobile re-mount)', async ({ page }) => {
+  test.setTimeout(60_000); // reload hits a real URL that next dev compiles on demand
   // Reproduces the real-device case emulation missed: a mobile browser that
   // re-mounts/reloads the page between navigations would wipe an in-memory nav
   // stack and send Back to Home. The stack is persisted, so this must survive.
@@ -46,4 +47,19 @@ test('Back restores a detail view with its selection', async ({ page }) => {
   const restored = await page.locator('body').innerText();
   // the brand detail rebuilt (has the stats strip labels), not a blank/landing
   expect(restored).toMatch(/RATING|REVIEWS|FOLLOWERS/i);
+});
+
+test('Navigating updates the URL', async ({ page }) => {
+  await boot(page);
+  await go(page, 'capsule', { seed: true });
+  expect(new URL(page.url()).pathname).toBe('/capsule');
+  await go(page, 'about', { seed: true });
+  expect(new URL(page.url()).pathname).toBe('/about');
+});
+
+test('A deep-link URL loads its view on direct visit', async ({ page }) => {
+  test.setTimeout(60_000); // next dev compiles the catch-all route on first hit
+  await page.goto('/capsule');
+  await page.waitForFunction(() => (window as any).__suedeRoute === 'capsule', null, { timeout: 30_000 });
+  expect(await page.evaluate(() => (window as any).__suedeRoute)).toBe('capsule');
 });
