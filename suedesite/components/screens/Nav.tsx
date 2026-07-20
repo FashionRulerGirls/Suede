@@ -10,6 +10,7 @@ import { useAuth } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/client';
 import { unreadNotificationCount, loadBrands, loadCollectiveMembers, loadPublishedReviews, loadPublishedInquiries } from '@/lib/contentData';
 import { hasCoreMeasurements } from '@/lib/profileData';
+import { InstallMenuItem } from '@/components/InstallPrompt';
 
 export function Nav({ route, onRoute, authed = false }: any) {
   const { user, profile } = useAuth();
@@ -346,6 +347,9 @@ export function Nav({ route, onRoute, authed = false }: any) {
             <span style={{ fontFamily: 'var(--font-serif)', fontWeight: 300, fontSize: 16, color: 'var(--text-primary)' }}>{measuresDone ? 'Update Profile Measurements' : 'Complete Profile Measurements'}</span>
             <Icon name="chevron-right" size={16} color="var(--text-muted)" />
           </button>
+          {/* Renders only when installable (Android/desktop) or on iOS Safari,
+              and hides once Suede is already installed. */}
+          <InstallMenuItem onBeforeAction={() => setOpen(false)} />
         </div>
         <div style={{ borderTop: '1px solid var(--border-subtle)', padding: '8px' }}>
           {extra.map(e => (
