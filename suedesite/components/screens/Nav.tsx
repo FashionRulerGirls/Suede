@@ -43,6 +43,17 @@ export function Nav({ route, onRoute, authed = false }: any) {
     window.addEventListener('suede-measurements-saved', refresh);
     return () => { alive = false; window.removeEventListener('suede-measurements-saved', refresh); };
   }, [real, user?.id]);
+  // Show the Admin entry only to admins — the installed PWA has no address bar,
+  // so this menu link is the way in. Non-admins never see it.
+  const [isAdmin, setIsAdmin] = React.useState(false);
+  React.useEffect(() => {
+    if (!real || !user) { setIsAdmin(false); return; }
+    let alive = true;
+    const sb = createClient();
+    if (!sb) return;
+    sb.rpc('is_admin').then(({ data, error }) => { if (alive) setIsAdmin(!error && data === true); });
+    return () => { alive = false; };
+  }, [real, user?.id]);
   const avatarSrc = real ? (profile?.avatar_url || undefined) : '/assets/avatars/avatar-rose.jpg';
   const avatarName = profile?.display_name || profile?.username || '';
   const [open, setOpen] = React.useState(false);
@@ -351,6 +362,20 @@ export function Nav({ route, onRoute, authed = false }: any) {
               and hides once Suede is already installed. */}
           <InstallMenuItem onBeforeAction={() => setOpen(false)} />
         </div>
+        {isAdmin && (
+          <div style={{ borderTop: '1px solid var(--border-subtle)', padding: '8px' }}>
+            {/* Real page, not an SPA route — use an anchor. This is the only way
+                into /admin from the installed PWA (no address bar). */}
+            <a href="/admin" onClick={() => setOpen(false)}
+              style={{ width: '100%', boxSizing: 'border-box', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '13px 14px', borderRadius: 'var(--radius-sm)', textDecoration: 'none' }}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 12 }}>
+                <Icon name="sliders" size={17} color="var(--text-primary)" />
+                <span style={{ fontFamily: 'var(--font-serif)', fontWeight: 300, fontSize: 16, color: 'var(--text-primary)' }}>Admin Dashboard</span>
+              </span>
+              <Icon name="chevron-right" size={16} color="var(--text-muted)" />
+            </a>
+          </div>
+        )}
         <div style={{ borderTop: '1px solid var(--border-subtle)', padding: '8px' }}>
           {extra.map(e => (
             <button key={e.label} onClick={() => go(e.id)}
