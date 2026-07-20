@@ -46,6 +46,7 @@ import {
 } from '@/components/TweaksPanel';
 import { appState } from '@/lib/appState';
 import { createClient } from '@/lib/supabase/client';
+import { hasCoreMeasurements } from '@/lib/profileData';
 import { loadBrandBySlug, loadReviewById, loadInquiryById, reviewRowToCard, inquiryRowToCard } from '@/lib/contentData';
 import { pathForRoute, routeFromPath } from '@/lib/routePaths';
 import { AuthProvider, useAuth } from '@/lib/auth';
@@ -282,18 +283,27 @@ function AppInner() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // First time a member is seen signed in on this device, send them straight to
-  // the profile setup form (measurements, sizes, bio) — not the read-only
-  // profile view. (Recovery sessions are excluded.)
+  // A member who hasn't finished profile setup (measurements) is sent to the
+  // setup form once — but only if their profile is actually incomplete. Someone
+  // who has already completed it just lands on the home page, even signing in on
+  // a new device. The localStorage flag only suppresses the redundant DB check
+  // on repeat logins; completeness itself is decided by the DB, not the flag.
+  // (Recovery sessions are excluded.)
   React.useEffect(() => {
     if (!user || recovery) return;
-    try {
-      const key = 'suede_onboarded_' + user.id;
-      if (!localStorage.getItem(key)) {
-        localStorage.setItem(key, '1');
-        setRoute('editprofile');
-      }
-    } catch { /* storage unavailable */ }
+    const key = 'suede_onboarded_' + user.id;
+    try { if (localStorage.getItem(key)) return; } catch { /* storage unavailable */ }
+    let alive = true;
+    const sb = createClient();
+    if (!sb) return;
+    hasCoreMeasurements(sb, user.id)
+      .then((complete) => {
+        if (!alive) return;
+        try { localStorage.setItem(key, '1'); } catch { /* ignore */ }
+        if (!complete) setRoute('editprofile');
+      })
+      .catch(() => { /* on error, don't hijack navigation */ });
+    return () => { alive = false; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id, recovery]);
 
