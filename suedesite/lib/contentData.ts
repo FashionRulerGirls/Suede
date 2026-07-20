@@ -367,6 +367,7 @@ function mapBrand(b: any, s: any) {
     slug: b.slug,
     name: b.name,
     tagline: b.tagline || '',
+    longBio: b.long_bio || '',
     founder: b.founder || '',
     founded: b.founded_year || '',
     location: b.location || '',
@@ -393,6 +394,13 @@ export async function loadBrands(sb: SupabaseClient, opts: { capsuleOnly?: boole
   const statsById: Record<string, any> = {};
   (stats || []).forEach((s: any) => { statsById[s.id] = s; });
   return (brands || []).map((b: any) => mapBrand(b, statsById[b.id]));
+}
+
+// A brand's uploaded documents (public read) for the back of the brand card.
+export async function loadBrandDocs(sb: SupabaseClient, brandId: string) {
+  if (!brandId) return [];
+  const { data } = await sb.from('brand_documents').select('id, label, url').eq('brand_id', brandId).order('position').order('created_at');
+  return (data || []) as { id: string; label: string; url: string }[];
 }
 
 // Full brand record by name — used to complete the brand page when we only

@@ -71,3 +71,16 @@ export async function uploadReviewMedia(
   if (failed) throw new Error(`${failed} of ${items.length} file(s) failed to upload`);
   return urls;
 }
+
+// Upload a brand document (PDF, image, etc.) into the public brand-assets
+// bucket, under the owner's uid folder so the owner-write policy allows it.
+// Returns the public URL.
+export async function uploadBrandDocument(sb: SupabaseClient, userId: string, brandId: string, file: File): Promise<string> {
+  const safe = (file.name || 'document').replace(/[^a-zA-Z0-9._-]/g, '-').slice(-60);
+  const path = `${userId}/${brandId}/${Date.now()}-${safe}`;
+  const { error } = await sb.storage.from('brand-assets').upload(path, file, {
+    upsert: true, contentType: file.type || undefined, cacheControl: '3600',
+  });
+  if (error) throw error;
+  return sb.storage.from('brand-assets').getPublicUrl(path).data.publicUrl;
+}

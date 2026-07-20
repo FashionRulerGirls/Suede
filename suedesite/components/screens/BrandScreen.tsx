@@ -10,7 +10,7 @@ import { ExploreModal } from '@/components/screens/ExploreModal';
 import { shopOut } from '@/lib/tracking';
 import { useAuth } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/client';
-import { loadBrandReviews, loadBrandInquiries, resolveBrandId, isFollowingBrand, setBrandFollow, brandFollowerCount, loadBrandByName } from '@/lib/contentData';
+import { loadBrandReviews, loadBrandInquiries, resolveBrandId, isFollowingBrand, setBrandFollow, brandFollowerCount, loadBrandByName, loadBrandDocs } from '@/lib/contentData';
 
 function BrandStat({ value, label, icon, breakdown }: any) {
   const [hover, setHover] = React.useState(false);
@@ -148,7 +148,14 @@ export function BrandScreen({ onRoute, authed = false }: any) {
   const statInquiries = real ? String(dbInq.length) : (brand.inquiries || '0');
   const statFollowers = real ? String(followers) : (brand.followers || '0');
   const [flipped, setFlipped] = React.useState(false);
-  const [docNote, setDocNote] = React.useState<string | null>(null);
+  const [brandDocs, setBrandDocs] = React.useState<{ id: string; label: string; url: string }[]>([]);
+  React.useEffect(() => {
+    const sb = createClient(); const id = brandId || brand?.id;
+    if (!sb || !id) { setBrandDocs([]); return; }
+    let active = true;
+    loadBrandDocs(sb, id).then((d) => { if (active) setBrandDocs(d); }).catch(() => {});
+    return () => { active = false; };
+  }, [brandId, brand?.id]);
   const [rateOpen, setRateOpen] = React.useState(false);
   // Prefer the brand's real store URL (tracked); fall back to a guessed domain.
   const shopHost = (brand.shopUrl || '').replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/+$/, '');
@@ -203,20 +210,22 @@ export function BrandScreen({ onRoute, authed = false }: any) {
         <div className="sd-brandback-grid" style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 40, alignItems: 'start', marginTop: 8 }}>
           <div>
             <div style={{ fontFamily: 'var(--font-body)', fontSize: 11, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 12 }}>The Brand</div>
-            <p style={{ fontFamily: 'var(--font-body)', fontSize: 14.5, lineHeight: 1.75, color: 'var(--text-secondary)', margin: 0, maxWidth: 450 }}>{brand.tagline}</p>
+            <p style={{ fontFamily: 'var(--font-body)', fontSize: 14.5, lineHeight: 1.75, color: 'var(--text-secondary)', margin: 0, maxWidth: 450, whiteSpace: 'pre-line' }}>{brand.longBio || brand.tagline}</p>
           </div>
           <div>
             <div style={{ fontFamily: 'var(--font-body)', fontSize: 11, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 12 }}>Documents</div>
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-              {['Size Guide', 'Return Policy', 'Shipping', 'Sustainability'].map((doc, i, a) => (
-                <button key={doc} onClick={() => setDocNote(doc)} className="measure-opt" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '14px 4px', background: 'none', border: 'none', borderBottom: i < a.length - 1 ? '1px solid var(--border-subtle)' : 'none', cursor: 'pointer', textAlign: 'left' }}>
-                  <span style={{ fontFamily: 'var(--font-body)', fontSize: 14.5, color: 'var(--text-primary)' }}>{doc}</span>
-                  {docNote === doc
-                    ? <span style={{ fontFamily: 'var(--font-body)', fontSize: 12, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--text-muted)' }}>Coming soon</span>
-                    : <Icon name="arrow-right" size={16} color="var(--text-secondary)" className="measure-arrow" />}
-                </button>
-              ))}
-            </div>
+            {brandDocs.length === 0
+              ? <div style={{ fontFamily: 'var(--font-body)', fontSize: 13.5, color: 'var(--text-muted)' }}>None yet.</div>
+              : (
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  {brandDocs.map((doc, i, a) => (
+                    <a key={doc.id} href={doc.url} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '14px 4px', borderBottom: i < a.length - 1 ? '1px solid var(--border-subtle)' : 'none', textDecoration: 'none' }}>
+                      <span style={{ fontFamily: 'var(--font-body)', fontSize: 14.5, color: 'var(--text-primary)' }}>{doc.label}</span>
+                      <Icon name="arrow-right" size={16} color="var(--text-secondary)" />
+                    </a>
+                  ))}
+                </div>
+              )}
           </div>
         </div>
         <div style={{ display: 'flex', justifyContent: 'center', marginTop: 'auto', paddingTop: 24 }}>

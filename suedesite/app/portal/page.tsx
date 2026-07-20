@@ -2,7 +2,7 @@
 import React from 'react';
 import { Logo, Icon } from '@/components/ds';
 import { createClient } from '@/lib/supabase/client';
-import { loadMyBrands, loadBrandOverview, saveBrandFields, submitContentFlag, type PortalBrand } from '@/lib/portalData';
+import { loadMyBrands, loadBrandOverview, saveBrandFields, submitContentFlag, loadBrandDocuments, addBrandDocument, deleteBrandDocument, type PortalBrand } from '@/lib/portalData';
 import { loadBrandReviews, loadBrandInquiries, postReviewComment, postInquiryResponse } from '@/lib/contentData';
 
 type Gate = 'checking' | 'anon' | 'nobrand' | 'ok';
@@ -71,7 +71,7 @@ export default function PortalPage() {
       </aside>
       <main style={{ padding: '32px 40px', minWidth: 0 }}>
         {section === 'dashboard' && <Dashboard sb={sb} brand={brand} />}
-        {section === 'edit' && <EditPage sb={sb} brand={brand} onSaved={check} />}
+        {section === 'edit' && <EditPage sb={sb} brand={brand} uid={uid} onSaved={check} />}
         {section === 'reviews' && <ContentList sb={sb} brand={brand} uid={uid} kind="reviews" />}
         {section === 'inquiries' && <ContentList sb={sb} brand={brand} uid={uid} kind="inquiries" />}
       </main>
@@ -128,25 +128,28 @@ function Dashboard({ sb, brand }: any) {
 }
 
 // ── edit brand page ─────────────────────────────────────────────────
-function EditPage({ sb, brand, onSaved }: any) {
-  const [f, setF] = React.useState({ tagline: brand.tagline, website: brand.website, instagram: brand.instagram, category: brand.category, location: brand.location, founder: brand.founder });
+function EditPage({ sb, brand, uid, onSaved }: any) {
+  const blank = () => ({ tagline: brand.tagline, longBio: brand.longBio, website: brand.website, instagram: brand.instagram, category: brand.category, location: brand.location, founder: brand.founder });
+  const [f, setF] = React.useState(blank);
   const [busy, setBusy] = React.useState(false);
   const [saved, setSaved] = React.useState(false);
-  React.useEffect(() => { setF({ tagline: brand.tagline, website: brand.website, instagram: brand.instagram, category: brand.category, location: brand.location, founder: brand.founder }); }, [brand.id]);
+  React.useEffect(() => { setF(blank()); setSaved(false); }, [brand.id]);
   const save = async () => { setBusy(true); setSaved(false); try { await saveBrandFields(sb, brand.id, f); setSaved(true); onSaved?.(); } catch { /* ignore */ } setBusy(false); };
-  const field = (key: keyof typeof f, label: string, ta?: boolean) => (
+  const field = (key: keyof typeof f, label: string, ta?: boolean, hint?: string) => (
     <label style={{ display: 'block', marginBottom: 16 }}>
       <span style={{ fontSize: 12, color: 'var(--text-muted)', display: 'block', marginBottom: 6 }}>{label}</span>
       {ta
-        ? <textarea rows={3} value={f[key]} onChange={(e) => { setF({ ...f, [key]: e.target.value }); setSaved(false); }} style={{ ...inp, resize: 'vertical' }} />
+        ? <textarea rows={key === 'longBio' ? 6 : 3} value={f[key]} onChange={(e) => { setF({ ...f, [key]: e.target.value }); setSaved(false); }} style={{ ...inp, resize: 'vertical' }} />
         : <input value={f[key]} onChange={(e) => { setF({ ...f, [key]: e.target.value }); setSaved(false); }} style={inp} />}
+      {hint && <span style={{ fontSize: 12, color: 'var(--text-muted)', display: 'block', marginTop: 5 }}>{hint}</span>}
     </label>
   );
   return (
     <>
       <Head title="Brand Page" sub="Update how your brand appears across Suede." />
       <div style={{ maxWidth: 560, background: 'var(--surface-card)', border: '1px solid var(--border-subtle)', padding: 28 }}>
-        {field('tagline', 'Tagline', true)}
+        {field('tagline', 'Tagline', true, 'One line — shown under your name.')}
+        {field('longBio', 'Long bio', true, 'The full story, shown on the back of your brand card.')}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
           {field('website', 'Website')}{field('instagram', 'Instagram')}
           {field('category', 'Category')}{field('location', 'Location')}
@@ -157,7 +160,51 @@ function EditPage({ sb, brand, onSaved }: any) {
           {saved && <span style={{ fontSize: 13, color: 'var(--rating-positive)' }}>Saved ✓</span>}
         </div>
       </div>
+
+      <div style={{ marginTop: 28 }}><Documents sb={sb} brand={brand} uid={uid} /></div>
     </>
+  );
+}
+
+function Documents({ sb, brand, uid }: any) {
+  const [docs, setDocs] = React.useState<any[] | null>(null);
+  const [label, setLabel] = React.useState('');
+  const [busy, setBusy] = React.useState(false);
+  const [err, setErr] = React.useState('');
+  const fileRef = React.useRef<HTMLInputElement>(null);
+  const load = React.useCallback(() => { loadBrandDocuments(sb, brand.id).then(setDocs).catch(() => setDocs([])); }, [sb, brand.id]);
+  React.useEffect(() => { setDocs(null); load(); }, [load]);
+  const upload = async (file?: File) => {
+    if (!file) return;
+    setBusy(true); setErr('');
+    try { await addBrandDocument(sb, uid, brand.id, label, file); setLabel(''); if (fileRef.current) fileRef.current.value = ''; load(); }
+    catch (e: any) { setErr(e?.message || 'Upload failed. (Is the brand-assets bucket set up?)'); }
+    setBusy(false);
+  };
+  const del = async (id: string) => { setBusy(true); try { await deleteBrandDocument(sb, id); load(); } catch { /* ignore */ } setBusy(false); };
+  return (
+    <div style={{ maxWidth: 560, background: 'var(--surface-card)', border: '1px solid var(--border-subtle)', padding: 28 }}>
+      <div style={{ fontFamily: 'var(--font-serif)', fontSize: 20, color: 'var(--text-heading)', marginBottom: 4 }}>Documents</div>
+      <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: '0 0 18px' }}>Size guide, return policy, shipping, lookbook, sustainability — shown on the back of your brand card.</p>
+      {docs === null ? <div style={{ fontSize: 14, color: 'var(--text-muted)' }}>Loading…</div>
+        : docs.length === 0 ? <div style={{ fontSize: 14, color: 'var(--text-muted)', marginBottom: 16 }}>No documents yet.</div>
+        : (
+          <div style={{ display: 'flex', flexDirection: 'column', marginBottom: 16 }}>
+            {docs.map((d) => (
+              <div key={d.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '11px 0', borderBottom: '1px solid var(--border-subtle)' }}>
+                <a href={d.url} target="_blank" rel="noopener noreferrer" style={{ fontSize: 14.5, color: 'var(--text-primary)', textDecoration: 'underline', textUnderlineOffset: 3 }}>{d.label}</a>
+                <button onClick={() => del(d.id)} style={{ ...btnGhostSm, color: 'var(--rating-critical)' }}>Remove</button>
+              </div>
+            ))}
+          </div>
+        )}
+      <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+        <input value={label} onChange={(e) => setLabel(e.target.value)} placeholder="Label (e.g. Size Guide)" style={{ ...inp, flex: '1 1 180px' }} />
+        <input ref={fileRef} type="file" accept=".pdf,.png,.jpg,.jpeg,.webp,.doc,.docx" onChange={(e) => upload(e.target.files?.[0])} style={{ display: 'none' }} />
+        <button onClick={() => fileRef.current?.click()} disabled={busy} style={{ ...btnPrimary, opacity: busy ? 0.6 : 1 }}>{busy ? 'Uploading…' : 'Upload file'}</button>
+      </div>
+      {err && <div style={{ color: 'var(--rating-critical)', fontSize: 13, marginTop: 10 }}>{err}</div>}
+    </div>
   );
 }
 
