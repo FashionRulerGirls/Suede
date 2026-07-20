@@ -4,7 +4,6 @@ import React from 'react';
    Section links live in the hamburger menu only; the bar keeps the
    wordmark, search, business menu and auth. */
 import { Logo, IconButton, AuthToggle, Select, Icon, Avatar } from '@/components/ds';
-import { SUEDE_BRANDS, SUEDE_MEMBERS, SUEDE_REVIEWS, SUEDE_INQUIRIES, SUEDE_NOTIF_COUNT } from '@/lib/data';
 import { appState } from '@/lib/appState';
 import { useAuth } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/client';
@@ -29,7 +28,7 @@ export function Nav({ route, onRoute, authed = false }: any) {
     window.addEventListener('suede-notifs-read', onRead);
     return () => { alive = false; window.removeEventListener('suede-notifs-read', onRead); };
   }, [real, user?.id]);
-  const notifCount = real ? realUnread : SUEDE_NOTIF_COUNT;
+  const notifCount = real ? realUnread : 0;
   // Once the member has saved their core measurements, the nav CTA says
   // "Update" rather than "Complete". Refreshes when measurements are saved.
   const [measuresDone, setMeasuresDone] = React.useState(false);
@@ -78,25 +77,24 @@ export function Nav({ route, onRoute, authed = false }: any) {
   const [realIndex, setRealIndex] = React.useState<any>(null);
   const [searchLoading, setSearchLoading] = React.useState(false);
   React.useEffect(() => {
-    if (!search || !real || !user || realIndex) return;
+    if (!search || realIndex) return;
     const sb = createClient();
     if (!sb) return;
     let active = true;
     setSearchLoading(true);
     Promise.all([
       loadBrands(sb, {}).catch(() => []),
-      loadCollectiveMembers(sb, user.id).catch(() => []),
-      loadPublishedReviews(sb, user.id).catch(() => []),
-      loadPublishedInquiries(sb, user.id).catch(() => []),
+      loadCollectiveMembers(sb, user?.id).catch(() => []),
+      loadPublishedReviews(sb, user?.id).catch(() => []),
+      loadPublishedInquiries(sb, user?.id).catch(() => []),
     ]).then(([b, m, r, i]) => { if (active) setRealIndex({ brands: b, members: m, reviews: r, inquiries: i }); })
       .finally(() => { if (active) setSearchLoading(false); });
     return () => { active = false; };
-  }, [search, real, user?.id, realIndex]);
+  }, [search, user?.id, realIndex]);
 
   const ql = q.trim().toLowerCase();
-  const src = real
-    ? (realIndex || { brands: [], members: [], reviews: [], inquiries: [] })
-    : { brands: SUEDE_BRANDS || [], members: SUEDE_MEMBERS || [], reviews: SUEDE_REVIEWS || [], inquiries: SUEDE_INQUIRIES || [] };
+  // Search runs over live data for everyone, guests included.
+  const src = realIndex || { brands: [], members: [], reviews: [], inquiries: [] };
   const mBrands = (ql ? src.brands.filter((b: any) => (b.name + ' ' + (b.tagline || '') + ' ' + (b.category || '')).toLowerCase().includes(ql)) : src.brands.slice(0, 4)).slice(0, 6);
   const mMembers = (ql ? src.members.filter((m: any) => (m.name + ' ' + m.handle).toLowerCase().includes(ql)) : src.members.slice(0, 4)).slice(0, 6);
   const mReviews = (ql ? src.reviews.filter((r: any) => (r.brand + ' ' + r.product + ' ' + (r.reviewer?.name || '') + ' ' + (r.excerpt || '')).toLowerCase().includes(ql)) : src.reviews.slice(0, 3)).slice(0, 6);

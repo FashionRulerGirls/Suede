@@ -2,7 +2,7 @@
 import React from 'react';
 /* Suede — Brand detail page (one per Capsule brand). */
 import { StarRating, MeasurementSpec, Button, Tabs, Icon, ReviewCard, Avatar, Badge } from '@/components/ds';
-import { SUEDE_BRANDS, SUEDE_REVIEWS, SUEDE_INQUIRIES } from '@/lib/data';
+import { SUEDE_BRANDS } from '@/lib/data';
 import { appState } from '@/lib/appState';
 import { SuedeControls } from '@/lib/listControls';
 import { InquiryCard } from '@/components/screens/LookbookScreen';
@@ -79,9 +79,8 @@ export function BrandScreen({ onRoute, authed = false }: any) {
   const [brandRow, setBrandRow] = React.useState<any>(null);
   const brand = brandRow || appState.brand || SUEDE_BRANDS[1];
   const { user } = useAuth();
-  // Guests / demo see the sample feed; real signed-in members see this brand's
-  // live reviews & inquiries from the database.
-  const real = !!user;
+  // Everyone sees this brand's live reviews & inquiries from the database —
+  // guests included. No sample feed anymore.
   const [dbReviews, setDbReviews] = React.useState<any[]>([]);
   const [dbInq, setDbInq] = React.useState<any[]>([]);
   const [brandId, setBrandId] = React.useState<string | null>(null);
@@ -100,15 +99,17 @@ export function BrandScreen({ onRoute, authed = false }: any) {
   }, []);
   React.useEffect(() => {
     const sb = createClient();
-    if (!sb || !user || !brand?.name) { setDbReviews([]); setDbInq([]); setBrandId(null); setFollowing(false); setFollowers(0); return; }
+    if (!sb || !brand?.name) { setDbReviews([]); setDbInq([]); setBrandId(null); setFollowing(false); setFollowers(0); return; }
     let active = true;
-    loadBrandReviews(sb, brand.name, user.id).then((r) => { if (active) setDbReviews(r); }).catch(() => {});
-    loadBrandInquiries(sb, brand.name, user.id).then((q) => { if (active) setDbInq(q); }).catch(() => {});
+    loadBrandReviews(sb, brand.name, user?.id).then((r) => { if (active) setDbReviews(r); }).catch(() => {});
+    loadBrandInquiries(sb, brand.name, user?.id).then((q) => { if (active) setDbInq(q); }).catch(() => {});
     resolveBrandId(sb, brand.name).then(async (id) => {
       if (!active || !id) return;
       setBrandId(id);
-      const [isF, fc] = await Promise.all([isFollowingBrand(sb, user.id, id), brandFollowerCount(sb, id)]);
-      if (active) { setFollowing(isF); setFollowers(fc); }
+      const fc = await brandFollowerCount(sb, id);
+      if (active) setFollowers(fc);
+      // Follow state is per-member; only meaningful when signed in.
+      if (user) { const isF = await isFollowingBrand(sb, user.id, id); if (active) setFollowing(isF); }
     }).catch(() => {});
     return () => { active = false; };
   }, [user?.id, brand?.name]);
@@ -135,18 +136,15 @@ export function BrandScreen({ onRoute, authed = false }: any) {
   const [tab, setTab] = React.useState('reviews');
   const [bQuery, setBQuery] = React.useState('');
   const [bSort, setBSort] = React.useState('date');
-  const reviews = SUEDE_REVIEWS;
-  const inquiries = SUEDE_INQUIRIES || [];
-  const reviewFeed = real ? dbReviews : [...reviews, ...reviews].slice(0, 2).map(r => ({ ...r, brand: brand.name }));
-  const inqFeed = real ? dbInq : [...inquiries, ...inquiries].slice(0, 2).map(r => ({ ...r, brand: brand.name }));
-  // Real-account stat values derive from the loaded feed; guests keep the
-  // brand's sample aggregates.
+  const reviewFeed = dbReviews;
+  const inqFeed = dbInq;
+  // Stats derive from the live feed + follower count for everyone.
   const ratedVals = dbReviews.map((r) => r.rating).filter((v) => v != null);
   const rAvg = ratedVals.length ? ratedVals.reduce((a: number, b: number) => a + b, 0) / ratedVals.length : 0;
-  const statRating = real ? rAvg.toFixed(1) : ((brand.rating && brand.rating.toFixed ? brand.rating.toFixed(1) : brand.rating) || '0.0');
-  const statReviews = real ? String(dbReviews.length) : (brand.reviews || '0');
-  const statInquiries = real ? String(dbInq.length) : (brand.inquiries || '0');
-  const statFollowers = real ? String(followers) : (brand.followers || '0');
+  const statRating = rAvg.toFixed(1);
+  const statReviews = String(dbReviews.length);
+  const statInquiries = String(dbInq.length);
+  const statFollowers = String(followers);
   const [flipped, setFlipped] = React.useState(false);
   const [brandDocs, setBrandDocs] = React.useState<{ id: string; label: string; url: string }[]>([]);
   React.useEffect(() => {
@@ -239,7 +237,7 @@ export function BrandScreen({ onRoute, authed = false }: any) {
         <div className="sd-stats" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 24, maxWidth: 900, margin: '0 auto' }}>
           {[[statRating, 'Rating', 'star'], [statReviews, 'Reviews', 'reviews'], [statInquiries, 'Inquiries', 'message'], [statFollowers, 'Followers', 'user']].map(([val, lbl, ic]: any) => {
             const isRating = lbl === 'Rating';
-            const base = real ? rAvg : (brand.rating || 4.5);
+            const base = rAvg;
             const breakdown = (isRating && base > 0) ? [
               ['Sizing accuracy', Math.max(1, Math.min(5, Math.round((base - 0.3) * 2) / 2))],
               ['Material quality', Math.max(1, Math.min(5, Math.round((base + 0.2) * 2) / 2))],

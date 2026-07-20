@@ -38,12 +38,13 @@ export function MemberProfileScreen({ onRoute }: any) {
   const [realInquiries, setRealInquiries] = React.useState<any[] | null>(null);
   React.useEffect(() => {
     const sb = createClient();
-    if (!sb || !user || !memberId) return;
+    if (!sb || !memberId) return;
     let active = true;
-    isFollowingMember(sb, user.id, memberId).then((f) => { if (active) setFollowing(f); }).catch(() => {});
-    loadMemberProfile(sb, memberId, user.id).then((p) => { if (active) setRealProf(p); }).catch(() => {});
-    loadMemberReviews(sb, memberId, user.id).then((r) => { if (active) setRealReviews(r); }).catch(() => { if (active) setRealReviews([]); });
-    loadMemberInquiries(sb, memberId, user.id).then((r) => { if (active) setRealInquiries(r); }).catch(() => { if (active) setRealInquiries([]); });
+    // Follow state is per-member; only load it when signed in.
+    if (user) isFollowingMember(sb, user.id, memberId).then((f) => { if (active) setFollowing(f); }).catch(() => {});
+    loadMemberProfile(sb, memberId, user?.id).then((p) => { if (active) setRealProf(p); }).catch(() => {});
+    loadMemberReviews(sb, memberId, user?.id).then((r) => { if (active) setRealReviews(r); }).catch(() => { if (active) setRealReviews([]); });
+    loadMemberInquiries(sb, memberId, user?.id).then((r) => { if (active) setRealInquiries(r); }).catch(() => { if (active) setRealInquiries([]); });
     return () => { active = false; };
   }, [user?.id, memberId]);
   // For a real member, present live profile data (measurements, counts, feed).
