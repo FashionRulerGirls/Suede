@@ -2,7 +2,7 @@
 /* Suede — The Lookbook (review feed) screen. */
 import React from 'react';
 import { ReviewCard, SectionHeading, Tabs, Button, Avatar, MeasurementSpec, Badge, Icon } from '@/components/ds';
-import { SUEDE_BRANDS, SUEDE_REVIEWS, SUEDE_INQUIRIES } from '@/lib/data';
+import { SUEDE_BRANDS } from '@/lib/data';
 import { appState } from '@/lib/appState';
 import { SuedeControls } from '@/lib/listControls';
 import { useAuth } from '@/lib/auth';
@@ -77,17 +77,16 @@ export function InquiryCard({ asker = {}, measurements = {}, product, productUrl
 
 export function LookbookScreen({ onRoute, authed = false }: any) {
   const { user } = useAuth();
-  // Guests (and the demo path) see the sample feed; a real signed-in member
-  // sees the live community feed from the database.
-  const real = !!user;
+  // The live community feed loads for everyone — guests included. Published
+  // reviews/inquiries are public, so there's no sample data here anymore.
   const [dbReviews, setDbReviews] = React.useState<any[]>([]);
   const [dbInquiries, setDbInquiries] = React.useState<any[]>([]);
   React.useEffect(() => {
     const sb = createClient();
-    if (!sb || !user) { setDbReviews([]); setDbInquiries([]); return; }
+    if (!sb) { setDbReviews([]); setDbInquiries([]); return; }
     let active = true;
-    loadPublishedReviews(sb, user.id).then((r) => { if (active) setDbReviews(r); }).catch(() => {});
-    loadPublishedInquiries(sb, user.id).then((q) => { if (active) setDbInquiries(q); }).catch(() => {});
+    loadPublishedReviews(sb, user?.id).then((r) => { if (active) setDbReviews(r); }).catch(() => {});
+    loadPublishedInquiries(sb, user?.id).then((q) => { if (active) setDbInquiries(q); }).catch(() => {});
     return () => { active = false; };
   }, [user?.id]);
   const [tab, setTab] = React.useState(appState.lookbookTab || 'reviews');
@@ -112,8 +111,8 @@ export function LookbookScreen({ onRoute, authed = false }: any) {
   const [iOfficial, setIOfficial] = React.useState(false);
 
   const q = query.trim().toLowerCase();
-  const reviewSource = real ? dbReviews : [...(SUEDE_REVIEWS || []), ...(SUEDE_REVIEWS || [])].slice(0, 6);
-  const inquirySource = real ? dbInquiries : [...(SUEDE_INQUIRIES || []), ...(SUEDE_INQUIRIES || [])].slice(0, 6);
+  const reviewSource = dbReviews;
+  const inquirySource = dbInquiries;
   let reviews = reviewSource.map((r, i) => ({ ...r, _i: i }));
   reviews = reviews.filter(r => (r.brand || '').toLowerCase().includes(q)
     && (rBrandType === 'All' || brandTypeOf(r.brand) === rBrandType)
