@@ -10,7 +10,7 @@ import { InquiryCard } from '@/components/screens/LookbookScreen';
 import { useAuth } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/client';
 import { loadProfileData, inchesToHeight, inchesDisplay } from '@/lib/profileData';
-import { loadUserReviews, loadUserInquiries, countFollowedBrands, memberFollowerCount, loadFollowedBrandNames, loadPublishedReviews, loadPublishedInquiries } from '@/lib/contentData';
+import { loadUserReviews, loadUserInquiries, countFollowedBrands, memberFollowerCount, loadFollowedBrandNames, loadPublishedReviews, loadPublishedInquiries, loadBrands } from '@/lib/contentData';
 
 function YProfStat({ value, label, links, onValue }: any) {
   const valueStyle = { fontFamily: 'var(--font-meta)', fontWeight: 500, fontSize: 30, lineHeight: 1, color: 'var(--text-heading)' } as const;
@@ -40,6 +40,9 @@ export function YourProfileScreen({ onRoute }: any) {
   const [dbInquiries, setDbInquiries] = React.useState<any[]>([]);
   const [followedBrands, setFollowedBrands] = React.useState(0);
   const [followerCount, setFollowerCount] = React.useState(0);
+  // Real brand rows (image + live review/follower counts) for the "Brands You
+  // Follow" cards — replaces the static SUEDE_BRANDS sample data.
+  const [dbBrands, setDbBrands] = React.useState<any[] | null>(null);
   React.useEffect(() => {
     const sb = createClient();
     if (!sb || !user) { setDb(null); setDbReviews([]); setDbInquiries([]); setFollowedBrands(0); setFollowerCount(0); return; }
@@ -50,6 +53,7 @@ export function YourProfileScreen({ onRoute }: any) {
     countFollowedBrands(sb, user.id).then((n) => { if (active) setFollowedBrands(n); }).catch(() => {});
     memberFollowerCount(sb, user.id).then((n) => { if (active) setFollowerCount(n); }).catch(() => {});
     loadFollowedBrandNames(sb, user.id).then((names) => { if (active) setFollowedNames(names); }).catch(() => {});
+    loadBrands(sb).then((bs) => { if (active) setDbBrands(bs); }).catch(() => {});
     return () => { active = false; };
   }, [user?.id]);
   // Community content for the Capsule Feed — loaded lazily when a feed view opens.
@@ -133,7 +137,7 @@ export function YourProfileScreen({ onRoute }: any) {
     // The brands this member follows / the members who follow them. Real members
     // see their own follows + community content; guests/demo see the samples.
     const followedBrands = real
-      ? (SUEDE_BRANDS || []).filter(b => followedSet.has(b.name.toLowerCase()) && b.name.toLowerCase().includes(ql))
+      ? (dbBrands || []).filter(b => followedSet.has(b.name.toLowerCase()) && b.name.toLowerCase().includes(ql))
       : (SUEDE_BRANDS || []).slice(0, Number(m.brands) || 8).filter(b => b.name.toLowerCase().includes(ql));
     const followers = real ? [] : (SUEDE_MEMBERS || []).filter(p => (p.name + ' ' + p.handle).toLowerCase().includes(ql));
     // Capsule Feed = community reviews/inquiries from the brands you follow.
