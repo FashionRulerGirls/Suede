@@ -51,12 +51,23 @@ export async function markApplicationReviewed(sb: SupabaseClient, id: string, ad
 
 // ── Platform Feedback (feedback) — §8 ────────────────────────────────
 export async function loadFeedback(sb: SupabaseClient) {
-  const { data } = await sb.from('feedback')
-    .select('id, message, email, status, created_at, author:profiles!user_id(username)')
+  // feedback.user_id references auth.users, not profiles, so we can't embed
+  // profiles via a FK hint (that errors and drops every row). Read the rows,
+  // then resolve usernames in a second pass (profiles.id === auth user id).
+  const { data, error } = await sb.from('feedback')
+    .select('id, message, email, status, created_at, user_id')
     .order('created_at', { ascending: false });
-  return (data || []).map((f: any) => ({
+  if (error) throw error;
+  const rows = data || [];
+  const ids = Array.from(new Set(rows.map((f: any) => f.user_id).filter(Boolean)));
+  const nameById: Record<string, string> = {};
+  if (ids.length) {
+    const { data: profs } = await sb.from('profiles').select('id, username').in('id', ids);
+    for (const p of (profs || []) as any[]) nameById[p.id] = p.username;
+  }
+  return rows.map((f: any) => ({
     id: f.id, message: f.message, created_at: f.created_at,
-    by: f.author?.username ? '@' + f.author.username : (f.email || 'Anonymous'),
+    by: nameById[f.user_id] ? '@' + nameById[f.user_id] : (f.email || 'Anonymous'),
     status: f.status === 'reviewed' ? 'Reviewed' : 'New',
   }));
 }
