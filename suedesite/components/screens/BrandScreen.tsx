@@ -193,21 +193,6 @@ export function BrandScreen({ onRoute, authed = false }: any) {
 
         <div style={{ flex: 1 }} />
 
-        {/* Brand meta — each of founder / location / founded shows only when it
-            holds real (non-placeholder) data, fed by the brand portal. */}
-        {(() => {
-          const real = (v?: string) => !!v && v !== '—' && !/outreach pending|coming soon|placeholder|profile coming/i.test(v);
-          const meta = [real(brand.location) ? brand.location : '', real(brand.founded) ? `Est. ${brand.founded}` : ''].filter(Boolean);
-          const founder = real(brand.founder) ? brand.founder : '';
-          if (!founder && !meta.length) return null;
-          return (
-            <div style={{ position: 'relative', zIndex: 3, textAlign: 'center', padding: '0 40px 8px' }}>
-              {founder && <div style={{ fontFamily: 'var(--font-body)', fontSize: 13, lineHeight: 1.5, color: 'var(--ink-600)', maxWidth: 520, margin: '0 auto' }}>{founder}</div>}
-              {meta.length > 0 && <div style={{ fontFamily: 'var(--font-body)', fontSize: 11.5, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ink-500)', marginTop: 6 }}>{meta.join('  ·  ')}</div>}
-            </div>
-          );
-        })()}
-
         {/* Bottom info bar — the "learn more" flip affordance. */}
         <div className="sd-brandbar" style={{ position: 'relative', zIndex: 3, display: 'flex', justifyContent: 'center', padding: '0 40px 28px' }}>
           <button onClick={() => setFlipped(true)} style={{ display: 'inline-flex', alignItems: 'center', gap: 10, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: 13, letterSpacing: '0.02em', color: 'var(--ink-900)', textAlign: 'center', whiteSpace: 'nowrap' }}>

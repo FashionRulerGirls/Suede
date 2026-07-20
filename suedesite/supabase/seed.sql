@@ -4,16 +4,20 @@
 -- brand starts at 0 until real activity arrives. Re-runnable.
 -- ════════════════════════════════════════════════════════════════════
 
+-- NOTE: founder / founded_year / location are intentionally left null. Those
+-- fields must come from the brands themselves (via the portal) — we do not seed
+-- guessed founders or cities, since unverified data on a trust platform is worse
+-- than none. tagline holds each brand's own copy and is safe to seed.
 insert into brands (slug, name, tagline, founder, founded_year, category, location, social, hero_image_url, is_capsule, status)
 values
-  ('kai-collective', 'Kai Collective', 'London-based contemporary brand intentionally crafted to make women feel their most confident.', 'Founded by Fisayo Longe, sharp tailoring with gold-hardware drama.', '2016', 'Womenswear', 'London, UK', '@kaicollective', '/assets/models/kai-collective.png', true, 'active'),
-  ('nadi', 'Nadi', 'Designed for women who value quality, presence, and self-expression, NADI is not about fast fashion or fleeting trends.', 'Founded by Aya Okonkwo, blending West African textiles with modern silhouettes.', '2019', 'Womenswear', 'Brooklyn, NY', '@nadibydani', '/assets/models/nadi.png', true, 'active'),
-  ('meji-meji', 'Meji Meji', 'Creating a world where every narrative is not only acknowledged but celebrated, interwoven into the very fabric of our collective journey.', 'Founded by Meji Alabi, fluid jersey draping and asymmetry.', '2018', 'Womenswear', 'Lagos, NG', '@mejimeji', '/assets/models/meji-meji.png', true, 'active'),
-  ('kairos', 'Kairos', 'Drawing inspiration from kairos—the perfect, opportune moment—our creations are designed for those who seize life’s most meaningful occasions with confidence and style.', 'Founded by Tunde Bakare, suede separates in earthen tones.', '2020', 'Womenswear', 'Accra, GH', '@kairos', '/assets/models/kairos.png', true, 'active'),
-  ('bupbes', 'Bupbes', 'From the Vietnamese “búp bê” (dolls) — created to make each girl’s world her own doll house, where she is the main character.', 'Founded by Bupe Mwamba, sculptural corsetry and peplum tailoring.', '2017', 'Womenswear', 'Lusaka, ZM', '@bupbes', '/assets/models/bupbes.png', true, 'active'),
-  ('nysama', 'Nysama', 'Elevated resort wear for wherever the day takes you, sunrise to sunset, cocktails to midnight.', 'Founded by Nysa Mensah, elevated resort wear sunrise to sunset.', '2021', 'Womenswear', 'Paris, FR', '@nysama', '/assets/models/nysama.png', true, 'active'),
-  ('bubon', 'Bubon', 'Offering a range of unique, original and innovative pieces, Bubon’s designs are inspired by nurturing the art of dressing.', 'Founded by Bubon Atelier, deconstructed knit and denim.', '2019', 'Unisex', 'Berlin, DE', '@bubon', '/assets/models/bubon.png', true, 'active'),
-  ('tofe', 'Tofe', 'Bridging timeless elegance and fearless edge, with each piece crafted to inspire confidence, strength, and a sense of daring.', 'Founded by Tofe Adeyemi, bias-cut column dresses in saturated colour.', '2018', 'Womenswear', 'New York, NY', '@tofe', '/assets/models/tofe.png', true, 'active'),
+  ('kai-collective', 'Kai Collective', 'London-based contemporary brand intentionally crafted to make women feel their most confident.', null, null, 'Womenswear', null, '@kaicollective', '/assets/models/kai-collective.png', true, 'active'),
+  ('nadi', 'Nadi', 'Designed for women who value quality, presence, and self-expression, NADI is not about fast fashion or fleeting trends.', null, null, 'Womenswear', null, '@nadibydani', '/assets/models/nadi.png', true, 'active'),
+  ('meji-meji', 'Meji Meji', 'Creating a world where every narrative is not only acknowledged but celebrated, interwoven into the very fabric of our collective journey.', null, null, 'Womenswear', null, '@mejimeji', '/assets/models/meji-meji.png', true, 'active'),
+  ('kairos', 'Kairos', 'Drawing inspiration from kairos—the perfect, opportune moment—our creations are designed for those who seize life’s most meaningful occasions with confidence and style.', null, null, 'Womenswear', null, '@kairos', '/assets/models/kairos.png', true, 'active'),
+  ('bupbes', 'Bupbes', 'From the Vietnamese “búp bê” (dolls) — created to make each girl’s world her own doll house, where she is the main character.', null, null, 'Womenswear', null, '@bupbes', '/assets/models/bupbes.png', true, 'active'),
+  ('nysama', 'Nysama', 'Elevated resort wear for wherever the day takes you, sunrise to sunset, cocktails to midnight.', null, null, 'Womenswear', null, '@nysama', '/assets/models/nysama.png', true, 'active'),
+  ('bubon', 'Bubon', 'Offering a range of unique, original and innovative pieces, Bubon’s designs are inspired by nurturing the art of dressing.', null, null, 'Unisex', null, '@bubon', '/assets/models/bubon.png', true, 'active'),
+  ('tofe', 'Tofe', 'Bridging timeless elegance and fearless edge, with each piece crafted to inspire confidence, strength, and a sense of daring.', null, null, 'Womenswear', null, '@tofe', '/assets/models/tofe.png', true, 'active'),
   ('starfish-mrkt', 'Starfish Mrkt', 'This is placeholder text for Starfish Mrkt — outreach pending. We would love Starfish featured in our first drop.', null, null, 'Womenswear', null, '@starfishmrkt', '/assets/models/starfish.png', true, 'outreach_pending'),
   ('lanje', 'Lanje', 'Brand profile coming soon — we’d love Lanje featured in an upcoming drop.', null, null, 'Womenswear', null, '@lanje', '/assets/models/lanje.png', true, 'outreach_pending'),
   ('muse-brnd', 'Muse Brnd', 'MUSE BRND creates a harmonious composition on fabric that intertwines streetwear and lux.', null, null, 'Womenswear', null, '@musebrnd', '/assets/models/musebrnd.png', true, 'outreach_pending'),
