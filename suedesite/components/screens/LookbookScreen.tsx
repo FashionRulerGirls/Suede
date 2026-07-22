@@ -94,6 +94,11 @@ export function LookbookScreen({ onRoute, authed = false }: any) {
   const isReviews = tab === 'reviews';
   const { SearchBar, Dropdown, FilterChip, CollapsibleToolbar } = SuedeControls;
   const capsuleNames = (SUEDE_BRANDS || []).map(b => b.name);
+  // Only Capsule brands have a brand page. Non-Capsule brands (names seen on
+  // reviews/inquiries but not in the Capsule) render as plain, non-clickable text.
+  const capsuleSet = new Set(capsuleNames.map(n => n.toLowerCase()));
+  const isCapsuleBrand = (name: string) => capsuleSet.has((name || '').toLowerCase());
+  const openBrand = (name: string) => { appState.brand = (SUEDE_BRANDS || []).find(x => x.name === name); onRoute('brand'); };
   const catOf = (p: any) => ({ 'Two Piece Motor Set': 'Bottoms', 'Bomber Jacket': 'Outerwear', 'The Nyomi Maxi': 'Dresses', 'Corset Top': 'Tops' }[p] || 'Dresses');
   const brandTypeOf = (b: any) => capsuleNames.includes(b) ? 'Capsule' : 'Non-Capsule';
 
@@ -178,7 +183,7 @@ export function LookbookScreen({ onRoute, authed = false }: any) {
         <div className="sd-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 28 }}>
           {(authed ? feed : feed.slice(0, 6)).map((r: any, i: number) => (
             <div key={i}>
-              {isReviews ? <ReviewCard {...r} onBrand={() => { if (!r.brand) return; appState.brand = (SUEDE_BRANDS || []).find(x => x.name === r.brand) || { name: r.brand }; onRoute('brand'); }} onSeeFull={() => { appState.review = r; onRoute('review'); }} onReviewer={() => { appState.member = { id: r.authorId, name: r.reviewer.name, handle: r.reviewer.handle, avatar: r.reviewer.avatar, social: r.reviewer.handle, bio: "I love to explore the brands and Fashion. It's my hobbyy.", measurements: r.measurements, followers: '30', reviews: '24', inquiries: '12', brands: '8' }; onRoute('member'); }} /> : <InquiryCard {...r} onBrand={() => { if (!r.brand) return; appState.brand = (SUEDE_BRANDS || []).find(x => x.name === r.brand) || { name: r.brand }; onRoute('brand'); }} onOpen={() => { appState.inquiry = r; onRoute('inquiry'); }} onAsker={() => { appState.member = { id: r.authorId, name: r.asker.name, handle: r.asker.handle, avatar: r.asker.avatar, social: r.asker.handle, bio: "I love to explore the brands and Fashion. It's my hobbyy.", measurements: r.measurements, followers: '30', reviews: '24', inquiries: '12', brands: '8' }; onRoute('member'); }} />}
+              {isReviews ? <ReviewCard {...r} onBrand={isCapsuleBrand(r.brand) ? () => openBrand(r.brand) : undefined} onSeeFull={() => { appState.review = r; onRoute('review'); }} onReviewer={() => { appState.member = { id: r.authorId, name: r.reviewer.name, handle: r.reviewer.handle, avatar: r.reviewer.avatar, social: r.reviewer.handle, bio: "I love to explore the brands and Fashion. It's my hobbyy.", measurements: r.measurements, followers: '30', reviews: '24', inquiries: '12', brands: '8' }; onRoute('member'); }} /> : <InquiryCard {...r} onBrand={isCapsuleBrand(r.brand) ? () => openBrand(r.brand) : undefined} onOpen={() => { appState.inquiry = r; onRoute('inquiry'); }} onAsker={() => { appState.member = { id: r.authorId, name: r.asker.name, handle: r.asker.handle, avatar: r.asker.avatar, social: r.asker.handle, bio: "I love to explore the brands and Fashion. It's my hobbyy.", measurements: r.measurements, followers: '30', reviews: '24', inquiries: '12', brands: '8' }; onRoute('member'); }} />}
             </div>
           ))}
         </div>

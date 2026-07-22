@@ -88,12 +88,16 @@ export function BrandScreen({ onRoute, authed = false }: any) {
   const [followers, setFollowers] = React.useState(0);
   const [followBusy, setFollowBusy] = React.useState(false);
   const [explore, setExplore] = React.useState(false);
+  const [lookupDone, setLookupDone] = React.useState(false);
   React.useEffect(() => {
     const sb = createClient();
     const name = appState.brand?.name;
-    if (!sb || !name) return;
+    if (!sb || !name) { setLookupDone(true); return; }
     let active = true;
-    loadBrandByName(sb, name).then((b) => { if (active && b) setBrandRow({ ...(appState.brand || {}), ...b }); }).catch(() => {});
+    loadBrandByName(sb, name)
+      .then((b) => { if (active && b) setBrandRow({ ...(appState.brand || {}), ...b }); })
+      .catch(() => {})
+      .finally(() => { if (active) setLookupDone(true); });
     return () => { active = false; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -158,6 +162,24 @@ export function BrandScreen({ onRoute, authed = false }: any) {
   // Prefer the brand's real store URL (tracked); fall back to a guessed domain.
   const shopHost = (brand.shopUrl || '').replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/+$/, '');
   const website = shopHost || ('www.' + brand.name.toLowerCase().replace(/[^a-z]/g, '') + '.com');
+
+  // Only Capsule brands get a brand page. Non-Capsule brands (names seen on
+  // reviews/inquiries but not curated into the Capsule) have no page — once the
+  // lookup resolves and the brand isn't a Capsule brand, we don't render one.
+  const isCapsuleBrand = brandRow
+    ? brandRow.is_capsule === true
+    : (brand?.is_capsule === true || (SUEDE_BRANDS || []).some((b) => b.name.toLowerCase() === (brand?.name || '').toLowerCase()));
+  if (lookupDone && !isCapsuleBrand) {
+    return (
+      <div style={{ maxWidth: 640, margin: '0 auto', padding: '96px 40px', textAlign: 'center' }}>
+        <div style={{ fontFamily: 'var(--font-serif)', fontSize: 30, color: 'var(--text-heading)', marginBottom: 12 }}>{brand?.name || 'This brand'}</div>
+        <p style={{ fontFamily: 'var(--font-body)', fontSize: 15, lineHeight: 1.6, color: 'var(--text-secondary)', margin: '0 0 26px' }}>
+          This brand isn’t part of The Capsule, so it doesn’t have a page yet. You can still find its reviews and inquiries in The Lookbook.
+        </p>
+        <Button variant="primary" size="sm" onClick={() => onRoute('lookbook')}>Browse The Lookbook</Button>
+      </div>
+    );
+  }
 
   return (
     <div className="sd-brand-wrap" style={{ maxWidth: 1240, margin: '0 auto', padding: '28px 40px 0' }}>
