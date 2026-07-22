@@ -96,6 +96,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         },
       });
       if (error) return { error: error.message, needsConfirm: false };
+      // With email confirmation on, Supabase hides "email already registered"
+      // (anti-enumeration): no error, but the returned user has an empty
+      // identities array. Detect that and tell the user an account exists.
+      // (With confirmation off, Supabase returns a real error above instead.)
+      const identities = (data.user as any)?.identities;
+      if (data.user && Array.isArray(identities) && identities.length === 0) {
+        return { error: 'An account with this email already exists. Try signing in instead.', needsConfirm: false };
+      }
       // If email confirmation is on, there's no session yet.
       return { error: null, needsConfirm: !data.session };
     },
