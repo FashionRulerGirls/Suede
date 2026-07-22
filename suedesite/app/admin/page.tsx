@@ -13,7 +13,7 @@ import {
   promoteBrandByName, flagBrandName,
   loadFlagForReview, mergeBrandName, correctBrandName, dismissBrandFlag,
   loadContentFlags, resolveContentFlag,
-  loadBrandClaims, approveBrandClaim, rejectBrandClaim,
+  loadBrandClaims, approveBrandClaim, rejectBrandClaim, loadApprovedClaims, markClaimNotified,
 } from '@/lib/adminActions';
 
 type Gate = 'checking' | 'anon' | 'denied' | 'ok';
@@ -375,11 +375,39 @@ function RequestsSection({ sb }: any) {
 function ClaimsSection({ sb, adminId }: any) {
   const [k, bump] = useReload();
   const [rows] = useAsync(() => loadBrandClaims(sb), [k]);
+  const [approved] = useAsync(() => loadApprovedClaims(sb), [k]);
   const [busy, setBusy] = React.useState<string | null>(null);
   const act = async (id: string, fn: () => Promise<void>) => { setBusy(id); try { await fn(); bump(); } catch { /* ignore */ } setBusy(null); };
+  const awaitingEmail = (approved || []).filter((c: any) => !c.notified);
   if (!rows) return <><H>Brand Claims</H><Muted>Loading…</Muted></>;
   return (
     <>
+      {/* Approved but not yet welcomed — the manual welcome email is tracked here. */}
+      {awaitingEmail.length > 0 && (
+        <div style={{ marginBottom: 30 }}>
+          <H sub="Approved — send each owner their welcome email, then mark it done so nothing slips.">Awaiting welcome email</H>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {awaitingEmail.map((c: any) => (
+              <Card key={c.id} style={{ borderLeft: '3px solid var(--ink-900)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', alignItems: 'flex-start' }}>
+                  <div style={{ minWidth: 0 }}>
+                    <span style={{ fontFamily: 'var(--font-serif)', fontSize: 18, color: 'var(--text-heading)' }}>{c.brand}</span>
+                    <div style={{ fontSize: 13.5, color: 'var(--text-secondary)', marginTop: 6, lineHeight: 1.6 }}>
+                      {c.name}<br />
+                      <a href={`mailto:${c.email}?subject=${encodeURIComponent(`Welcome to Suede — ${c.brand}`)}`} style={{ color: 'var(--text-primary)', textDecoration: 'underline', textUnderlineOffset: 3 }}>{c.email}</a>
+                      {c.instagram ? ` · ${c.instagram}` : ''}
+                    </div>
+                    <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 6 }}>Approved {fmtDate(c.reviewed_at)}</div>
+                  </div>
+                  <div style={{ display: 'flex', gap: 8, flex: 'none', alignItems: 'center' }}>
+                    <ActionBtn busy={busy === c.id} onClick={() => act(c.id, () => markClaimNotified(sb, c.id))}>Mark as emailed</ActionBtn>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
       <H sub="Owners claiming their brand. Approving hands over the brand page.">Brand Claims</H>
       {!rows.length ? <Muted>No pending claims.</Muted> : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -550,7 +578,7 @@ function ContentFlagsSection({ sb, adminId }: any) {
           <ActionBtn danger busy={busy === f.id} onClick={() => act(f.id, () => resolveContentFlag(sb, f.id, adminId, 'remove', f.type, f.entityId))}>Remove content</ActionBtn>
           <ActionBtn ghost busy={busy === f.id} onClick={() => act(f.id, () => resolveContentFlag(sb, f.id, adminId, 'dismiss'))}>Dismiss</ActionBtn>
         </span>,
-      ])} loading={!rows} empty="No open brand flags. (Brand-side flag submission is not built yet.)" />
+      ])} loading={!rows} empty="No open flags. Reviews and inquiries flagged by brand owners from the portal appear here." />
     </>
   );
 }

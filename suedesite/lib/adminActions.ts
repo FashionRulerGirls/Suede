@@ -237,6 +237,23 @@ export async function rejectBrandClaim(sb: SupabaseClient, id: string, adminId: 
   if (error) throw error;
 }
 
+// Approved claims whose owner still needs the (manual) welcome email — so the
+// admin has one place to see who to email and mark it done.
+export async function loadApprovedClaims(sb: SupabaseClient) {
+  const { data } = await sb.from('brand_claims')
+    .select('id, brand_name, claimant_name, work_email, instagram, reviewed_at, notified_at')
+    .eq('status', 'approved').order('reviewed_at', { ascending: false });
+  return (data || []).map((c: any) => ({
+    id: c.id, brand: c.brand_name, name: c.claimant_name, email: c.work_email,
+    instagram: c.instagram, reviewed_at: c.reviewed_at, notifiedAt: c.notified_at, notified: !!c.notified_at,
+  }));
+}
+// Record that the owner's welcome email was sent (by hand).
+export async function markClaimNotified(sb: SupabaseClient, id: string) {
+  const { error } = await sb.from('brand_claims').update({ notified_at: new Date().toISOString() }).eq('id', id);
+  if (error) throw error;
+}
+
 // ── Brand-submitted flags on reviews/inquiries — §7 (admin side) ─────
 export async function loadContentFlags(sb: SupabaseClient) {
   const { data } = await sb.from('moderation_flags')
