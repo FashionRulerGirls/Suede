@@ -218,7 +218,8 @@ export function BrandScreen({ onRoute, authed = false }: any) {
             0025 and only owners can set these), so it stays hidden otherwise. */}
         {(() => {
           const real = (v?: string) => !!v && v.trim() !== '' && v.trim() !== '—' && !/outreach pending|coming soon|placeholder|profile coming/i.test(v);
-          const founder = real(brand.founder) ? brand.founder.trim() : '';
+          const rawFounder = real(brand.founder) ? brand.founder.trim() : '';
+          const founder = rawFounder ? (/^founded by/i.test(rawFounder) ? rawFounder : `Founded by ${rawFounder}`) : '';
           const meta = [real(brand.location) ? brand.location.trim() : '', real(brand.founded) ? `Est. ${String(brand.founded).trim()}` : ''].filter(Boolean);
           if (!founder && !meta.length) return null;
           return (
