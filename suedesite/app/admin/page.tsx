@@ -88,6 +88,12 @@ export default function AdminPage() {
             <Icon name={ic} size={16} color={section === id ? 'var(--text-primary)' : 'var(--text-muted)'} />{label}
           </button>
         ))}
+        <a href="/" className="admin-back" style={{
+          marginTop: 'auto', display: 'flex', alignItems: 'center', gap: 11, padding: '10px 12px', borderRadius: 'var(--radius-xs)',
+          textDecoration: 'none', color: 'var(--text-secondary)', fontFamily: 'var(--font-body)', fontSize: 14, whiteSpace: 'nowrap',
+        }}>
+          <Icon name="arrow-left" size={16} color="var(--text-muted)" />Back to Suede
+        </a>
       </aside>
       <main className="admin-main" style={{ padding: '32px 40px', minWidth: 0 }}>
         {section === 'overview' && <OverviewSection sb={sb!} />}
