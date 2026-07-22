@@ -172,6 +172,30 @@ export async function loadMemberDirectory(sb: SupabaseClient, limit = 500) {
   }));
 }
 
+// ── Outbound clicks (brand + product redirects to the brand's store) ──
+export async function loadOutboundClicks(sb: SupabaseClient, limit = 2000) {
+  const { data } = await sb.from('outbound_clicks')
+    .select('brand_name, product_name, source_page, created_at')
+    .order('created_at', { ascending: false }).limit(limit);
+  const rows = (data || []) as any[];
+  const since = (ms: number) => rows.filter((r) => new Date(r.created_at).getTime() >= Date.now() - ms).length;
+  const tally = (key: string) => {
+    const m: Record<string, number> = {};
+    for (const r of rows) { const k = (r[key] || '—').trim() || '—'; m[k] = (m[k] || 0) + 1; }
+    return Object.entries(m).sort((a, b) => b[1] - a[1]);
+  };
+  return {
+    total: rows.length,
+    week: since(7 * DAY),
+    month: since(30 * DAY),
+    byBrand: tally('brand_name'),
+    bySource: tally('source_page'),
+    recent: rows.slice(0, 40).map((r) => ({
+      brand: r.brand_name || '—', product: r.product_name || '—', source: r.source_page || '—', created_at: r.created_at,
+    })),
+  };
+}
+
 // ── CSV export ──────────────────────────────────────────────────────
 export function toCSV(headers: string[], rows: (string | number | boolean | null)[][]): string {
   const esc = (v: any) => { const s = v == null ? '' : String(v); return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };

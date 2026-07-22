@@ -4,7 +4,7 @@ import { Logo, Icon } from '@/components/ds';
 import { createClient } from '@/lib/supabase/client';
 import {
   amIAdmin, loadOverview, loadGrowth, loadReviewActivity, loadInquiryActivity,
-  loadMemberDirectory, toCSV, downloadCSV, type Overview,
+  loadMemberDirectory, loadOutboundClicks, toCSV, downloadCSV, type Overview,
 } from '@/lib/adminData';
 import {
   loadCapsuleRequests, approveCapsuleRequest, rejectCapsuleRequest,
@@ -17,7 +17,7 @@ import {
 } from '@/lib/adminActions';
 
 type Gate = 'checking' | 'anon' | 'denied' | 'ok';
-type Section = 'overview' | 'growth' | 'reviews' | 'inquiries' | 'brands' | 'requests' | 'claims' | 'applications' | 'flags' | 'feedback' | 'members' | 'export';
+type Section = 'overview' | 'growth' | 'reviews' | 'inquiries' | 'clicks' | 'brands' | 'requests' | 'claims' | 'applications' | 'flags' | 'feedback' | 'members' | 'export';
 
 const fmtDate = (iso?: string) => (iso ? new Date(iso).toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' }) : '—');
 
@@ -46,6 +46,7 @@ export default function AdminPage() {
     ['growth', 'Growth', 'sparkle'],
     ['reviews', 'Review Activity', 'reviews'],
     ['inquiries', 'Inquiry Activity', 'message'],
+    ['clicks', 'Store Clicks', 'external-link'],
     ['brands', 'Brand Management', 'shirt'],
     ['requests', 'Capsule Requests', 'plus'],
     ['claims', 'Brand Claims', 'lock'],
@@ -100,6 +101,7 @@ export default function AdminPage() {
         {section === 'growth' && <GrowthSection sb={sb!} />}
         {section === 'reviews' && <ReviewsSection sb={sb!} />}
         {section === 'inquiries' && <InquiriesSection sb={sb!} />}
+        {section === 'clicks' && <ClicksSection sb={sb!} />}
         {section === 'brands' && <BrandsSection sb={sb!} adminId={adminId} />}
         {section === 'requests' && <RequestsSection sb={sb!} />}
         {section === 'claims' && <ClaimsSection sb={sb!} adminId={adminId} />}
@@ -266,6 +268,27 @@ function InquiriesSection({ sb }: any) {
         <span><b style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{r.member}</b> <span style={{ color: 'var(--text-muted)' }}>{r.handle}</span></span>,
         r.brand, fmtDate(r.created_at), r.responses,
       ])} loading={!rows} empty="No inquiries yet." />
+    </>
+  );
+}
+
+function ClicksSection({ sb }: any) {
+  const [d] = useAsync(() => loadOutboundClicks(sb), []);
+  if (!d) return <><H>Store Clicks</H><Muted>Loading…</Muted></>;
+  return (
+    <>
+      <H sub="Every brand & product click that redirected a shopper to a brand's store.">Store Clicks</H>
+      <div style={grid(180)}>
+        <Stat label="Total clicks" value={d.total} />
+        <Stat label="Last 7 days" value={d.week} />
+        <Stat label="Last 30 days" value={d.month} />
+      </div>
+      <SubH>Clicks by brand</SubH>
+      <Table head={['Brand', 'Clicks']} rows={d.byBrand.map(([name, n]: any) => [name, n])} loading={false} empty="No clicks yet." />
+      <SubH>Where clicks happen</SubH>
+      <Table head={['Source', 'Clicks']} rows={d.bySource.map(([name, n]: any) => [name, n])} loading={false} empty="—" />
+      <SubH>Recent clicks</SubH>
+      <Table head={['Brand', 'Product', 'Source', 'When']} rows={d.recent.map((r: any) => [r.brand, r.product, r.source, fmtDate(r.created_at)])} loading={false} empty="No clicks yet." />
     </>
   );
 }
