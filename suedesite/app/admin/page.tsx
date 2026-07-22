@@ -379,9 +379,25 @@ function ClaimsSection({ sb, adminId }: any) {
   const [busy, setBusy] = React.useState<string | null>(null);
   const act = async (id: string, fn: () => Promise<void>) => { setBusy(id); try { await fn(); bump(); } catch { /* ignore */ } setBusy(null); };
   const awaitingEmail = (approved || []).filter((c: any) => !c.notified);
+  const accessed = (approved || []).filter((c: any) => c.accessed);
   if (!rows) return <><H>Brand Claims</H><Muted>Loading…</Muted></>;
   return (
     <>
+      {/* Confirmation that an approved brand actually got into their portal. */}
+      {accessed.length > 0 && (
+        <div style={{ marginBottom: 30 }}>
+          <H sub="These owners have signed in and opened their portal.">Accessed their portal</H>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {accessed.map((c: any) => (
+              <Card key={c.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+                <span style={{ fontFamily: 'var(--font-serif)', fontSize: 17, color: 'var(--text-heading)' }}>{c.brand}</span>
+                <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{c.name}</span>
+                <Pill ok>Accessed {fmtDate(c.accessedAt)}</Pill>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
       {/* Approved but not yet welcomed — the manual welcome email is tracked here. */}
       {awaitingEmail.length > 0 && (
         <div style={{ marginBottom: 30 }}>

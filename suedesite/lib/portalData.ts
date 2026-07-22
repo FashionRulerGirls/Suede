@@ -17,6 +17,15 @@ export async function loadMyBrands(sb: SupabaseClient, ownerId: string): Promise
   }));
 }
 
+// Stamp first portal access (no-op after the first time, thanks to the null
+// guard). Lets the admin dashboard see which approved brands have logged in.
+export async function markPortalAccessed(sb: SupabaseClient, brandIds: string[]) {
+  const ids = brandIds.filter(Boolean);
+  if (!ids.length) return;
+  try { await sb.from('brands').update({ portal_accessed_at: new Date().toISOString() }).in('id', ids).is('portal_accessed_at', null); }
+  catch { /* non-critical */ }
+}
+
 // ── brand documents ─────────────────────────────────────────────────
 export async function loadBrandDocuments(sb: SupabaseClient, brandId: string) {
   const { data } = await sb.from('brand_documents').select('id, label, url, position').eq('brand_id', brandId).order('position').order('created_at');

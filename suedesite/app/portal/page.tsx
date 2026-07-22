@@ -2,7 +2,7 @@
 import React from 'react';
 import { Logo, Icon } from '@/components/ds';
 import { createClient } from '@/lib/supabase/client';
-import { loadMyBrands, loadBrandOverview, saveBrandFields, submitContentFlag, loadBrandDocuments, addBrandDocument, deleteBrandDocument, type PortalBrand } from '@/lib/portalData';
+import { loadMyBrands, loadBrandOverview, saveBrandFields, submitContentFlag, loadBrandDocuments, addBrandDocument, deleteBrandDocument, markPortalAccessed, type PortalBrand } from '@/lib/portalData';
 import { loadBrandReviews, loadBrandInquiries, postReviewComment, postInquiryResponse } from '@/lib/contentData';
 
 type Gate = 'checking' | 'anon' | 'nobrand' | 'ok';
@@ -26,6 +26,9 @@ export default function PortalPage() {
     const mine = await loadMyBrands(sb, user.id);
     setBrands(mine);
     setGate(mine.length ? 'ok' : 'nobrand');
+    // Record first portal access so the admin dashboard can confirm the owner
+    // got in after approval + welcome email.
+    if (mine.length) markPortalAccessed(sb, mine.map((b) => b.id));
   }, [sb]);
   React.useEffect(() => { check(); }, [check]);
 
@@ -169,16 +172,28 @@ function EditPage({ sb, brand, uid, onSaved }: any) {
 function Documents({ sb, brand, uid }: any) {
   const [docs, setDocs] = React.useState<any[] | null>(null);
   const [label, setLabel] = React.useState('');
+  const [file, setFile] = React.useState<File | null>(null);
   const [busy, setBusy] = React.useState(false);
   const [err, setErr] = React.useState('');
+  const [saved, setSaved] = React.useState(false);
   const fileRef = React.useRef<HTMLInputElement>(null);
   const load = React.useCallback(() => { loadBrandDocuments(sb, brand.id).then(setDocs).catch(() => setDocs([])); }, [sb, brand.id]);
   React.useEffect(() => { setDocs(null); load(); }, [load]);
-  const upload = async (file?: File) => {
-    if (!file) return;
-    setBusy(true); setErr('');
-    try { await addBrandDocument(sb, uid, brand.id, label, file); setLabel(''); if (fileRef.current) fileRef.current.value = ''; load(); }
-    catch (e: any) { setErr(e?.message || 'Upload failed. (Is the brand-assets bucket set up?)'); }
+  const pick = (f?: File) => {
+    if (!f) return;
+    setFile(f); setErr(''); setSaved(false);
+    if (!label.trim()) setLabel(f.name.replace(/\.[^.]+$/, '')); // prefill a name from the filename
+  };
+  const save = async () => {
+    if (!file) { setErr('Choose a file first.'); return; }
+    if (!label.trim()) { setErr('Give this document a name.'); return; }
+    setBusy(true); setErr(''); setSaved(false);
+    try {
+      await addBrandDocument(sb, uid, brand.id, label.trim(), file);
+      setLabel(''); setFile(null); if (fileRef.current) fileRef.current.value = '';
+      setSaved(true); setTimeout(() => setSaved(false), 3000);
+      load();
+    } catch (e: any) { setErr(e?.message || 'Upload failed. (Is the brand-assets bucket set up?)'); }
     setBusy(false);
   };
   const del = async (id: string) => { setBusy(true); try { await deleteBrandDocument(sb, id); load(); } catch { /* ignore */ } setBusy(false); };
@@ -198,11 +213,17 @@ function Documents({ sb, brand, uid }: any) {
             ))}
           </div>
         )}
-      <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-        <input value={label} onChange={(e) => setLabel(e.target.value)} placeholder="Label (e.g. Size Guide)" style={{ ...inp, flex: '1 1 180px' }} />
-        <input ref={fileRef} type="file" accept=".pdf,.png,.jpg,.jpeg,.webp,.doc,.docx" onChange={(e) => upload(e.target.files?.[0])} style={{ display: 'none' }} />
-        <button onClick={() => fileRef.current?.click()} disabled={busy} style={{ ...btnPrimary, opacity: busy ? 0.6 : 1 }}>{busy ? 'Uploading…' : 'Upload file'}</button>
+      {/* Add a document: pick → name → save, with a clear confirmation. */}
+      <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: 18, display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <input value={label} onChange={(e) => { setLabel(e.target.value); setSaved(false); }} placeholder="Document name (e.g. Size Guide)" style={{ ...inp, width: '100%', boxSizing: 'border-box' }} />
+        <input ref={fileRef} type="file" accept=".pdf,.png,.jpg,.jpeg,.webp,.doc,.docx" onChange={(e) => pick(e.target.files?.[0])} style={{ display: 'none' }} />
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+          <button onClick={() => fileRef.current?.click()} disabled={busy} style={{ ...btnGhostSm, border: '1px solid var(--border-default)', padding: '9px 14px' }}>{file ? 'Change file' : 'Choose file'}</button>
+          <span style={{ fontSize: 13, color: file ? 'var(--text-secondary)' : 'var(--text-muted)', flex: '1 1 120px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{file ? file.name : 'No file chosen'}</span>
+          <button onClick={save} disabled={busy || !file} style={{ ...btnPrimary, opacity: busy || !file ? 0.5 : 1 }}>{busy ? 'Saving…' : 'Save document'}</button>
+        </div>
       </div>
+      {saved && <div style={{ color: 'var(--rating-positive, #3f7d52)', fontSize: 13, marginTop: 12, display: 'flex', alignItems: 'center', gap: 6 }}><Icon name="check" size={14} color="var(--rating-positive, #3f7d52)" />Document added — it’s live on your brand card.</div>}
       {err && <div style={{ color: 'var(--rating-critical)', fontSize: 13, marginTop: 10 }}>{err}</div>}
     </div>
   );

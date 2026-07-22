@@ -241,11 +241,12 @@ export async function rejectBrandClaim(sb: SupabaseClient, id: string, adminId: 
 // admin has one place to see who to email and mark it done.
 export async function loadApprovedClaims(sb: SupabaseClient) {
   const { data } = await sb.from('brand_claims')
-    .select('id, brand_name, claimant_name, work_email, instagram, reviewed_at, notified_at')
+    .select('id, brand_name, claimant_name, work_email, instagram, reviewed_at, notified_at, brand:brands!brand_id(portal_accessed_at)')
     .eq('status', 'approved').order('reviewed_at', { ascending: false });
   return (data || []).map((c: any) => ({
     id: c.id, brand: c.brand_name, name: c.claimant_name, email: c.work_email,
     instagram: c.instagram, reviewed_at: c.reviewed_at, notifiedAt: c.notified_at, notified: !!c.notified_at,
+    accessedAt: c.brand?.portal_accessed_at || null, accessed: !!c.brand?.portal_accessed_at,
   }));
 }
 // Record that the owner's welcome email was sent (by hand).
