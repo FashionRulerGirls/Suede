@@ -27,6 +27,6 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     // everything except Next internals, static assets, and PWA files
-    '/((?!_next/static|_next/image|favicon.ico|assets|icons|sw.js|manifest.webmanifest|brand-portal|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|assets|icons|api/og|sw.js|manifest.webmanifest|brand-portal|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)',
   ],
 };
