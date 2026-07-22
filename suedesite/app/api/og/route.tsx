@@ -18,6 +18,16 @@ function fonts() {
   return _fonts;
 }
 
+// The real Suede wordmark (recolored to ink), embedded as a data URI.
+let _wordmark: string | null = null;
+function wordmark() {
+  if (!_wordmark) {
+    const svg = readFileSync(join(process.cwd(), 'app/api/og/assets/wordmark.svg'));
+    _wordmark = 'data:image/svg+xml;base64,' + svg.toString('base64');
+  }
+  return _wordmark;
+}
+
 const INK = '#14120F';
 const LINEN = '#F4F0EA';
 const MUTED = '#6a5f55';
@@ -35,7 +45,9 @@ export async function GET(req: Request) {
   const kind = p.get('kind') === 'inquiry' ? 'inquiry' : 'review';
   const brand = (p.get('brand') || 'Suede').slice(0, 40);
   const product = (p.get('product') || '').slice(0, 60);
-  const snippet = (p.get('snippet') || '').slice(0, 180);
+  // Keep the in-card quote short — it must stay legible when a phone shrinks the
+  // preview; the full text lives in the shared page's description.
+  const snippet = (p.get('snippet') || '').slice(0, 120);
   const by = (p.get('by') || '').slice(0, 40);
   const ratingRaw = parseFloat(p.get('rating') || '');
   const rating = Number.isFinite(ratingRaw) ? ratingRaw : null;
@@ -49,26 +61,27 @@ export async function GET(req: Request) {
         {img ? (
           <div style={{ display: 'flex', width: 500, height: '100%' }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={img} width={500} height={630} style={{ objectFit: 'cover' }} alt="" />
+            <img src={img} width={500} height={630} style={{ objectFit: 'cover', objectPosition: 'center top' }} alt="" />
           </div>
         ) : null}
-        <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', flex: 1, padding: '64px 68px' }}>
-          <div style={{ display: 'flex', fontSize: 22, letterSpacing: 4, textTransform: 'uppercase', color: MUTED }}>{eyebrow}</div>
-          <div style={{ display: 'flex', fontFamily: 'Cormorant', fontSize: 76, color: INK, textTransform: 'uppercase', marginTop: 10, letterSpacing: 2 }}>{brand}</div>
+        <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', flex: 1, padding: '64px 70px' }}>
+          <div style={{ display: 'flex', fontSize: 24, letterSpacing: 5, textTransform: 'uppercase', color: MUTED }}>{eyebrow}</div>
+          <div style={{ display: 'flex', fontFamily: 'Cormorant', fontSize: 88, color: INK, textTransform: 'uppercase', marginTop: 12, letterSpacing: 2, lineHeight: 1 }}>{brand}</div>
           {rating != null ? (
-            <div style={{ display: 'flex', gap: 8, marginTop: 18 }}>
+            <div style={{ display: 'flex', gap: 9, marginTop: 22 }}>
               {[0, 1, 2, 3, 4].map((i) => <Star key={i} filled={i < Math.round(rating)} />)}
             </div>
           ) : null}
-          {product ? <div style={{ display: 'flex', fontSize: 28, color: MUTED, marginTop: 20 }}>{product}</div> : null}
+          {product ? <div style={{ display: 'flex', fontSize: 30, color: MUTED, marginTop: 22 }}>{product}</div> : null}
           {snippet ? (
-            <div style={{ display: 'flex', fontSize: 30, lineHeight: 1.35, color: INK, marginTop: 20 }}>
+            <div style={{ display: 'flex', fontSize: 34, lineHeight: 1.35, color: INK, marginTop: 22 }}>
               {kind === 'review' ? `“${snippet}”` : snippet}
             </div>
           ) : null}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 'auto', paddingTop: 28 }}>
-            <div style={{ display: 'flex', fontFamily: 'Cormorant', fontSize: 34, letterSpacing: 8, color: INK, textTransform: 'uppercase' }}>Suede</div>
-            {by ? <div style={{ display: 'flex', fontSize: 22, color: MUTED }}>· {by}</div> : null}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginTop: 'auto', paddingTop: 30 }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={wordmark()} width={104} height={46} alt="Suede" />
+            {by ? <div style={{ display: 'flex', fontSize: 24, color: MUTED }}>· {by}</div> : null}
           </div>
         </div>
       </div>
