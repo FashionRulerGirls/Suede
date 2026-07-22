@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import './mobile-site.css';
 import { RegisterSW } from '@/components/RegisterSW';
+import { Analytics } from '@vercel/analytics/react';
 
 const SITE_URL = 'https://suedecapsule.com';
 const SITE_DESC =
@@ -42,7 +43,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>{children}<RegisterSW /></body>
+      <body>{children}<RegisterSW /><Analytics /></body>
     </html>
   );
 }

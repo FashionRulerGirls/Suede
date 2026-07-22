@@ -17,6 +17,19 @@ export async function loadMyBrands(sb: SupabaseClient, ownerId: string): Promise
   }));
 }
 
+// Flags this brand raised + how the Suede team resolved them (with any note).
+export async function loadMyFlags(sb: SupabaseClient, uid: string) {
+  const { data } = await sb.from('moderation_flags')
+    .select('id, entity_type, reason, status, resolution_note, created_at')
+    .eq('raised_by', uid).in('entity_type', ['review', 'inquiry'])
+    .order('created_at', { ascending: false });
+  return (data || []).map((f: any) => ({
+    id: f.id, type: f.entity_type, reason: f.reason,
+    status: f.status === 'open' ? 'Under review' : f.status === 'dismissed' ? 'Dismissed' : 'Resolved',
+    note: f.resolution_note || '', created_at: f.created_at,
+  }));
+}
+
 // Stamp first portal access (no-op after the first time, thanks to the null
 // guard). Lets the admin dashboard see which approved brands have logged in.
 export async function markPortalAccessed(sb: SupabaseClient, brandIds: string[]) {

@@ -603,21 +603,46 @@ function FlagForReview({ sb, adminId }: any) {
   );
 }
 
+function FlagCard({ f, sb, adminId, onDone }: any) {
+  const [note, setNote] = React.useState('');
+  const [busy, setBusy] = React.useState<string | null>(null);
+  const run = async (action: 'remove' | 'keep' | 'dismiss') => {
+    setBusy(action);
+    try { await resolveContentFlag(sb, f.id, adminId, action, f.type, f.entityId, note); onDone(); }
+    catch { /* ignore */ }
+    setBusy(null);
+  };
+  return (
+    <Card>
+      <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+        <span style={{ fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text-muted)' }}>{f.type}</span>
+        <span style={{ fontFamily: 'var(--font-serif)', fontSize: 17, color: 'var(--text-heading)' }}>{f.reason || 'Flag'}</span>
+        <span style={{ fontSize: 12, color: 'var(--text-muted)', marginLeft: 'auto' }}>{fmtDate(f.created_at)}</span>
+      </div>
+      {f.detail && <p style={{ fontSize: 13.5, color: 'var(--text-secondary)', margin: '8px 0 0', lineHeight: 1.6 }}>{f.detail}</p>}
+      <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={2} placeholder="Reply to the brand with your decision (optional) — they’ll see this in their portal."
+        style={{ width: '100%', boxSizing: 'border-box', marginTop: 12, border: '1px solid var(--border-default)', borderRadius: 'var(--radius-xs)', padding: '9px 11px', fontFamily: 'var(--font-body)', fontSize: 13.5, resize: 'vertical' }} />
+      <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
+        <ActionBtn danger busy={busy === 'remove'} onClick={() => run('remove')}>Remove content & reply</ActionBtn>
+        <ActionBtn busy={busy === 'keep'} onClick={() => run('keep')}>Keep content & reply</ActionBtn>
+        <ActionBtn ghost busy={busy === 'dismiss'} onClick={() => run('dismiss')}>Dismiss</ActionBtn>
+      </div>
+    </Card>
+  );
+}
+
 function ContentFlagsSection({ sb, adminId }: any) {
   const [k, bump] = useReload();
   const [rows] = useAsync(() => loadContentFlags(sb), [k]);
-  const [busy, setBusy] = React.useState<string | null>(null);
-  const act = async (id: string, fn: () => Promise<void>) => { setBusy(id); try { await fn(); bump(); } catch { /* ignore */ } setBusy(null); };
+  if (!rows) return <><H>Brand Flags</H><Muted>Loading…</Muted></>;
   return (
     <>
-      <H sub="Reviews & inquiries flagged by brands for attention.">Brand Flags</H>
-      <Table head={['Type', 'Reason', 'Detail', 'Date', 'Actions']} rows={(rows || []).map((f: any) => [
-        <span style={{ textTransform: 'capitalize' }}>{f.type}</span>, f.reason || '—', f.detail || '—', fmtDate(f.created_at),
-        <span style={{ display: 'flex', gap: 8 }}>
-          <ActionBtn danger busy={busy === f.id} onClick={() => act(f.id, () => resolveContentFlag(sb, f.id, adminId, 'remove', f.type, f.entityId))}>Remove content</ActionBtn>
-          <ActionBtn ghost busy={busy === f.id} onClick={() => act(f.id, () => resolveContentFlag(sb, f.id, adminId, 'dismiss'))}>Dismiss</ActionBtn>
-        </span>,
-      ])} loading={!rows} empty="No open flags. Reviews and inquiries flagged by brand owners from the portal appear here." />
+      <H sub="Reviews & inquiries flagged by brands. Reply with a decision — the brand sees it in their portal.">Brand Flags</H>
+      {!rows.length ? <Muted>No open flags. Reviews and inquiries flagged by brand owners from the portal appear here.</Muted> : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {rows.map((f: any) => <FlagCard key={f.id} f={f} sb={sb} adminId={adminId} onDone={bump} />)}
+        </div>
+      )}
     </>
   );
 }

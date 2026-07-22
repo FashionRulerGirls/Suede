@@ -2,7 +2,7 @@
 import React from 'react';
 import { Logo, Icon } from '@/components/ds';
 import { createClient } from '@/lib/supabase/client';
-import { loadMyBrands, loadBrandOverview, saveBrandFields, submitContentFlag, loadBrandDocuments, addBrandDocument, deleteBrandDocument, markPortalAccessed, type PortalBrand } from '@/lib/portalData';
+import { loadMyBrands, loadBrandOverview, saveBrandFields, submitContentFlag, loadBrandDocuments, addBrandDocument, deleteBrandDocument, markPortalAccessed, loadMyFlags, type PortalBrand } from '@/lib/portalData';
 import { loadBrandReviews, loadBrandInquiries, postReviewComment, postInquiryResponse } from '@/lib/contentData';
 
 type Gate = 'checking' | 'anon' | 'nobrand' | 'ok';
@@ -73,7 +73,7 @@ export default function PortalPage() {
         </div>
       </aside>
       <main style={{ padding: '32px 40px', minWidth: 0 }}>
-        {section === 'dashboard' && <Dashboard sb={sb} brand={brand} />}
+        {section === 'dashboard' && <Dashboard sb={sb} brand={brand} uid={uid} />}
         {section === 'edit' && <EditPage sb={sb} brand={brand} uid={uid} onSaved={check} />}
         {section === 'reviews' && <ContentList sb={sb} brand={brand} uid={uid} kind="reviews" />}
         {section === 'inquiries' && <ContentList sb={sb} brand={brand} uid={uid} kind="inquiries" />}
@@ -113,9 +113,11 @@ function SignIn({ sb, onDone }: any) {
 }
 
 // ── dashboard ───────────────────────────────────────────────────────
-function Dashboard({ sb, brand }: any) {
+function Dashboard({ sb, brand, uid }: any) {
   const [o, setO] = React.useState<any>(null);
+  const [flags, setFlags] = React.useState<any[]>([]);
   React.useEffect(() => { let a = true; loadBrandOverview(sb, brand).then((d) => a && setO(d)).catch(() => {}); return () => { a = false; }; }, [sb, brand.id]);
+  React.useEffect(() => { let a = true; if (uid) loadMyFlags(sb, uid).then((d) => a && setFlags(d)).catch(() => {}); return () => { a = false; }; }, [sb, uid]);
   return (
     <>
       <Head title={brand.name} sub={brand.tagline || 'Your brand at a glance.'} />
@@ -125,6 +127,23 @@ function Dashboard({ sb, brand }: any) {
         <Stat label="Avg. rating" value={o ? (o.avgRating != null ? `${o.avgRating} ★` : '—') : '…'} />
         <Stat label="Followers" value={o ? o.followers : '…'} />
       </div>
+      {flags.length > 0 && (
+        <div style={{ marginTop: 28, maxWidth: 620 }}>
+          <div style={{ fontFamily: 'var(--font-serif)', fontSize: 18, color: 'var(--text-heading)', marginBottom: 12 }}>Your flags</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {flags.map((f) => (
+              <div key={f.id} style={{ background: 'var(--surface-card)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-xs)', padding: '14px 16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--text-muted)' }}>{f.type}</span>
+                  <span style={{ fontSize: 14, color: 'var(--text-primary)' }}>{f.reason}</span>
+                  <span style={{ marginLeft: 'auto', fontSize: 11.5, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)', background: f.status === 'Under review' ? 'var(--text-muted)' : 'var(--ink-900)', borderRadius: 3, padding: '3px 8px' }}>{f.status}</span>
+                </div>
+                {f.note && <p style={{ fontSize: 13.5, color: 'var(--text-secondary)', margin: '10px 0 0', lineHeight: 1.6 }}><b style={{ color: 'var(--text-primary)' }}>Suede team:</b> {f.note}</p>}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
       <p style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 20 }}>Head to Reviews or Inquiries to respond to shoppers or flag anything that needs our team’s attention.</p>
     </>
   );

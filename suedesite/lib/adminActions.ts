@@ -265,11 +265,16 @@ export async function loadContentFlags(sb: SupabaseClient) {
     detail: f.detail?.note || '', created_at: f.created_at,
   }));
 }
-export async function resolveContentFlag(sb: SupabaseClient, id: string, adminId: string, action: 'dismiss' | 'remove', entityType?: string, entityId?: string) {
+// Resolve a brand's flag: remove the content, keep it (reviewed, no change), or
+// dismiss — each can carry a short decision note the brand will see.
+export async function resolveContentFlag(sb: SupabaseClient, id: string, adminId: string, action: 'dismiss' | 'remove' | 'keep', entityType?: string, entityId?: string, note?: string) {
   if (action === 'remove' && entityType && entityId) {
     await sb.from(entityType === 'review' ? 'reviews' : 'inquiries').update({ status: 'removed' }).eq('id', entityId);
   }
-  const { error } = await sb.from('moderation_flags').update({ status: action === 'remove' ? 'resolved' : 'dismissed', resolved_by: adminId }).eq('id', id);
+  const status = action === 'dismiss' ? 'dismissed' : 'resolved';
+  const patch: Record<string, any> = { status, resolved_by: adminId };
+  if (note !== undefined) patch.resolution_note = note.trim() || null;
+  const { error } = await sb.from('moderation_flags').update(patch).eq('id', id);
   if (error) throw error;
 }
 
