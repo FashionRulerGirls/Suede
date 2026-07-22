@@ -2,6 +2,7 @@
 /* Suede — Full Review detail page. */
 import React from 'react';
 import { Avatar, MeasurementSpec, StarRating, Button, Icon, Lightbox, SocialVideo } from '@/components/ds';
+import { ShareButton } from '@/components/ShareButton';
 import { SUEDE_BRANDS } from '@/lib/data';
 import { appState } from '@/lib/appState';
 import { useAuth } from '@/lib/auth';
@@ -157,8 +158,10 @@ export function ReviewDetailScreen({ onRoute, authed = false }: any) {
         <button onClick={() => onRoute('lookbook')} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-secondary)' }}>
           <Icon name="arrow-left" size={16} color="var(--text-secondary)" /> Back to Lookbook
         </button>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 18 }}>
+          {real && <ShareButton path={`/review/${r._id}`} title={`${brand ? brand + ' — ' : ''}review on Suede`} text={`${product ? product + ' · ' : ''}Read this review on Suede`} />}
         {isAuthor && (
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 18 }}>
+          <>
             {editable ? (
               <button onClick={onEdit} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-primary)' }}>
                 <Icon name="pen" size={15} color="var(--text-primary)" /> Edit
@@ -169,8 +172,9 @@ export function ReviewDetailScreen({ onRoute, authed = false }: any) {
             <button onClick={onDelete} disabled={deleting} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--rating-critical)', textDecoration: 'underline', textUnderlineOffset: 3 }}>
               {deleting ? 'Deleting…' : 'Delete'}
             </button>
-          </div>
+          </>
         )}
+        </div>
       </div>
 
       <div className="sd-rev-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 60, alignItems: 'start' }}>

@@ -2,6 +2,7 @@
 /* Suede — Full Inquiry detail page. */
 import React from 'react';
 import { Avatar, MeasurementSpec, Button, Icon, StarRating } from '@/components/ds';
+import { ShareButton } from '@/components/ShareButton';
 import { SUEDE_BRANDS } from '@/lib/data';
 import { appState } from '@/lib/appState';
 import { InquiryCard } from '@/components/screens/LookbookScreen';
@@ -145,9 +146,12 @@ export function InquiryDetailScreen({ onRoute, authed = false }: any) {
 
   return (
     <div className="sd-iqd-wrap" style={{ maxWidth: 1240, margin: '0 auto', padding: '28px 40px 0' }}>
-      <button onClick={() => { appState.lookbookTab = 'inquiries'; onRoute('lookbook'); }} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-secondary)', marginBottom: 24 }}>
-        <Icon name="arrow-left" size={16} color="var(--text-secondary)" /> Back to Lookbook
-      </button>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, marginBottom: 24, flexWrap: 'wrap' }}>
+        <button onClick={() => { appState.lookbookTab = 'inquiries'; onRoute('lookbook'); }} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-secondary)' }}>
+          <Icon name="arrow-left" size={16} color="var(--text-secondary)" /> Back to Lookbook
+        </button>
+        {real && <ShareButton path={`/inquiry/${q._id}`} title={`${brand ? brand + ' — ' : ''}inquiry on Suede`} text={`${product ? product + ' · ' : ''}See this inquiry on Suede`} />}
+      </div>
 
       <div className="sd-iqd-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 60, alignItems: 'start' }}>
         {/* Left — product image + CTA */}
