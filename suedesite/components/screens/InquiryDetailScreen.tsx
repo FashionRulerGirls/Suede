@@ -33,16 +33,24 @@ function CitedReview({ review, onOpen }: any) {
   );
 }
 
-function ResponseRow({ avatar, name, specs, when, body, review, likes, liked, onLike, onOpenReview }: any) {
+function ResponseRow({ avatar, name, specs, when, body, review, likes, liked, onLike, onOpenReview, onBehalfOf }: any) {
   const color = liked ? 'var(--rating-positive)' : 'var(--text-muted)';
   return (
     <article style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-card)', padding: '20px 24px' }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 14 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <Avatar src={avatar} name={name} size="sm" />
-          <span style={{ display: 'inline-flex', alignItems: 'baseline', gap: 10 }}>
-            <span style={{ fontFamily: 'var(--font-display)', fontSize: 18, color: 'var(--text-primary)' }}>{name}</span>
-            <span style={{ fontFamily: 'var(--font-meta)', fontWeight: 500, fontSize: 12, letterSpacing: '0.04em', color: 'var(--text-muted)' }}>{specs}</span>
+          <span style={{ display: 'inline-flex', flexDirection: 'column', gap: 2 }}>
+            <span style={{ display: 'inline-flex', alignItems: 'baseline', gap: 10 }}>
+              <span style={{ fontFamily: 'var(--font-display)', fontSize: 18, color: 'var(--text-primary)' }}>{name}</span>
+              <span style={{ fontFamily: 'var(--font-meta)', fontWeight: 500, fontSize: 12, letterSpacing: '0.04em', color: 'var(--text-muted)' }}>{specs}</span>
+            </span>
+            {onBehalfOf && (
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: 'var(--font-body)', fontSize: 11.5, color: 'var(--text-muted)' }}>
+                <span style={{ fontSize: 9.5, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--white)', background: 'var(--ink-900)', borderRadius: 3, padding: '2px 6px' }}>Brand</span>
+                on behalf of {onBehalfOf}
+              </span>
+            )}
           </span>
         </div>
         <span style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: 'var(--text-muted)' }}>{when}</span>

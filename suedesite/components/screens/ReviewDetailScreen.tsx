@@ -19,14 +19,22 @@ function SubRating({ label, value }: any) {
   );
 }
 
-function CommentRow({ avatar, name, when, body, likes, liked, onLike }: any) {
+function CommentRow({ avatar, name, when, body, likes, liked, onLike, onBehalfOf }: any) {
   const color = liked ? 'var(--rating-positive)' : 'var(--text-muted)';
   return (
     <article style={{ background: 'var(--surface-card)', border: '1px solid var(--border-subtle)', padding: '20px 24px' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 14 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <Avatar src={avatar} name={name} size="sm" />
-          <span style={{ fontFamily: 'var(--font-display)', fontSize: 18, color: 'var(--text-primary)' }}>{name}</span>
+          <span style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <span style={{ fontFamily: 'var(--font-display)', fontSize: 18, color: 'var(--text-primary)' }}>{name}</span>
+            {onBehalfOf && (
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: 'var(--font-body)', fontSize: 11.5, letterSpacing: '0.02em', color: 'var(--text-muted)' }}>
+                <span style={{ fontSize: 9.5, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--white)', background: 'var(--ink-900)', borderRadius: 3, padding: '2px 6px' }}>Brand</span>
+                on behalf of {onBehalfOf}
+              </span>
+            )}
+          </span>
         </div>
         <span style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: 'var(--text-muted)' }}>{when}</span>
       </div>

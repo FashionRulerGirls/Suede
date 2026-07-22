@@ -710,13 +710,14 @@ export async function loadInquiryById(sb: SupabaseClient, id: string) {
 export async function loadReviewComments(sb: SupabaseClient, reviewId: string) {
   const { data } = await sb
     .from('review_comments')
-    .select('id, body, created_at, author:profiles!author_id(username, display_name, avatar_url)')
+    .select('id, body, created_at, author:profiles!author_id(username, display_name, avatar_url), brand:brands!brand_id(name)')
     .eq('review_id', reviewId)
     .order('created_at', { ascending: false });
   return (data || []).map((c: any) => ({
     id: c.id,
     avatar: c.author?.avatar_url || '',
     name: c.author?.display_name || c.author?.username || 'Member',
+    onBehalfOf: c.brand?.name || '',
     when: relativeTime(c.created_at),
     body: c.body,
     likes: 0,
@@ -727,6 +728,7 @@ export async function loadReviewComments(sb: SupabaseClient, reviewId: string) {
 // preview card (and carrying _id so a click can open the full review).
 const RESPONSE_SELECT =
   'id, body, created_at, review_id, author:profiles!author_id(username, display_name, avatar_url), ' +
+  'brand:brands!brand_id(name), ' +
   'review:reviews!review_id(id, author_id, brand_name, product_name, product_url, size_value, size_other, ' +
   'body, recommend, rating_sizing, rating_material, rating_value, rating_photos, rating_service)';
 
@@ -749,6 +751,7 @@ function responseRowToCard(c: any) {
     id: c.id,
     avatar: c.author?.avatar_url || '',
     name: c.author?.display_name || c.author?.username || 'Member',
+    onBehalfOf: c.brand?.name || '',
     specs: '',
     when: relativeTime(c.created_at),
     body: c.body,
@@ -766,21 +769,21 @@ export async function loadInquiryResponses(sb: SupabaseClient, inquiryId: string
   return (data || []).map(responseRowToCard);
 }
 
-export async function postReviewComment(sb: SupabaseClient, userId: string, reviewId: string, body: string) {
+export async function postReviewComment(sb: SupabaseClient, userId: string, reviewId: string, body: string, brandId?: string | null) {
   const { data, error } = await sb
     .from('review_comments')
-    .insert({ review_id: reviewId, author_id: userId, body: body.trim() })
-    .select('id, body, created_at, author:profiles!author_id(username, display_name, avatar_url)')
+    .insert({ review_id: reviewId, author_id: userId, body: body.trim(), brand_id: brandId || null })
+    .select('id, body, created_at, author:profiles!author_id(username, display_name, avatar_url), brand:brands!brand_id(name)')
     .single();
   if (error) throw error;
   const c = data as any;
-  return { id: c.id, avatar: c.author?.avatar_url || '', name: c.author?.display_name || c.author?.username || 'You', when: relativeTime(c.created_at), body: c.body, likes: 0 };
+  return { id: c.id, avatar: c.author?.avatar_url || '', name: c.author?.display_name || c.author?.username || 'You', onBehalfOf: c.brand?.name || '', when: relativeTime(c.created_at), body: c.body, likes: 0 };
 }
 
-export async function postInquiryResponse(sb: SupabaseClient, userId: string, inquiryId: string, body: string, reviewId?: string | null) {
+export async function postInquiryResponse(sb: SupabaseClient, userId: string, inquiryId: string, body: string, reviewId?: string | null, brandId?: string | null) {
   const { data, error } = await sb
     .from('inquiry_responses')
-    .insert({ inquiry_id: inquiryId, author_id: userId, body: body.trim(), review_id: reviewId || null })
+    .insert({ inquiry_id: inquiryId, author_id: userId, body: body.trim(), review_id: reviewId || null, brand_id: brandId || null })
     .select(RESPONSE_SELECT)
     .single();
   if (error) throw error;

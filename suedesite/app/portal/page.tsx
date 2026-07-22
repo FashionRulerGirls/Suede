@@ -245,7 +245,7 @@ function ContentList({ sb, brand, uid, kind }: any) {
       {!rows.length ? <Center>Nothing here yet.</Center> : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {rows.map((r: any) => (
-            <ContentCard key={r._id} item={r} kind={kind} sb={sb} uid={uid} onFlag={() => setFlagFor(r)} />
+            <ContentCard key={r._id} item={r} kind={kind} sb={sb} uid={uid} brandId={brand.id} onFlag={() => setFlagFor(r)} />
           ))}
         </div>
       )}
@@ -254,7 +254,7 @@ function ContentList({ sb, brand, uid, kind }: any) {
   );
 }
 
-function ContentCard({ item, kind, sb, uid, onFlag }: any) {
+function ContentCard({ item, kind, sb, uid, brandId, onFlag }: any) {
   const [reply, setReply] = React.useState('');
   const [open, setOpen] = React.useState(false);
   const [busy, setBusy] = React.useState(false);
@@ -263,8 +263,9 @@ function ContentCard({ item, kind, sb, uid, onFlag }: any) {
     if (!reply.trim()) return;
     setBusy(true);
     try {
-      if (kind === 'reviews') await postReviewComment(sb, uid, item._id, reply.trim());
-      else await postInquiryResponse(sb, uid, item._id, reply.trim());
+      // Posted from the portal → attributed to the brand (shows "on behalf of").
+      if (kind === 'reviews') await postReviewComment(sb, uid, item._id, reply.trim(), brandId);
+      else await postInquiryResponse(sb, uid, item._id, reply.trim(), null, brandId);
       setReply(''); setOpen(false); setDone(true);
     } catch { /* ignore */ }
     setBusy(false);
