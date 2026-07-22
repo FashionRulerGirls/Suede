@@ -38,7 +38,7 @@ function OrDivider() {
 
 /* ---------- Create Account ---------- */
 export function CreateAccountScreen({ onRoute }: any) {
-  const { signUp, signInWithOAuth } = useAuth();
+  const { signUp, signInWithOAuth, signIn } = useAuth();
   const [show, setShow] = React.useState(false);
   const [show2, setShow2] = React.useState(false);
   const [agree, setAgree] = React.useState(false);
@@ -50,6 +50,35 @@ export function CreateAccountScreen({ onRoute }: any) {
   const [error, setError] = React.useState<string | null>(null);
   const [busy, setBusy] = React.useState(false);
   const [sent, setSent] = React.useState(false);
+  const [confirming, setConfirming] = React.useState(false);
+  const [confirmNote, setConfirmNote] = React.useState<string | null>(null);
+
+  // Confirmation may happen on ANOTHER device (e.g. sign up on desktop, click
+  // the email link on a phone), which signs that device in but leaves this one
+  // stuck on "check your email". This device already has the entered email +
+  // password, so poll to sign itself in once the email is confirmed. Gentle
+  // interval to stay clear of auth rate limits; a manual button is the fallback.
+  React.useEffect(() => {
+    if (!sent) return;
+    let alive = true;
+    let attempts = 0;
+    const id = setInterval(async () => {
+      attempts += 1;
+      if (attempts > 40) { clearInterval(id); return; } // ~5 min, then rely on the button
+      const { error } = await signIn(email.trim(), password);
+      if (alive && !error) { clearInterval(id); onRoute('__signedin'); }
+    }, 7000);
+    return () => { alive = false; clearInterval(id); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sent]);
+
+  const checkConfirmed = async () => {
+    setConfirmNote(null); setConfirming(true);
+    const { error } = await signIn(email.trim(), password);
+    setConfirming(false);
+    if (!error) { onRoute('__signedin'); return; }
+    setConfirmNote('We haven’t seen your confirmation yet. Click the link in your email, then try again.');
+  };
 
   const submit = async () => {
     setError(null);
@@ -76,8 +105,15 @@ export function CreateAccountScreen({ onRoute }: any) {
           <span style={{ width: 56, height: 56, borderRadius: '50%', background: 'var(--ink-900)', color: 'var(--white)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}><Icon name="check" size={26} color="var(--white)" /></span>
           <h1 style={{ fontFamily: 'var(--font-serif)', fontWeight: 400, fontSize: 32, margin: 0 }}>Check your email</h1>
           <p style={{ fontFamily: 'var(--font-body)', fontSize: 15, color: 'var(--text-muted)', lineHeight: 1.6, margin: '12px 0 0' }}>
-            We sent a confirmation link to <b style={{ color: 'var(--text-primary)' }}>{email}</b>. Click it to finish creating your account.
+            We sent a confirmation link to <b style={{ color: 'var(--text-primary)' }}>{email}</b>. Click it to finish creating your account — you can open it on any device.
           </p>
+          <p style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.6, margin: '10px 0 20px' }}>
+            This page signs you in automatically once you confirm.
+          </p>
+          <Button variant="primary" fullWidth onClick={checkConfirmed} disabled={confirming}>
+            {confirming ? 'Checking…' : 'I’ve confirmed — continue'}
+          </Button>
+          {confirmNote && <p style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.5, margin: '14px 0 0' }}>{confirmNote}</p>}
         </Card>
       </AuthShell>
     );
