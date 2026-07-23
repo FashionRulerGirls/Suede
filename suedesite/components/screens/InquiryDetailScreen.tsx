@@ -45,12 +45,7 @@ function ResponseRow({ avatar, name, specs, when, body, review, likes, liked, on
               <span style={{ fontFamily: 'var(--font-display)', fontSize: 18, color: 'var(--text-primary)' }}>{name}</span>
               <span style={{ fontFamily: 'var(--font-meta)', fontWeight: 500, fontSize: 12, letterSpacing: '0.04em', color: 'var(--text-muted)' }}>{specs}</span>
             </span>
-            {onBehalfOf && (
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: 'var(--font-body)', fontSize: 11.5, color: 'var(--text-muted)' }}>
-                <span style={{ fontSize: 9.5, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--white)', background: 'var(--ink-900)', borderRadius: 3, padding: '2px 6px' }}>Brand</span>
-                on behalf of {onBehalfOf}
-              </span>
-            )}
+            {onBehalfOf && <span style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-muted)' }}>on behalf of {onBehalfOf}</span>}
           </span>
         </div>
         <span style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: 'var(--text-muted)' }}>{when}</span>
