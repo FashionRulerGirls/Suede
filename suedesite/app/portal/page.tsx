@@ -278,15 +278,16 @@ function ContentCard({ item, kind, sb, uid, brandId, onFlag }: any) {
   const [open, setOpen] = React.useState(false);
   const [busy, setBusy] = React.useState(false);
   const [done, setDone] = React.useState(false);
+  const [err, setErr] = React.useState('');
   const send = async () => {
     if (!reply.trim()) return;
-    setBusy(true);
+    setBusy(true); setErr('');
     try {
       // Posted from the portal → attributed to the brand (shows "on behalf of").
       if (kind === 'reviews') await postReviewComment(sb, uid, item._id, reply.trim(), brandId);
       else await postInquiryResponse(sb, uid, item._id, reply.trim(), null, brandId);
       setReply(''); setOpen(false); setDone(true);
-    } catch { /* ignore */ }
+    } catch (e: any) { setErr(e?.message || 'Couldn’t post your response. Please try again.'); }
     setBusy(false);
   };
   const who = kind === 'reviews' ? item.reviewer?.name : item.asker?.name;
@@ -314,6 +315,7 @@ function ContentCard({ item, kind, sb, uid, brandId, onFlag }: any) {
             <button onClick={() => setOpen(false)} style={btnGhostSm}>Cancel</button>
             <button onClick={send} disabled={busy || !reply.trim()} style={{ ...btnPrimary, opacity: busy || !reply.trim() ? 0.6 : 1 }}>{busy ? 'Posting…' : 'Post reply'}</button>
           </div>
+          {err && <div style={{ color: 'var(--rating-critical)', fontSize: 13, marginTop: 10 }}>{err}</div>}
         </div>
       )}
     </div>

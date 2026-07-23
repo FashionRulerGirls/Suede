@@ -708,12 +708,18 @@ export async function loadInquiryById(sb: SupabaseClient, id: string) {
 // Comments / responses (public read). Author measurements aren't readable by
 // other members (owner-only RLS), so responder specs are left blank.
 export async function loadReviewComments(sb: SupabaseClient, reviewId: string) {
-  const { data } = await sb
+  const COLS = 'id, body, created_at, author:profiles!author_id(username, display_name, avatar_url)';
+  let resp: any = await sb
     .from('review_comments')
-    .select('id, body, created_at, author:profiles!author_id(username, display_name, avatar_url), brand:brands!brand_id(name)')
+    .select(COLS + ', brand:brands!brand_id(name)')
     .eq('review_id', reviewId)
     .order('created_at', { ascending: false });
-  return (data || []).map((c: any) => ({
+  if (resp.error) {
+    // brand join unavailable (e.g. migration 0029 not applied yet) — never let
+    // that hide the comments; retry without the brand attribution.
+    resp = await sb.from('review_comments').select(COLS).eq('review_id', reviewId).order('created_at', { ascending: false });
+  }
+  return ((resp.data || []) as any[]).map((c: any) => ({
     id: c.id,
     avatar: c.author?.avatar_url || '',
     name: c.author?.display_name || c.author?.username || 'Member',
@@ -726,6 +732,10 @@ export async function loadReviewComments(sb: SupabaseClient, reviewId: string) {
 
 // A cited review, joined onto an inquiry response, shaped for the embedded
 // preview card (and carrying _id so a click can open the full review).
+const RESPONSE_SELECT_NOBRAND =
+  'id, body, created_at, review_id, author:profiles!author_id(username, display_name, avatar_url), ' +
+  'review:reviews!review_id(id, author_id, brand_name, product_name, product_url, size_value, size_other, ' +
+  'body, recommend, rating_sizing, rating_material, rating_value, rating_photos, rating_service)';
 const RESPONSE_SELECT =
   'id, body, created_at, review_id, author:profiles!author_id(username, display_name, avatar_url), ' +
   'brand:brands!brand_id(name), ' +
@@ -761,33 +771,46 @@ function responseRowToCard(c: any) {
 }
 
 export async function loadInquiryResponses(sb: SupabaseClient, inquiryId: string) {
-  const { data } = await sb
+  let resp: any = await sb
     .from('inquiry_responses')
     .select(RESPONSE_SELECT)
     .eq('inquiry_id', inquiryId)
     .order('created_at', { ascending: true });
-  return (data || []).map(responseRowToCard);
+  if (resp.error) {
+    // brand join unavailable (migration lag) — retry without it so responses load.
+    resp = await sb.from('inquiry_responses').select(RESPONSE_SELECT_NOBRAND).eq('inquiry_id', inquiryId).order('created_at', { ascending: true });
+  }
+  return ((resp.data || []) as any[]).map(responseRowToCard);
 }
 
 export async function postReviewComment(sb: SupabaseClient, userId: string, reviewId: string, body: string, brandId?: string | null) {
-  const { data, error } = await sb
+  const COLS = 'id, body, created_at, author:profiles!author_id(username, display_name, avatar_url)';
+  let resp: any = await sb
     .from('review_comments')
     .insert({ review_id: reviewId, author_id: userId, body: body.trim(), brand_id: brandId || null })
-    .select('id, body, created_at, author:profiles!author_id(username, display_name, avatar_url), brand:brands!brand_id(name)')
+    .select(COLS + ', brand:brands!brand_id(name)')
     .single();
-  if (error) throw error;
-  const c = data as any;
+  if (resp.error) {
+    // brand_id column not present yet (migration lag) — still save the comment.
+    resp = await sb.from('review_comments').insert({ review_id: reviewId, author_id: userId, body: body.trim() }).select(COLS).single();
+  }
+  if (resp.error) throw resp.error;
+  const c = resp.data as any;
   return { id: c.id, avatar: c.author?.avatar_url || '', name: c.author?.display_name || c.author?.username || 'You', onBehalfOf: c.brand?.name || '', when: relativeTime(c.created_at), body: c.body, likes: 0 };
 }
 
 export async function postInquiryResponse(sb: SupabaseClient, userId: string, inquiryId: string, body: string, reviewId?: string | null, brandId?: string | null) {
-  const { data, error } = await sb
+  let resp: any = await sb
     .from('inquiry_responses')
     .insert({ inquiry_id: inquiryId, author_id: userId, body: body.trim(), review_id: reviewId || null, brand_id: brandId || null })
     .select(RESPONSE_SELECT)
     .single();
-  if (error) throw error;
-  const card = responseRowToCard(data as any);
+  if (resp.error) {
+    // brand_id column not present yet (migration lag) — still save the response.
+    resp = await sb.from('inquiry_responses').insert({ inquiry_id: inquiryId, author_id: userId, body: body.trim(), review_id: reviewId || null }).select(RESPONSE_SELECT_NOBRAND).single();
+  }
+  if (resp.error) throw resp.error;
+  const card = responseRowToCard(resp.data as any);
   return { ...card, name: card.name === 'Member' ? 'You' : card.name };
 }
 
