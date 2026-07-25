@@ -44,7 +44,7 @@
   --text-primary:   var(--ink-900);
   --text-heading:   var(--ink-800);
   --text-secondary: var(--ink-500);
-  --text-muted:     var(--ink-400);
+  --text-muted:     #6f6a60;  /* darkened from ink-400 (#8a8a82, ~3.6:1) to meet WCAG AA 4.5:1 on light surfaces */
   --text-disabled:  var(--ink-300);
   --text-inverse:   var(--white);
   --text-link:      var(--ink-900);

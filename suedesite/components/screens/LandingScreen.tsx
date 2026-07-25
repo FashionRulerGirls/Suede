@@ -116,7 +116,8 @@ function CardStack({ front, frontW, mirror, center }: any) {
     : { [mirror ? 'right' : 'left']: '9%', transform: 'translateY(-50%)' };
   return (
     <div className="sd-cardstack" style={{ position: 'absolute', top: '50%', ...pos, width: frontW }}>
-      <div aria-hidden="true" style={{ position: 'absolute', top: -14, left: 64, width: '100%', transform: 'rotate(6deg)', opacity: 0.4 }}>{front}</div>
+      {/* @ts-ignore inert removes the decorative clone's focusable children from the tab order */}
+      <div aria-hidden="true" inert="" style={{ position: 'absolute', top: -14, left: 64, width: '100%', transform: 'rotate(6deg)', opacity: 0.4 }}>{front}</div>
       <div style={{ position: 'relative', transform: 'rotate(-3deg)' }}>{front}</div>
     </div>
   );

@@ -15,6 +15,7 @@ export function Input({
   invalid = false,
   trailingIcon,
   onTrailingClick,
+  trailingLabel,
   style,
   ...rest
 }: any) {
@@ -57,6 +58,8 @@ export function Input({
         <button
           type="button"
           onClick={onTrailingClick}
+          aria-label={trailingLabel || trailingIcon}
+          title={trailingLabel || undefined}
           style={{ border: 'none', background: 'transparent', cursor: 'pointer', padding: 0, display: 'flex', color: 'var(--text-muted)' }}
         >
           <Icon name={trailingIcon} size={18} />

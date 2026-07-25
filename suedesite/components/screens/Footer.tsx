@@ -57,7 +57,7 @@ export function Footer({ onRoute }: any) {
               </div>
             ) : (
               <>
-                <Input variant="underline" maxLength={120} placeholder="Email Address" trailingIcon="pen"
+                <Input variant="underline" maxLength={120} placeholder="Email Address" trailingIcon="pen" trailingLabel="Subscribe"
                   type="email" value={email}
                   invalid={newsState === 'error'}
                   onChange={(e: any) => { setEmail(e.target.value); if (newsState === 'error') setNewsState('idle'); }}
