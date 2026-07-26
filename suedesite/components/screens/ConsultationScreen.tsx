@@ -244,7 +244,7 @@ export function ConsultationScreen({ onRoute, authed }: any) {
   if (!authed && SignInGate) return <SignInGate onRoute={onRoute} title="Fit Consultation" message="Sign in to take your guided measurement consultation and save the results to your Suede profile." />;
   if (!started) {
     return (
-      <main style={{ background: PAPER, minHeight: '100vh' }}>
+      <div style={{ background: PAPER, minHeight: '100vh' }}>
         <div style={{ maxWidth: 672, margin: '0 auto', padding: '64px 32px 0px' }}>
           <div style={{ textAlign: 'center', marginBottom: 64 }}>
             <p style={{ fontSize: 12, letterSpacing: '0.3em', textTransform: 'uppercase', color: ink(0.4), marginBottom: 24 }}>SUEDE Fit Consultation</p>
@@ -297,14 +297,14 @@ export function ConsultationScreen({ onRoute, authed }: any) {
             <button onClick={startConsultation} onMouseEnter={(e) => e.currentTarget.style.background = 'var(--ink-700)'} onMouseLeave={(e) => e.currentTarget.style.background = INK} style={darkBtn({ padding: '20px 64px' })}>Start Consultation</button>
           </div>
         </div>
-      </main>
+      </div>
     );
   }
 
   // ---- Chat ----
   const progressPct = (Math.min(currentStep + 1, MEASUREMENT_STEPS.length) / MEASUREMENT_STEPS.length) * 100;
   return (
-    <main style={{ background: PAPER, height: 'calc(100vh - 73px)', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ background: PAPER, height: 'calc(100vh - 73px)', display: 'flex', flexDirection: 'column' }}>
       <style>{`@keyframes csBounce{0%,80%,100%{transform:translateY(0);opacity:.3}40%{transform:translateY(-5px);opacity:.7}} .cs-dot{animation:csBounce 1.2s infinite}`}</style>
 
       {/* Progress */}
@@ -438,6 +438,6 @@ export function ConsultationScreen({ onRoute, authed }: any) {
           )}
         </div>
       </div>
-    </main>
+    </div>
   );
 }

@@ -336,13 +336,35 @@ function AppInner() {
     brandsignin: BrandSignInScreen,
     claimbrand: ClaimBrandScreen,
   };
+  const ROUTE_TITLES: Record<string, string> = {
+    landing: 'Home', lookbook: 'The Lookbook', capsule: 'The Capsule', collective: 'The Collective',
+    about: 'About', notifications: 'Notifications', yourprofile: 'Your Profile', editprofile: 'Edit Profile',
+    quiz: 'Measurement Quiz', consult: 'Measurement Consultation', suggest: 'Suggest a Brand', apply: 'Apply for the Capsule',
+    brandsignin: 'Brand Sign In', claimbrand: 'Claim Your Brand', privacy: 'Privacy Policy', terms: 'Terms of Service',
+    signin: 'Sign In', createaccount: 'Create Account', forgot: 'Forgot Password', verify: 'Verify Email', reset: 'Reset Password',
+    createreview: 'Write a Review', createinquiry: 'Leave an Inquiry', brand: 'Brand', review: 'Review', member: 'Member', inquiry: 'Inquiry',
+  };
   const Screen = screens[route] || LandingScreen;
+
+  // Announce route changes to screen readers (SPA nav is silent otherwise) and
+  // move keyboard focus to the new content.
+  const mainRef = React.useRef<HTMLElement>(null);
+  const firstRender = React.useRef(true);
+  const [announce, setAnnounce] = React.useState('');
+  React.useEffect(() => {
+    setAnnounce((ROUTE_TITLES[route] || 'Page') + ' — Suede');
+    if (firstRender.current) { firstRender.current = false; return; }
+    mainRef.current?.focus();
+  }, [route]);
 
   return (
     <div id="root">
+      <div aria-live="polite" role="status" className="sr-only">{announce}</div>
       <Nav route={route} onRoute={setRoute} authed={authed} />
       <ProfileProgress route={route} onRoute={setRoute} />
-      <Screen onRoute={setRoute} tweaks={t} authed={authed} />
+      <main ref={mainRef} tabIndex={-1} style={{ outline: 'none' }}>
+        <Screen onRoute={setRoute} tweaks={t} authed={authed} />
+      </main>
       <Footer onRoute={setRoute} />
       <TweaksPanel title="Tweaks">
         <TweakSection label="Brand" />
