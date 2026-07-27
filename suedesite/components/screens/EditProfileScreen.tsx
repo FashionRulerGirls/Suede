@@ -74,9 +74,11 @@ function ChipRow({ options, value, onChange, cols }: any) {
     background: active ? 'var(--ink-900)' : 'transparent', color: active ? 'var(--white)' : 'var(--text-primary)',
     fontFamily: 'var(--font-body)', fontSize: 14, transition: 'all var(--dur-fast) var(--ease-out)',
   });
+  // Multi-select: value is an array of chosen sizes; clicking a chip toggles it.
+  const sel = Array.isArray(value) ? value : (value ? [value] : []);
   return (
     <div className="sd-chipgrid" style={{ display: 'grid', gridTemplateColumns: `repeat(${cols}, 1fr)`, gap: 10 }}>
-      {options.map((o: any) => <button key={o} type="button" onClick={() => onChange(value === o ? '' : o)} style={chip(value === o)}>{o}</button>)}
+      {options.map((o: any) => <button key={o} type="button" onClick={() => onChange(o)} style={chip(sel.includes(o))}>{o}</button>)}
     </div>
   );
 }
@@ -246,8 +248,12 @@ export function EditProfileScreen({ onRoute, authed = false }: any) {
   const [cropFile, setCropFile] = React.useState<File | null>(null);
   const [f, setF] = React.useState<any>({ ...BLANK });
   const set = (k: string, v: any) => setF((p: any) => ({ ...p, [k]: v }));
-  const [sizes, setSizes] = React.useState<any>({ topsLetter: '', topsNum: '', botLetter: '', botNum: '', waist: '', plus: '' });
-  const setSize = (k: any, v: any) => setSizes((s: any) => ({ ...s, [k]: v }));
+  const [sizes, setSizes] = React.useState<any>({ topsLetter: [], topsNum: [], botLetter: [], botNum: [], waist: [], plus: [] });
+  // Toggle a size in/out of its group's array — members can have multiple.
+  const setSize = (k: any, v: any) => setSizes((s: any) => {
+    const cur: string[] = Array.isArray(s[k]) ? s[k] : (s[k] ? [s[k]] : []);
+    return { ...s, [k]: cur.includes(v) ? cur.filter((x) => x !== v) : [...cur, v] };
+  });
   const [saving, setSaving] = React.useState(false);
   const [saveErr, setSaveErr] = React.useState<string | null>(null);
   // On the Measurements step, offer how to add measurements (guided / quiz /
@@ -339,10 +345,10 @@ export function EditProfileScreen({ onRoute, authed = false }: any) {
         arm_in: toInches(f.arm),
         torso_in: toInches(f.torso),
         usual_sizes: buildUsualSizes({
-          tops: [sizes.topsLetter, sizes.topsNum],
-          bottoms: [sizes.botLetter, sizes.botNum],
-          waist: [sizes.waist],
-          plus: [sizes.plus],
+          tops: [...sizes.topsLetter, ...sizes.topsNum],
+          bottoms: [...sizes.botLetter, ...sizes.botNum],
+          waist: sizes.waist,
+          plus: sizes.plus,
         }),
         source: 'manual',
         source_confidence: 0.9,

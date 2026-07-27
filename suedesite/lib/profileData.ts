@@ -112,14 +112,15 @@ export function splitUsualSizes(stored: Record<string, any> | null | undefined) 
     const v = stored?.[k];
     return Array.isArray(v) ? v.map(String) : v ? [String(v)] : [];
   };
-  const letter = (arr: string[]) => arr.find((x) => SIZE_LETTERS.has(x)) || '';
-  const numeric = (arr: string[]) => arr.find((x) => /^\d+$/.test(x)) || '';
+  const letters = (arr: string[]) => arr.filter((x) => SIZE_LETTERS.has(x));
+  const numerics = (arr: string[]) => arr.filter((x) => /^\d+$/.test(x));
   const tops = g('Tops'), bottoms = g('Bottoms');
+  // Arrays throughout — a member can have more than one usual size per group.
   return {
-    topsLetter: letter(tops), topsNum: numeric(tops),
-    botLetter: letter(bottoms), botNum: numeric(bottoms),
-    waist: (g('Waist')[0] || '').replace(/"/g, ''),
-    plus: g('Plus')[0] || '',
+    topsLetter: letters(tops), topsNum: numerics(tops),
+    botLetter: letters(bottoms), botNum: numerics(bottoms),
+    waist: g('Waist').map((x) => x.replace(/"/g, '')),
+    plus: g('Plus'),
   };
 }
 
