@@ -42,6 +42,14 @@ button { color: inherit; }
 .sd-brandcard-front :focus-visible,
 [data-dark] :focus-visible { outline-color: #ffffff; }
 
+/* iOS Safari auto-zooms when you focus an input whose font-size is < 16px —
+   which reads as the page "zooming in a little" on load/reload of pages with
+   form fields. Force form controls to 16px on touch devices to stop it. Desktop
+   is untouched, and pinch-zoom stays enabled (accessibility). */
+@media (hover: none) and (pointer: coarse) {
+  input, textarea, select { font-size: 16px !important; }
+}
+
 /* Screen-reader-only: present in the a11y tree, hidden visually. */
 .sr-only {
   position: absolute; width: 1px; height: 1px;
