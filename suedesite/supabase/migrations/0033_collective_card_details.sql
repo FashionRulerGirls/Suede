@@ -11,6 +11,10 @@
 -- Collective completeness gate); measurements_public only controls display.
 -- Re-runnable. Run after 0007.
 
+-- The return signature changes (new OUT columns), which create-or-replace can't
+-- do — drop the old function first.
+drop function if exists public.collective_members();
+
 create or replace function public.collective_members()
 returns table (
   id uuid, username text, display_name text, avatar_url text, bio text,
