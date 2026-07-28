@@ -384,9 +384,10 @@ function mapBrand(b: any, s: any) {
   };
 }
 
-export async function loadBrands(sb: SupabaseClient, opts: { capsuleOnly?: boolean } = {}) {
+export async function loadBrands(sb: SupabaseClient, opts: { capsuleOnly?: boolean; homeOnly?: boolean } = {}) {
   let q = sb.from('brands').select('*');
   if (opts.capsuleOnly) q = q.eq('is_capsule', true);
+  if (opts.homeOnly) q = q.eq('on_home', true);
   const [{ data: brands }, { data: stats }] = await Promise.all([
     q.order('name'),
     sb.from('brand_stats').select('*'),
@@ -394,6 +395,18 @@ export async function loadBrands(sb: SupabaseClient, opts: { capsuleOnly?: boole
   const statsById: Record<string, any> = {};
   (stats || []).forEach((s: any) => { statsById[s.id] = s; });
   return (brands || []).map((b: any) => mapBrand(b, statsById[b.id]));
+}
+
+// Capsule brands flagged to also appear on the home-page marquee. Resilient:
+// if the on_home column isn't present yet (migration 0034 not applied), returns
+// [] rather than throwing, so the home page falls back to its curated list.
+export async function loadHomeBrands(sb: SupabaseClient) {
+  try {
+    const brands = await loadBrands(sb, { homeOnly: true });
+    return brands.filter((b: any) => b.image);
+  } catch {
+    return [];
+  }
 }
 
 // A brand's uploaded documents (public read) for the back of the brand card.

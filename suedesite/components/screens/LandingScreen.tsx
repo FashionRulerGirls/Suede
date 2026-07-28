@@ -4,6 +4,8 @@ import React from 'react';
 import { Button, BrandCard, ReviewCard, SectionHeading, Eyebrow, EditorialBanner, Icon, Logo, MeasurementSpec, Badge, Reveal } from '@/components/ds';
 import { SUEDE_BRANDS, SUEDE_REVIEWS } from '@/lib/data';
 import { appState } from '@/lib/appState';
+import { createClient } from '@/lib/supabase/client';
+import { loadHomeBrands } from '@/lib/contentData';
 
 /* Auto-scrolling model marquee sitting in front of the giant hero wordmark.
    5 visible on desktop, 3 on tablet, 2 on phone; pause toggles the loop. */
@@ -191,7 +193,18 @@ function HowItWorks({ onRoute }: any) {
 
 export function LandingScreen({ onRoute, tweaks, authed = false }: any) {
   const HOME_HIDDEN = ['Akino', 'The Ekhator Label', 'Constructed for Women'];
-  const brands = SUEDE_BRANDS.filter((b) => !HOME_HIDDEN.includes(b.name));
+  const curated = SUEDE_BRANDS.filter((b) => !HOME_HIDDEN.includes(b.name));
+  // Admin-featured Capsule brands (on_home) append to the curated marquee.
+  const [featured, setFeatured] = React.useState<any[]>([]);
+  React.useEffect(() => {
+    const sb = createClient();
+    if (!sb) return;
+    let active = true;
+    loadHomeBrands(sb).then((bs) => { if (active) setFeatured(bs); }).catch(() => {});
+    return () => { active = false; };
+  }, []);
+  const curatedNames = new Set(curated.map((b) => b.name.toLowerCase()));
+  const brands = [...curated, ...featured.filter((b: any) => b.name && !curatedNames.has(b.name.toLowerCase()))];
   return (
     <div>
       {/* HERO — giant SUEDE wordmark behind the auto-scrolling model carousel */}

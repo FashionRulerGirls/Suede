@@ -114,6 +114,61 @@ export async function removeFromCapsule(sb: SupabaseClient, id: string) {
   if (error) throw error;
 }
 
+// A slug not already taken by another brand (append -2, -3, … on collision).
+async function uniqueBrandSlug(sb: SupabaseClient, base: string): Promise<string> {
+  const root = slugify(base);
+  for (let n = 0; n < 50; n++) {
+    const slug = n === 0 ? root : `${root}-${n + 1}`;
+    const { data } = await sb.from('brands').select('id').eq('slug', slug).maybeSingle();
+    if (!data) return slug;
+  }
+  return `${root}-${Date.now().toString(36)}`;
+}
+
+// Create a new Capsule brand from the admin "Add Brand" form. Inserts the row
+// (is_capsule = true → it appears in the directory immediately), uploads the
+// normalised model cutout to brand-assets under the admin's folder, and links
+// it as the hero image. onHome also features it on the home-page marquee.
+export async function createCapsuleBrand(
+  sb: SupabaseClient,
+  adminId: string,
+  input: { name: string; website: string; description: string; onHome: boolean; cutout: Blob },
+): Promise<{ id: string; slug: string }> {
+  const name = input.name.trim();
+  if (!name) throw new Error('Brand name is required.');
+  const slug = await uniqueBrandSlug(sb, name);
+
+  const { data: inserted, error: insErr } = await sb.from('brands').insert({
+    slug,
+    name,
+    tagline: input.description.trim() || null,
+    shop_url: input.website.trim() || null,
+    social: '@' + slug,
+    is_capsule: true,
+    on_home: !!input.onHome,
+    status: 'active',
+  }).select('id, slug').single();
+  if (insErr) throw insErr;
+  const id = (inserted as any).id as string;
+
+  // Upload the cutout into the public brand-assets bucket, under the admin's
+  // uid folder (the owner-folder write policy allows this).
+  const path = `${adminId}/${id}/cutout-${Date.now()}.png`;
+  const { error: upErr } = await sb.storage.from('brand-assets').upload(path, input.cutout, {
+    upsert: true, contentType: 'image/png', cacheControl: '3600',
+  });
+  if (upErr) {
+    // Roll back the row so a failed image doesn't leave a pictureless brand.
+    await sb.from('brands').delete().eq('id', id);
+    throw new Error('Could not upload the cutout — the brand was not created. ' + upErr.message);
+  }
+  const url = sb.storage.from('brand-assets').getPublicUrl(path).data.publicUrl;
+  const { error: updErr } = await sb.from('brands').update({ hero_image_url: url }).eq('id', id);
+  if (updErr) throw updErr;
+
+  return { id, slug: (inserted as any).slug };
+}
+
 // Promote a non-capsule brand name into the Capsule, relinking its reviews.
 export async function promoteBrandByName(sb: SupabaseClient, name: string) {
   const id = await ensureCapsuleBrand(sb, name, null);

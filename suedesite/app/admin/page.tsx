@@ -14,10 +14,12 @@ import {
   loadFlagForReview, mergeBrandName, correctBrandName, dismissBrandFlag,
   loadContentFlags, resolveContentFlag,
   loadBrandClaims, approveBrandClaim, rejectBrandClaim, loadApprovedClaims, markClaimNotified,
+  createCapsuleBrand,
 } from '@/lib/adminActions';
+import { normalizeCutout } from '@/lib/imageNormalize';
 
 type Gate = 'checking' | 'anon' | 'denied' | 'ok';
-type Section = 'overview' | 'growth' | 'reviews' | 'inquiries' | 'clicks' | 'brands' | 'requests' | 'claims' | 'applications' | 'flags' | 'feedback' | 'members' | 'export';
+type Section = 'overview' | 'growth' | 'reviews' | 'inquiries' | 'clicks' | 'addbrand' | 'brands' | 'requests' | 'claims' | 'applications' | 'flags' | 'feedback' | 'members' | 'export';
 
 const fmtDate = (iso?: string) => (iso ? new Date(iso).toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' }) : '—');
 
@@ -47,6 +49,7 @@ export default function AdminPage() {
     ['reviews', 'Review Activity', 'reviews'],
     ['inquiries', 'Inquiry Activity', 'message'],
     ['clicks', 'Store Clicks', 'external-link'],
+    ['addbrand', 'Add Brand', 'plus'],
     ['brands', 'Brand Management', 'shirt'],
     ['requests', 'Capsule Requests', 'plus'],
     ['claims', 'Brand Claims', 'lock'],
@@ -102,6 +105,7 @@ export default function AdminPage() {
         {section === 'reviews' && <ReviewsSection sb={sb!} />}
         {section === 'inquiries' && <InquiriesSection sb={sb!} />}
         {section === 'clicks' && <ClicksSection sb={sb!} />}
+        {section === 'addbrand' && <AddBrandSection sb={sb!} adminId={adminId} />}
         {section === 'brands' && <BrandsSection sb={sb!} adminId={adminId} />}
         {section === 'requests' && <RequestsSection sb={sb!} />}
         {section === 'claims' && <ClaimsSection sb={sb!} adminId={adminId} />}
@@ -557,6 +561,123 @@ function FeedbackSection({ sb }: any) {
           ))}
         </div>
       )}
+    </>
+  );
+}
+
+function AddBrandSection({ sb, adminId }: any) {
+  const [name, setName] = React.useState('');
+  const [website, setWebsite] = React.useState('');
+  const [desc, setDesc] = React.useState('');
+  const [onHome, setOnHome] = React.useState(false);
+  const [cutout, setCutout] = React.useState<Blob | null>(null);
+  const [preview, setPreview] = React.useState('');
+  const [state, setState] = React.useState<'idle' | 'busy' | 'done' | 'error'>('idle');
+  const [msg, setMsg] = React.useState('');
+  const [doneSlug, setDoneSlug] = React.useState('');
+
+  const inputStyle: any = { width: '100%', boxSizing: 'border-box', border: '1px solid var(--border-default)', borderRadius: 'var(--radius-xs)', background: 'var(--surface-card)', padding: '11px 13px', fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-primary)', outline: 'none' };
+  const labelStyle: any = { display: 'block', fontFamily: 'var(--font-body)', fontSize: 12, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 7 };
+
+  const pickFile = async (file?: File | null) => {
+    if (!file) return;
+    if (!file.type.startsWith('image/')) { setState('error'); setMsg('Choose an image file — a PNG with a transparent background works best.'); return; }
+    setState('idle'); setMsg('Processing image…');
+    try {
+      const blob = await normalizeCutout(file);
+      setCutout(blob);
+      setPreview((prev) => { if (prev) URL.revokeObjectURL(prev); return URL.createObjectURL(blob); });
+      setMsg('');
+    } catch (e: any) { setState('error'); setMsg(e?.message || 'Could not process that image.'); }
+  };
+
+  const reset = () => {
+    setName(''); setWebsite(''); setDesc(''); setOnHome(false); setCutout(null);
+    setPreview((prev) => { if (prev) URL.revokeObjectURL(prev); return ''; });
+    setState('idle'); setMsg(''); setDoneSlug('');
+  };
+
+  const submit = async () => {
+    if (!name.trim()) { setState('error'); setMsg('Enter a brand name.'); return; }
+    if (!cutout) { setState('error'); setMsg('Upload a model cutout.'); return; }
+    setState('busy'); setMsg('');
+    try {
+      const res = await createCapsuleBrand(sb, adminId, { name, website, description: desc, onHome, cutout });
+      setDoneSlug(res.slug); setState('done');
+    } catch (e: any) { setState('error'); setMsg(e?.message || 'Could not create the brand.'); }
+  };
+
+  if (state === 'done') {
+    return (
+      <>
+        <H sub="The brand is live in the Capsule directory.">Add Brand</H>
+        <Card style={{ maxWidth: 560 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+            <Icon name="check" size={20} color="var(--rating-positive)" />
+            <span style={{ fontFamily: 'var(--font-serif)', fontSize: 20, color: 'var(--text-heading)' }}>“{name.trim()}” added to the Capsule</span>
+          </div>
+          <p style={{ fontSize: 14, color: 'var(--text-muted)', margin: '0 0 18px', lineHeight: 1.55 }}>
+            It now appears in the Capsule directory{onHome ? ' and on the home-page marquee' : ''}. It may take a moment to show as caches refresh.
+          </p>
+          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+            <a href={`/brand/${doneSlug}`} style={{ ...inputStyle, width: 'auto', textDecoration: 'none', color: 'var(--text-primary)', borderColor: 'var(--ink-900)' }}>View brand page →</a>
+            <button onClick={reset} style={{ ...inputStyle, width: 'auto', cursor: 'pointer', background: 'var(--ink-900)', color: 'var(--white)', border: 'none' }}>Add another brand</button>
+          </div>
+        </Card>
+      </>
+    );
+  }
+
+  return (
+    <>
+      <H sub="Create a new Capsule brand. It's added to the directory the moment you submit.">Add Brand</H>
+      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 300px', gap: 24, alignItems: 'start' }}>
+        <Card>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+            <div>
+              <label style={labelStyle}>Model cutout <span style={{ color: 'var(--rating-critical)' }}>*</span></label>
+              <input type="file" accept="image/png,image/webp,image/jpeg" onChange={(e) => pickFile(e.target.files?.[0])} style={{ ...inputStyle, padding: 9, cursor: 'pointer' }} />
+              <p style={{ fontSize: 12.5, color: 'var(--text-muted)', margin: '7px 0 0', lineHeight: 1.5 }}>Transparent PNG recommended. It's auto-resized to the standard 1:2 portrait so it lines up with every other brand on web and mobile.</p>
+            </div>
+            <div>
+              <label style={labelStyle}>Brand name <span style={{ color: 'var(--rating-critical)' }}>*</span></label>
+              <input value={name} onChange={(e) => { setName(e.target.value); if (state === 'error') setState('idle'); }} placeholder="e.g. Nadi" style={inputStyle} />
+            </div>
+            <div>
+              <label style={labelStyle}>Website</label>
+              <input value={website} onChange={(e) => setWebsite(e.target.value)} placeholder="https://…" style={inputStyle} />
+            </div>
+            <div>
+              <label style={labelStyle}>Short description</label>
+              <textarea value={desc} onChange={(e) => setDesc(e.target.value)} rows={3} maxLength={280} placeholder="One or two lines about the brand." style={{ ...inputStyle, resize: 'vertical', lineHeight: 1.5 }} />
+            </div>
+            <button type="button" onClick={() => setOnHome((v) => !v)} style={{ display: 'flex', alignItems: 'center', gap: 12, background: 'none', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'left' }}>
+              <span style={{ width: 44, height: 26, borderRadius: 13, background: onHome ? 'var(--rating-positive)' : 'var(--border-strong)', position: 'relative', flex: 'none', transition: 'background var(--dur-fast) var(--ease-out)' }}>
+                <span style={{ position: 'absolute', top: 3, left: onHome ? 21 : 3, width: 20, height: 20, borderRadius: '50%', background: 'var(--white)', transition: 'left var(--dur-fast) var(--ease-out)' }} />
+              </span>
+              <span>
+                <span style={{ display: 'block', fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-primary)' }}>Feature on the home page</span>
+                <span style={{ display: 'block', fontSize: 12.5, color: 'var(--text-muted)' }}>Also show this brand in the home-page marquee.</span>
+              </span>
+            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginTop: 4 }}>
+              <button onClick={submit} disabled={state === 'busy'} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'var(--ink-900)', color: 'var(--white)', border: 'none', borderRadius: 'var(--radius-xs)', padding: '12px 22px', cursor: state === 'busy' ? 'default' : 'pointer', fontFamily: 'var(--font-body)', fontSize: 14, opacity: state === 'busy' ? 0.6 : 1 }}>
+                {state === 'busy' ? 'Adding…' : 'Add to Capsule'}
+              </button>
+              {msg && <span style={{ fontSize: 13, color: state === 'error' ? 'var(--rating-critical)' : 'var(--text-muted)' }}>{msg}</span>}
+            </div>
+          </div>
+        </Card>
+        <Card style={{ padding: 0, overflow: 'hidden' }}>
+          <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--border-subtle)', fontSize: 12, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--text-muted)' }}>Preview</div>
+          <div style={{ height: 360, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', background: 'var(--paper)', padding: 16 }}>
+            {preview
+              ? <img src={preview} alt="Cutout preview" style={{ height: '100%', width: 'auto', objectFit: 'contain' }} />
+              : <span style={{ alignSelf: 'center', fontSize: 13, color: 'var(--text-muted)', textAlign: 'center', padding: 20 }}>The normalized cutout appears here.</span>}
+          </div>
+          {name.trim() && <div style={{ padding: '12px 14px', textAlign: 'center', fontFamily: 'var(--font-serif)', fontSize: 14, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--text-secondary)', borderTop: '1px solid var(--border-subtle)' }}>{name.trim()}</div>}
+        </Card>
+      </div>
     </>
   );
 }
