@@ -774,7 +774,25 @@ function CapsuleBrands({ sb, adminId }: any) {
   const [edit, setEdit] = React.useState<any>(null);
   const [busy, setBusy] = React.useState<string | null>(null);
   const [msg, setMsg] = React.useState('');
-  const save = async () => { setBusy(edit.id); try { await updateBrand(sb, edit.id, { name: edit.name, slug: edit.slug, website: edit.website, instagram: edit.instagram }); setEdit(null); bump(); } catch { /* ignore */ } setBusy(null); };
+  const [editErr, setEditErr] = React.useState('');
+  const closeEdit = () => { setEdit((prev: any) => { if (prev?._newPreview) URL.revokeObjectURL(prev._newPreview); return null; }); setEditErr(''); };
+  const pickEditFile = async (file?: File | null) => {
+    if (!file) return;
+    setEditErr('');
+    try {
+      const blob = await normalizeCutout(file);
+      setEdit((prev: any) => { if (prev?._newPreview) URL.revokeObjectURL(prev._newPreview); return { ...prev, _newCutout: blob, _newPreview: URL.createObjectURL(blob) }; });
+    } catch (e: any) { setEditErr(e?.message || 'Could not process that image.'); }
+  };
+  const save = async () => {
+    setBusy(edit.id); setEditErr('');
+    try {
+      await updateBrand(sb, edit.id, { name: edit.name, slug: edit.slug, website: edit.website, instagram: edit.instagram });
+      if (edit._newCutout) await updateBrandCutout(sb, adminId, edit.id, edit._newCutout);
+      closeEdit(); bump();
+    } catch (e: any) { setEditErr(e?.message || 'Could not save.'); }
+    setBusy(null);
+  };
   const toggleHome = async (b: any) => { setBusy(b.id); try { await setBrandOnHome(sb, b.id, !b.onHome); bump(); } catch { /* ignore */ } setBusy(null); };
   const remove = async (b: any) => {
     if (typeof window !== 'undefined' && !window.confirm(`Remove “${b.name}” from The Capsule? It disappears from the directory (and the home page). Its reviews are kept.`)) return;
@@ -812,8 +830,8 @@ function CapsuleBrands({ sb, adminId }: any) {
         </span>,
       ])} loading={!rows} empty="No Capsule brands." />
       {edit && (
-        <div onClick={() => setEdit(null)} style={{ position: 'fixed', inset: 0, zIndex: 80, background: 'rgba(20,18,15,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-          <div onClick={(e) => e.stopPropagation()} style={{ background: 'var(--surface-card)', width: 'min(460px,100%)', padding: 26, borderRadius: 'var(--radius-xs)' }}>
+        <div onClick={closeEdit} style={{ position: 'fixed', inset: 0, zIndex: 80, background: 'rgba(20,18,15,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ background: 'var(--surface-card)', width: 'min(460px,100%)', maxHeight: '90vh', overflowY: 'auto', padding: 26, borderRadius: 'var(--radius-xs)' }}>
             <div style={{ fontFamily: 'var(--font-serif)', fontSize: 20, color: 'var(--text-heading)', marginBottom: 18 }}>Edit brand</div>
             {[['name', 'Brand name'], ['slug', 'Slug'], ['website', 'Website URL'], ['instagram', 'Instagram handle']].map(([key, label]) => (
               <label key={key} style={{ display: 'block', marginBottom: 14 }}>
@@ -821,8 +839,21 @@ function CapsuleBrands({ sb, adminId }: any) {
                 <input value={edit[key] || ''} onChange={(e) => setEdit({ ...edit, [key]: e.target.value })} style={{ width: '100%', boxSizing: 'border-box', border: '1px solid var(--border-default)', borderRadius: 'var(--radius-xs)', padding: '10px 12px', fontFamily: 'var(--font-body)', fontSize: 14 }} />
               </label>
             ))}
+            <div style={{ marginBottom: 14 }}>
+              <span style={{ fontSize: 12, color: 'var(--text-muted)', display: 'block', marginBottom: 7 }}>Model cutout</span>
+              <div style={{ display: 'flex', alignItems: 'flex-end', gap: 14 }}>
+                {(edit._newPreview || edit.image)
+                  ? <img src={edit._newPreview || edit.image} alt="" style={{ height: 104, width: 'auto', objectFit: 'contain', background: 'var(--paper)', borderRadius: 4, flex: 'none' }} />
+                  : <div style={{ height: 104, width: 64, background: 'var(--paper)', borderRadius: 4, flex: 'none' }} />}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <input type="file" accept="image/png,image/webp,image/jpeg" onChange={(e) => pickEditFile(e.target.files?.[0])} style={{ width: '100%', boxSizing: 'border-box', border: '1px solid var(--border-default)', borderRadius: 'var(--radius-xs)', padding: 8, fontSize: 13, cursor: 'pointer' }} />
+                  <p style={{ fontSize: 11.5, color: edit._newCutout ? 'var(--rating-positive)' : 'var(--text-muted)', margin: '6px 0 0', lineHeight: 1.45 }}>{edit._newCutout ? 'New cutout ready — Save to apply.' : 'Pick a transparent PNG to replace it (auto-resized to match).'}</p>
+                </div>
+              </div>
+            </div>
+            {editErr && <p style={{ fontSize: 12.5, color: 'var(--rating-critical)', margin: '0 0 12px' }}>{editErr}</p>}
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 8 }}>
-              <ActionBtn ghost onClick={() => setEdit(null)}>Cancel</ActionBtn>
+              <ActionBtn ghost onClick={closeEdit}>Cancel</ActionBtn>
               <ActionBtn busy={busy === edit.id} onClick={save}>Save</ActionBtn>
             </div>
           </div>
