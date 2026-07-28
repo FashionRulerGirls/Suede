@@ -55,7 +55,7 @@ export default function PortalPage() {
     <div style={{ minHeight: '100vh', background: '#faf8f5', display: 'grid', gridTemplateColumns: '250px 1fr', fontFamily: 'var(--font-body)' }}>
       <aside style={{ borderRight: '1px solid var(--border-subtle)', background: 'var(--surface-card)', padding: '24px 16px', display: 'flex', flexDirection: 'column', gap: 6, position: 'sticky', top: 0, height: '100vh' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '4px 10px 16px' }}>
-          <Logo variant="monogram" height={26} /><span style={{ fontSize: 12, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--text-muted)' }}>Brand Portal</span>
+          <a href="/" aria-label="Suede — home" title="Back to Suede" style={{ display: 'inline-flex', lineHeight: 0 }}><Logo variant="monogram" height={26} /></a><span style={{ fontSize: 12, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--text-muted)' }}>Brand Portal</span>
         </div>
         {brands.length > 1 && (
           <select value={active} onChange={(e) => { setActive(Number(e.target.value)); }} style={{ margin: '0 6px 12px', padding: '8px 10px', border: '1px solid var(--border-default)', borderRadius: 'var(--radius-xs)', fontFamily: 'var(--font-body)', fontSize: 13 }}>
@@ -98,7 +98,7 @@ function SignIn({ sb, onDone }: any) {
   };
   return (
     <Shell><div style={{ width: 'min(400px, 100%)', margin: '0 auto' }}>
-      <div style={{ textAlign: 'center', marginBottom: 24 }}><Logo variant="monogram" height={44} /></div>
+      <div style={{ textAlign: 'center', marginBottom: 24 }}><a href="/" aria-label="Suede — home" title="Back to Suede" style={{ display: 'inline-flex', lineHeight: 0 }}><Logo variant="monogram" height={44} /></a></div>
       <div style={{ background: 'var(--surface-card)', border: '1px solid var(--border-subtle)', padding: 32 }}>
         <div style={{ fontFamily: 'var(--font-serif)', fontSize: 24, color: 'var(--text-heading)', marginBottom: 4 }}>Brand Portal</div>
         <p style={{ fontSize: 14, color: 'var(--text-muted)', margin: '0 0 20px' }}>Sign in with your Suede account.</p>
