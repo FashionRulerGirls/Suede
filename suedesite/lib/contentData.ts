@@ -550,6 +550,16 @@ export async function loadCollectiveMembers(sb: SupabaseClient, viewerId?: strin
     bio: p.bio || '',
     following: followingSet.has(p.id),
     match: viewerId ? await loadMatch(sb, viewerId, p.id) : null,
+    // Card footer + measurement spec (0033). The RPC returns measurements only
+    // when the member made them public; the plain-profiles fallback omits them.
+    measurements: measurementsDisplay({
+      height_in: p.height_in, bust_in: p.bust_in, waist_in: p.waist_in, hips_in: p.hips_in,
+    }),
+    stats: {
+      reviews: Number(p.reviews_count ?? 0),
+      inquiries: Number(p.inquiries_count ?? 0),
+      followers: Number(p.followers_count ?? 0),
+    },
   })));
   return withMatch;
 }

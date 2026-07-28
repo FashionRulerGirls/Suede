@@ -1,42 +1,74 @@
 'use client';
 import React from 'react';
 /* Suede — The Collective (member discovery) screen. */
-import { SectionHeading, Button, Avatar } from '@/components/ds';
+import { SectionHeading, Button, Avatar, MeasurementSpec } from '@/components/ds';
 import { appState } from '@/lib/appState';
 import { SuedeControls } from '@/lib/listControls';
 import { useAuth } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/client';
 import { loadCollectiveMembers, setMemberFollow } from '@/lib/contentData';
 
-// Real member card: avatar + bio + real Suede Match + persisted follow.
+// Real member card — mirrors the home-page member card (LandingScreen):
+// header with measurement spec + Suede Match pill, centered portrait with
+// Follow+/View Profile links, and a Reviews/Inquiries/Followers stats footer.
 function RealMemberCard({ mem, viewerId, onView }: any) {
   const [following, setFollowing] = React.useState(!!mem.following);
   const conf = mem.match?.confidence as string | undefined;
   const dot = conf === 'high' ? 'var(--rating-positive)' : conf === 'medium' ? 'var(--denim)' : conf === 'low' ? 'var(--text-muted)' : 'var(--border-strong)';
+  const confLabel = conf === 'high' ? 'High Confidence' : conf === 'medium' ? 'Medium Confidence' : conf === 'low' ? 'Exploratory' : '';
   const toggle = async () => {
     if (!viewerId) return;
     const on = !following; setFollowing(on);
     const sb = createClient();
     if (sb) { try { await setMemberFollow(sb, viewerId, mem.id, on); } catch { setFollowing(!on); } }
   };
+  const link: any = { background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-primary)', textDecoration: 'underline', textUnderlineOffset: 3, textAlign: 'left' };
+  const m = mem.measurements || {};
+  const hasMeas = !!(m.height || m.bust || m.waist || m.hips);
+  const s = mem.stats || { reviews: 0, inquiries: 0, followers: 0 };
+  const stat = (n: number) => (n >= 1000 ? `${(n / 1000).toFixed(n % 1000 >= 100 ? 1 : 0)}k` : String(n));
   return (
-    <div style={{ background: 'var(--surface-card)', boxShadow: 'var(--shadow-card)', padding: '24px 26px', display: 'flex', flexDirection: 'column', gap: 16 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-        <button onClick={onView} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}><Avatar src={mem.avatar} name={mem.name} size={56} ring /></button>
-        <div style={{ minWidth: 0, flex: 1 }}>
-          <button onClick={onView} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'left', fontFamily: 'var(--font-serif)', fontSize: 21, color: 'var(--text-primary)' }}>{mem.name}</button>
-          <div style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>{mem.handle}</div>
+    <div className="sd-collcard" style={{ background: 'var(--surface-card)', borderRadius: 0, boxShadow: '0 16px 42px rgba(16,14,11,0.16)', padding: '16px 30px', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 14 }}>
+        <div style={{ minWidth: 0 }}>
+          <button onClick={onView} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'left', fontFamily: 'var(--font-serif)', fontSize: 22, color: 'var(--text-primary)' }}>{mem.name}</button>
+          <div style={{ fontFamily: 'var(--font-body)', fontSize: 11, letterSpacing: '0.08em', color: 'var(--text-muted)', marginTop: 3 }}>{mem.handle}</div>
         </div>
-        {mem.match && (
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: 'var(--font-body)', fontSize: 12, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
-            <span style={{ width: 6, height: 6, borderRadius: '50%', background: dot }} />{mem.match.score}% match
-          </span>
-        )}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8 }}>
+          {hasMeas && <MeasurementSpec height={m.height} bust={m.bust} waist={m.waist} hips={m.hips} size="sm" tone="muted" />}
+          {mem.match && (
+            <span style={{ position: 'relative', display: 'inline-flex' }}
+              onMouseEnter={(e) => { const t = e.currentTarget.querySelector('[data-tip]') as any; if (t) { t.style.opacity = '1'; t.style.pointerEvents = 'auto'; } }}
+              onMouseLeave={(e) => { const t = e.currentTarget.querySelector('[data-tip]') as any; if (t) { t.style.opacity = '0'; t.style.pointerEvents = 'none'; } }}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: 'var(--font-body)', fontSize: 12, letterSpacing: '0.02em', color: 'var(--text-muted)' }}>
+                <span style={{ width: 6, height: 6, borderRadius: '50%', background: dot, flex: 'none' }} />Suede Match
+              </span>
+              <span data-tip className="sd-rating-pop" style={{ position: 'absolute', top: 'calc(100% + 8px)', right: 0, whiteSpace: 'nowrap', background: 'var(--surface-card)', border: '1px solid var(--border-subtle)', boxShadow: 'var(--shadow-lg)', padding: '8px 12px', display: 'inline-flex', alignItems: 'center', opacity: 0, pointerEvents: 'none', transition: 'opacity var(--dur-base) var(--ease-out)', zIndex: 20 }}>
+                <span style={{ fontFamily: 'var(--font-body)', fontSize: 12.5, color: 'var(--text-secondary)' }}>{mem.match.score != null ? `${mem.match.score}% match` : ''}{mem.match.score != null && confLabel ? ' · ' : ''}{confLabel}</span>
+              </span>
+            </span>
+          )}
+        </div>
       </div>
-      {mem.bio && <p style={{ fontFamily: 'var(--font-body)', fontSize: 14, lineHeight: 1.55, color: 'var(--text-secondary)', margin: 0 }}>{mem.bio}</p>}
-      <div style={{ display: 'flex', gap: 12, borderTop: '1px solid var(--border-subtle)', paddingTop: 16 }}>
-        <Button variant={following ? 'secondary' : 'primary'} size="sm" onClick={toggle}>{following ? 'Following' : 'Follow'}</Button>
-        <Button variant="ghost" size="sm" onClick={onView}>View Profile</Button>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', gap: 16, marginTop: 14 }}>
+        <span aria-hidden="true" />
+        <button onClick={onView} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', justifySelf: 'center', lineHeight: 0 }}>
+          {mem.avatar
+            ? <img src={mem.avatar} alt={mem.name} style={{ width: 184, height: 244, objectFit: 'cover', objectPosition: 'center 30%', borderRadius: 0, display: 'block' }} />
+            : <Avatar name={mem.name} size={184} />}
+        </button>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14, justifySelf: 'end', alignItems: 'flex-end' }}>
+          <button style={link} onClick={toggle}>{following ? 'Following' : 'Follow+'}</button>
+          <button style={link} onClick={onView}>View Profile</button>
+        </div>
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 14, paddingTop: 14, borderTop: '1px solid var(--border-subtle)' }}>
+        {[['Reviews', s.reviews], ['Inquiries', s.inquiries], ['Followers', s.followers]].map(([k, v]: any) => (
+          <div key={k} style={{ textAlign: 'center', flex: 1 }}>
+            <div style={{ fontFamily: 'var(--font-serif)', fontSize: 12, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--text-muted)' }}>{k}</div>
+            <div style={{ fontFamily: 'var(--font-serif)', fontSize: 18, color: 'var(--text-primary)', marginTop: 4 }}>{stat(v)}</div>
+          </div>
+        ))}
       </div>
     </div>
   );
