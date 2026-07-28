@@ -75,12 +75,17 @@ export function NotificationsScreen({ onRoute, authed }: any) {
     try {
       if (n.entityType === 'review') {
         const row = await loadReviewById(sb, n.entityId);
-        if (row) { appState.review = reviewRowToCard(row); onRoute('review'); }
+        if (row) { appState.review = reviewRowToCard(row); onRoute('review'); return; }
       } else if (n.entityType === 'inquiry') {
         const row = await loadInquiryById(sb, n.entityId);
-        if (row) { appState.inquiry = inquiryRowToCard(row); onRoute('inquiry'); }
+        if (row) { appState.inquiry = inquiryRowToCard(row); onRoute('inquiry'); return; }
+      } else {
+        return;
       }
-    } catch { /* entity removed — leave the user on the list */ }
+      // The referenced review/inquiry has been removed. Drop the stale row so it
+      // stops lingering in the list (the DB trigger clears it at the source too).
+      setItems((prev) => prev.filter((x) => x.id !== n.id));
+    } catch { /* transient error — leave the user on the list */ }
   };
 
   return (

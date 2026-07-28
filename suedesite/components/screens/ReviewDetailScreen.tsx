@@ -49,6 +49,7 @@ export function ReviewDetailScreen({ onRoute, authed = false }: any) {
   const [full, setFull] = React.useState<any>(null);
   const [media, setMedia] = React.useState<{ url: string; kind: string; poster?: string | null }[]>([]);
   const [lb, setLb] = React.useState<number | null>(null);
+  const [gone, setGone] = React.useState(false); // real review that no longer resolves (deleted)
   const [reviewLikes, setReviewLikes] = React.useState(0);
   const [reviewLiked, setReviewLiked] = React.useState(false);
   const [comments, setComments] = React.useState<any[]>(real ? [] : [
@@ -61,7 +62,7 @@ export function ReviewDetailScreen({ onRoute, authed = false }: any) {
     const sb = createClient();
     if (!sb) return;
     let active = true;
-    loadReviewById(sb, r._id).then((f) => { if (active) setFull(f); }).catch(() => {});
+    loadReviewById(sb, r._id).then((f) => { if (active) { if (f) setFull(f); else setGone(true); } }).catch(() => {});
     loadReviewMedia(sb, r._id).then((u) => { if (active) setMedia(u); }).catch(() => {});
     // Comments + their like state.
     loadReviewComments(sb, r._id).then(async (cs) => {
@@ -154,6 +155,19 @@ export function ReviewDetailScreen({ onRoute, authed = false }: any) {
     setComments((c) => [{ avatar: profile?.avatar_url || '/assets/avatars/avatar-rose.jpg', name: profile?.display_name || 'Kikiola Akanbi', when: 'Just now', likes: 0, body: text }, ...c]);
     setDraft('');
   };
+
+  if (gone) {
+    return (
+      <div style={{ maxWidth: 640, margin: '0 auto', padding: '96px 24px', textAlign: 'center' }}>
+        <span style={{ display: 'inline-flex', width: 52, height: 52, borderRadius: '50%', background: 'var(--linen)', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}><Icon name="info" size={22} color="var(--text-muted)" /></span>
+        <p style={{ fontFamily: 'var(--font-serif)', fontSize: 22, color: 'var(--text-heading)', margin: '0 0 6px' }}>This review is no longer available</p>
+        <p style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-muted)', margin: '0 0 22px' }}>It may have been removed by its author.</p>
+        <button onClick={() => onRoute('lookbook')} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-primary)', borderBottom: '1px solid var(--ink-900)' }}>
+          <Icon name="arrow-left" size={16} color="var(--text-primary)" /> Back to Lookbook
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="sd-rev-wrap" style={{ maxWidth: 1240, margin: '0 auto', padding: '28px 40px 0' }}>

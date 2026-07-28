@@ -67,6 +67,7 @@ export function InquiryDetailScreen({ onRoute, authed = false }: any) {
   const real = !!q._id; // came from the database (vs. the guest/demo sample)
   const { user, profile } = useAuth();
   const [full, setFull] = React.useState<any>(null);
+  const [gone, setGone] = React.useState(false); // real inquiry that no longer resolves (deleted)
   const [responses, setResponses] = React.useState<any[]>(real ? [] : [
     { avatar: '/assets/avatars/avatar-rose.jpg', name: 'Sophie L.', specs: '5\'6"/33"/39"/40"', when: '2 days ago', likes: 3, body: 'Good coverage — fully lined through the bodice and skirt, only the leg slit is high.' },
     { avatar: '/assets/avatars/avatar-blue.jpg', name: 'Maria T.', specs: '5\'6"/33"/39"/40"', when: '1 day ago', likes: 1, body: 'Pretty good coverage. The neckline sits high and the sleeves are full length.' },
@@ -76,7 +77,7 @@ export function InquiryDetailScreen({ onRoute, authed = false }: any) {
     const sb = createClient();
     if (!sb) return;
     let active = true;
-    loadInquiryById(sb, q._id).then((f) => { if (active) setFull(f); }).catch(() => {});
+    loadInquiryById(sb, q._id).then((f) => { if (active) { if (f) setFull(f); else setGone(true); } }).catch(() => {});
     loadInquiryResponses(sb, q._id).then(async (rs) => {
       if (!active) return;
       const ids = rs.map((x: any) => x.id).filter(Boolean);
@@ -146,6 +147,19 @@ export function InquiryDetailScreen({ onRoute, authed = false }: any) {
     setResponses(rs => [...rs, { avatar: profile?.avatar_url || '/assets/avatars/avatar-rose.jpg', name: profile?.display_name || 'Kikiola Akanbi', specs: '', when: 'Just now', likes: 0, body: text, review: attached || null }]);
     setDraft(''); setAttached(null);
   };
+
+  if (gone) {
+    return (
+      <div style={{ maxWidth: 640, margin: '0 auto', padding: '96px 24px', textAlign: 'center' }}>
+        <span style={{ display: 'inline-flex', width: 52, height: 52, borderRadius: '50%', background: 'var(--linen)', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}><Icon name="info" size={22} color="var(--text-muted)" /></span>
+        <p style={{ fontFamily: 'var(--font-serif)', fontSize: 22, color: 'var(--text-heading)', margin: '0 0 6px' }}>This inquiry is no longer available</p>
+        <p style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-muted)', margin: '0 0 22px' }}>It may have been removed by its author.</p>
+        <button onClick={() => { appState.lookbookTab = 'inquiries'; onRoute('lookbook'); }} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-primary)', borderBottom: '1px solid var(--ink-900)' }}>
+          <Icon name="arrow-left" size={16} color="var(--text-primary)" /> Back to Lookbook
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="sd-iqd-wrap" style={{ maxWidth: 1240, margin: '0 auto', padding: '28px 40px 0' }}>

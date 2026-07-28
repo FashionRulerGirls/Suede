@@ -696,12 +696,14 @@ export function relativeTime(iso?: string): string {
 }
 
 export async function loadReviewById(sb: SupabaseClient, id: string) {
-  const { data } = await sb.from('reviews').select(REVIEW_SELECT).eq('id', id).maybeSingle();
+  // A soft-deleted review (status 'removed') must not resolve — even for its
+  // author, and even when reached directly from a stale link or notification.
+  const { data } = await sb.from('reviews').select(REVIEW_SELECT).eq('id', id).neq('status', 'removed').maybeSingle();
   return data as any;
 }
 
 export async function loadInquiryById(sb: SupabaseClient, id: string) {
-  const { data } = await sb.from('inquiries').select(INQUIRY_SELECT).eq('id', id).maybeSingle();
+  const { data } = await sb.from('inquiries').select(INQUIRY_SELECT).eq('id', id).neq('status', 'removed').maybeSingle();
   return data as any;
 }
 
