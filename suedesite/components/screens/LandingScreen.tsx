@@ -203,8 +203,11 @@ export function LandingScreen({ onRoute, tweaks, authed = false }: any) {
     loadHomeBrands(sb).then((bs) => { if (active) setFeatured(bs); }).catch(() => {});
     return () => { active = false; };
   }, []);
-  const curatedNames = new Set(curated.map((b) => b.name.toLowerCase()));
-  const brands = [...curated, ...featured.filter((b: any) => b.name && !curatedNames.has(b.name.toLowerCase()))];
+  // The on_home flag is the source of truth: once any brand is flagged, the
+  // marquee shows exactly those (fully controllable from Brand Management).
+  // The curated list is only a fallback for when nothing is flagged yet.
+  const featuredValid = featured.filter((b: any) => b.name && b.image);
+  const brands = featuredValid.length ? featuredValid : curated;
   return (
     <div>
       {/* HERO — giant SUEDE wordmark behind the auto-scrolling model carousel */}
