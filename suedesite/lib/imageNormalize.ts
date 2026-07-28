@@ -14,7 +14,7 @@ const MAX_W = 0.98;     // …only shrink below MODEL_H if an unusually wide pos
 const BOTTOM = 0.99;    // baseline sits near the very bottom (models "stand")
 const ALPHA_MIN = 12;   // treat pixels below this alpha as empty
 
-function loadImage(file: File): Promise<HTMLImageElement> {
+function loadImage(file: Blob): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const url = URL.createObjectURL(file);
     const img = new Image();
@@ -58,7 +58,7 @@ function looksOpaque(data: Uint8ClampedArray, w: number, h: number): boolean {
   return transparent / total < 0.02; // essentially no transparency anywhere
 }
 
-export async function normalizeCutout(file: File): Promise<Blob> {
+export async function normalizeCutout(file: Blob): Promise<Blob> {
   const img = await loadImage(file);
   const nw = img.naturalWidth, nh = img.naturalHeight;
   if (!nw || !nh) throw new Error('That image looks empty.');

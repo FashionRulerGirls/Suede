@@ -78,11 +78,11 @@ export async function markFeedbackReviewed(sb: SupabaseClient, id: string) {
 
 // ── Brand Management — §5a / §5b ─────────────────────────────────────
 export async function loadCapsuleBrands(sb: SupabaseClient) {
-  const COLS = 'id, name, slug, shop_url, social, created_at';
+  const COLS = 'id, name, slug, shop_url, social, hero_image_url, created_at';
   // Include on_home when present; fall back if migration 0034 isn't applied yet.
   let resp: any = await sb.from('brands').select(COLS + ', on_home').eq('is_capsule', true).order('name');
   if (resp.error) resp = await sb.from('brands').select(COLS).eq('is_capsule', true).order('name');
-  return (resp.data || []).map((b: any) => ({ id: b.id, name: b.name, slug: b.slug, website: b.shop_url || '', instagram: b.social || '', onHome: !!b.on_home, created_at: b.created_at }));
+  return (resp.data || []).map((b: any) => ({ id: b.id, name: b.name, slug: b.slug, website: b.shop_url || '', instagram: b.social || '', image: b.hero_image_url || '', onHome: !!b.on_home, created_at: b.created_at }));
 }
 
 // Non-Capsule = brand names seen on reviews that aren't a Capsule brand.
@@ -126,6 +126,20 @@ export async function removeFromCapsule(sb: SupabaseClient, id: string) {
 export async function setBrandOnHome(sb: SupabaseClient, id: string, on: boolean) {
   const { error } = await sb.from('brands').update({ on_home: on }).eq('id', id);
   if (error) throw error;
+}
+
+// Replace a brand's cutout with a (re)normalized PNG. The caller normalizes the
+// blob client-side; this uploads it and re-links hero_image_url.
+export async function updateBrandCutout(sb: SupabaseClient, adminId: string, brandId: string, cutout: Blob): Promise<string> {
+  const path = `${adminId}/${brandId}/cutout-${Date.now()}.png`;
+  const { error: upErr } = await sb.storage.from('brand-assets').upload(path, cutout, {
+    upsert: true, contentType: 'image/png', cacheControl: '3600',
+  });
+  if (upErr) throw upErr;
+  const url = sb.storage.from('brand-assets').getPublicUrl(path).data.publicUrl;
+  const { error } = await sb.from('brands').update({ hero_image_url: url }).eq('id', brandId);
+  if (error) throw error;
+  return url;
 }
 
 // A slug not already taken by another brand (append -2, -3, … on collision).

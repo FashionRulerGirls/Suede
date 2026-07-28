@@ -9,7 +9,7 @@ import {
 import {
   loadCapsuleRequests, approveCapsuleRequest, rejectCapsuleRequest,
   loadApplications, markApplicationReviewed, loadFeedback, markFeedbackReviewed,
-  loadCapsuleBrands, loadNonCapsuleBrands, updateBrand, removeFromCapsule, setBrandOnHome,
+  loadCapsuleBrands, loadNonCapsuleBrands, updateBrand, removeFromCapsule, setBrandOnHome, updateBrandCutout,
   promoteBrandByName, flagBrandName,
   loadFlagForReview, mergeBrandName, correctBrandName, dismissBrandFlag,
   loadContentFlags, resolveContentFlag,
@@ -692,7 +692,7 @@ function BrandsSection({ sb, adminId }: any) {
           <button key={id} onClick={() => setTab(id)} style={{ padding: '8px 18px', border: 'none', cursor: 'pointer', background: tab === id ? 'var(--ink-900)' : 'var(--surface-card)', color: tab === id ? 'var(--white)' : 'var(--text-secondary)', fontFamily: 'var(--font-body)', fontSize: 13 }}>{label}</button>
         ))}
       </div>
-      {tab === 'capsule' ? <CapsuleBrands sb={sb} /> : tab === 'noncap' ? <NonCapsuleBrands sb={sb} adminId={adminId} /> : <FlagForReview sb={sb} adminId={adminId} />}
+      {tab === 'capsule' ? <CapsuleBrands sb={sb} adminId={adminId} /> : tab === 'noncap' ? <NonCapsuleBrands sb={sb} adminId={adminId} /> : <FlagForReview sb={sb} adminId={adminId} />}
     </>
   );
 }
@@ -768,19 +768,37 @@ function ContentFlagsSection({ sb, adminId }: any) {
   );
 }
 
-function CapsuleBrands({ sb }: any) {
+function CapsuleBrands({ sb, adminId }: any) {
   const [k, bump] = useReload();
   const [rows] = useAsync(() => loadCapsuleBrands(sb), [k]);
   const [edit, setEdit] = React.useState<any>(null);
   const [busy, setBusy] = React.useState<string | null>(null);
+  const [msg, setMsg] = React.useState('');
   const save = async () => { setBusy(edit.id); try { await updateBrand(sb, edit.id, { name: edit.name, slug: edit.slug, website: edit.website, instagram: edit.instagram }); setEdit(null); bump(); } catch { /* ignore */ } setBusy(null); };
   const toggleHome = async (b: any) => { setBusy(b.id); try { await setBrandOnHome(sb, b.id, !b.onHome); bump(); } catch { /* ignore */ } setBusy(null); };
   const remove = async (b: any) => {
     if (typeof window !== 'undefined' && !window.confirm(`Remove “${b.name}” from The Capsule? It disappears from the directory (and the home page). Its reviews are kept.`)) return;
     setBusy(b.id); try { await removeFromCapsule(sb, b.id); bump(); } catch { /* ignore */ } setBusy(null);
   };
+  // Re-run the current cutout through the standard normalizer so brands added
+  // before the sizing fix snap to the consistent height — no re-upload needed.
+  const renormalize = async (b: any) => {
+    if (!b.image) { setMsg(`“${b.name}” has no cutout to re-normalize.`); return; }
+    setBusy(b.id); setMsg('');
+    try {
+      const resp = await fetch(b.image, { cache: 'no-store' });
+      if (!resp.ok) throw new Error('Could not fetch the current cutout.');
+      const normalized = await normalizeCutout(await resp.blob());
+      await updateBrandCutout(sb, adminId, b.id, normalized);
+      setMsg(`“${b.name}” cutout re-normalized.`); bump();
+    } catch (e: any) {
+      setMsg(`Couldn’t re-normalize “${b.name}” — ${e?.message || 'try re-uploading it via Add Brand.'}`);
+    }
+    setBusy(null);
+  };
   return (
     <>
+      {msg && <p style={{ fontSize: 13, color: msg.startsWith('Couldn') || msg.includes('no cutout') ? 'var(--rating-critical)' : 'var(--rating-positive)', marginTop: -8, marginBottom: 14 }}>{msg}</p>}
       <Table head={['Brand', 'Slug', 'Home', 'Actions']} rows={(rows || []).map((b: any) => [
         <b style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{b.name}</b>, b.slug,
         b.onHome
@@ -789,6 +807,7 @@ function CapsuleBrands({ sb }: any) {
         <span style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           <ActionBtn ghost onClick={() => setEdit({ ...b })}>Edit</ActionBtn>
           <ActionBtn ghost busy={busy === b.id} onClick={() => toggleHome(b)}>{b.onHome ? 'Remove from home' : 'Feature on home'}</ActionBtn>
+          {b.image && <ActionBtn ghost busy={busy === b.id} onClick={() => renormalize(b)}>Re-normalize</ActionBtn>}
           <ActionBtn danger busy={busy === b.id} onClick={() => remove(b)}>Remove from Capsule</ActionBtn>
         </span>,
       ])} loading={!rows} empty="No Capsule brands." />
