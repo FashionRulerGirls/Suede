@@ -1,9 +1,15 @@
 import { NextResponse } from 'next/server';
 import dns from 'node:dns/promises';
 import net from 'node:net';
+import { createClient } from '@/lib/supabase/server';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
+
+// Cap how much of a remote page we'll pull into memory. Product metadata lives
+// in the <head>; 2 MB is plenty and stops a hostile/huge page from exhausting
+// the server.
+const MAX_BYTES = 2 * 1024 * 1024;
 
 /* Reads basic product metadata (name, image, brand, price) from a pasted
    product URL. Runs server-side so we can fetch cross-origin pages that the
@@ -24,6 +30,40 @@ type Product = {
 // 169.254.169.254, localhost, RFC1918 ranges) — directly or via a redirect.
 
 class BlockedUrlError extends Error {}
+
+// Read a response body up to maxBytes, then stop. Guards against pages with no
+// (or a lying) content-length that would otherwise stream unbounded via .text().
+async function readCapped(res: Response, maxBytes: number): Promise<string> {
+  const lenHeader = Number(res.headers.get('content-length') || 0);
+  if (lenHeader && lenHeader > maxBytes) throw new BlockedUrlError('response too large');
+  const body = res.body;
+  if (!body) return (await res.text()).slice(0, maxBytes);
+  const reader = body.getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  try {
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      if (value) {
+        total += value.length;
+        if (total > maxBytes) throw new BlockedUrlError('response too large');
+        chunks.push(value);
+      }
+    }
+  } finally {
+    reader.releaseLock();
+  }
+  return new TextDecoder('utf-8', { fatal: false }).decode(concat(chunks));
+}
+
+function concat(chunks: Uint8Array[]): Uint8Array {
+  const total = chunks.reduce((n, c) => n + c.length, 0);
+  const out = new Uint8Array(total);
+  let off = 0;
+  for (const c of chunks) { out.set(c, off); off += c.length; }
+  return out;
+}
 
 function ipv4ToInt(ip: string): number {
   return ip.split('.').reduce((acc, o) => (acc * 256) + Number(o), 0) >>> 0;
@@ -166,6 +206,15 @@ function fromJsonLd(html: string): Partial<Product> {
 }
 
 export async function POST(req: Request) {
+  // Signed-in members only: this endpoint fetches arbitrary user-supplied URLs
+  // server-side, so gating it prevents anonymous abuse as a fetch proxy/scanner.
+  // (Only members create reviews, which is the only caller.)
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    return NextResponse.json({ ok: false, error: 'Please sign in first.' }, { status: 401 });
+  }
+
   let body: any;
   try { body = await req.json(); } catch { body = {}; }
   const raw = (body?.url || '').toString().trim();
@@ -190,7 +239,7 @@ export async function POST(req: Request) {
     if (!res.ok) {
       return NextResponse.json({ ok: false, error: `The site returned an error (${res.status}). Try entering details manually.` }, { status: 502 });
     }
-    html = await res.text();
+    html = await readCapped(res, MAX_BYTES);
   } catch (e: any) {
     if (e instanceof BlockedUrlError) {
       return NextResponse.json({ ok: false, error: "That link isn't allowed. Please enter the details manually." }, { status: 400 });
