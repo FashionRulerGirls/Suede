@@ -4,10 +4,13 @@
 // consistent size and baseline across the web grid and the mobile marquee,
 // regardless of how the source PNG was exported. Returns a PNG Blob (alpha kept).
 
-const TARGET_W = 600;   // 1:2 portrait — matches the Capsule cutout proportion
+const TARGET_W = 720;   // generous width so wide poses never need shrinking
 const TARGET_H = 1200;
-const SIDE_PAD = 0.90;  // model fills ≤90% of width / ≤94% of height
-const TOP_PAD = 0.94;
+const MODEL_H = 0.94;   // EVERY model fills this fraction of the canvas HEIGHT —
+                        // this is what makes the on-card height identical across
+                        // brands (the card renders each cutout at height:100%).
+const MAX_W = 0.98;     // …only shrink below MODEL_H if an unusually wide pose
+                        // would otherwise spill past the frame edges.
 const BOTTOM = 0.99;    // baseline sits near the very bottom (models "stand")
 const ALPHA_MIN = 12;   // treat pixels below this alpha as empty
 
@@ -37,6 +40,24 @@ function contentBox(data: Uint8ClampedArray, w: number, h: number) {
   return { x: minX, y: minY, w: maxX - minX + 1, h: maxY - minY + 1 };
 }
 
+// True when the image has a solid (opaque) background rather than a cut-out —
+// every corner/edge is opaque and almost nothing is transparent. Such an image
+// can't be trimmed, so it would render at the wrong size next to real cutouts.
+function looksOpaque(data: Uint8ClampedArray, w: number, h: number): boolean {
+  const A = (x: number, y: number) => data[(y * w + x) * 4 + 3];
+  const edge = [
+    [0, 0], [w - 1, 0], [0, h - 1], [w - 1, h - 1],
+    [w >> 1, 0], [w >> 1, h - 1], [0, h >> 1], [w - 1, h >> 1],
+  ];
+  if (!edge.every(([x, y]) => A(x, y) > 200)) return false; // a clear edge → it's a cutout
+  let transparent = 0, total = 0;
+  const step = Math.max(1, Math.floor(Math.min(w, h) / 64));
+  for (let y = 0; y < h; y += step) for (let x = 0; x < w; x += step) {
+    total++; if (A(x, y) <= ALPHA_MIN) transparent++;
+  }
+  return transparent / total < 0.02; // essentially no transparency anywhere
+}
+
 export async function normalizeCutout(file: File): Promise<Blob> {
   const img = await loadImage(file);
   const nw = img.naturalWidth, nh = img.naturalHeight;
@@ -50,15 +71,21 @@ export async function normalizeCutout(file: File): Promise<Blob> {
   sctx.drawImage(img, 0, 0);
   let box;
   try {
-    box = contentBox(sctx.getImageData(0, 0, nw, nh).data, nw, nh);
-  } catch {
-    box = { x: 0, y: 0, w: nw, h: nh }; // tainted/opaque source — use full frame
+    const px = sctx.getImageData(0, 0, nw, nh).data;
+    if (looksOpaque(px, nw, nh)) {
+      throw new Error('This image has a solid background — please upload a transparent cut-out PNG so the model lines up with the other brands.');
+    }
+    box = contentBox(px, nw, nh);
+  } catch (e: any) {
+    if (e?.message?.startsWith('This image has a solid background')) throw e;
+    box = { x: 0, y: 0, w: nw, h: nh }; // couldn't read pixels — use full frame
   }
 
-  // Scale the trimmed model to fit the padded target box, preserving aspect.
-  const maxW = TARGET_W * SIDE_PAD;
-  const maxH = TARGET_H * TOP_PAD;
-  const scale = Math.min(maxW / box.w, maxH / box.h);
+  // Height-fill FIRST — this pins every model to the same rendered height on
+  // the card. Only if an exceptionally wide pose would spill past the frame do
+  // we shrink further (rare; keeps arms/hips from being clipped).
+  let scale = (TARGET_H * MODEL_H) / box.h;
+  if (box.w * scale > TARGET_W * MAX_W) scale = (TARGET_W * MAX_W) / box.w;
   const dw = box.w * scale, dh = box.h * scale;
   const dx = (TARGET_W - dw) / 2;                 // centre horizontally
   const dy = TARGET_H * BOTTOM - dh;              // bottom-align
