@@ -78,8 +78,11 @@ export async function markFeedbackReviewed(sb: SupabaseClient, id: string) {
 
 // ── Brand Management — §5a / §5b ─────────────────────────────────────
 export async function loadCapsuleBrands(sb: SupabaseClient) {
-  const { data } = await sb.from('brands').select('id, name, slug, shop_url, social, created_at').eq('is_capsule', true).order('name');
-  return (data || []).map((b: any) => ({ id: b.id, name: b.name, slug: b.slug, website: b.shop_url || '', instagram: b.social || '', created_at: b.created_at }));
+  const COLS = 'id, name, slug, shop_url, social, created_at';
+  // Include on_home when present; fall back if migration 0034 isn't applied yet.
+  let resp: any = await sb.from('brands').select(COLS + ', on_home').eq('is_capsule', true).order('name');
+  if (resp.error) resp = await sb.from('brands').select(COLS).eq('is_capsule', true).order('name');
+  return (resp.data || []).map((b: any) => ({ id: b.id, name: b.name, slug: b.slug, website: b.shop_url || '', instagram: b.social || '', onHome: !!b.on_home, created_at: b.created_at }));
 }
 
 // Non-Capsule = brand names seen on reviews that aren't a Capsule brand.
@@ -108,9 +111,20 @@ export async function updateBrand(sb: SupabaseClient, id: string, fields: { name
   if (error) throw error;
 }
 
-// Remove from Capsule (demote); the brand still exists for its reviews.
+// Remove from Capsule (demote); the brand still exists for its reviews. Also
+// clears the home flag so a removed brand can't linger on the marquee.
 export async function removeFromCapsule(sb: SupabaseClient, id: string) {
-  const { error } = await sb.from('brands').update({ is_capsule: false }).eq('id', id);
+  const { error } = await sb.from('brands').update({ is_capsule: false, on_home: false }).eq('id', id);
+  // Retry without on_home if migration 0034 isn't applied yet.
+  if (error) {
+    const { error: e2 } = await sb.from('brands').update({ is_capsule: false }).eq('id', id);
+    if (e2) throw e2;
+  }
+}
+
+// Toggle whether a Capsule brand also appears on the home-page marquee.
+export async function setBrandOnHome(sb: SupabaseClient, id: string, on: boolean) {
+  const { error } = await sb.from('brands').update({ on_home: on }).eq('id', id);
   if (error) throw error;
 }
 

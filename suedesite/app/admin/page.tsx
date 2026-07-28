@@ -9,7 +9,7 @@ import {
 import {
   loadCapsuleRequests, approveCapsuleRequest, rejectCapsuleRequest,
   loadApplications, markApplicationReviewed, loadFeedback, markFeedbackReviewed,
-  loadCapsuleBrands, loadNonCapsuleBrands, updateBrand, removeFromCapsule,
+  loadCapsuleBrands, loadNonCapsuleBrands, updateBrand, removeFromCapsule, setBrandOnHome,
   promoteBrandByName, flagBrandName,
   loadFlagForReview, mergeBrandName, correctBrandName, dismissBrandFlag,
   loadContentFlags, resolveContentFlag,
@@ -774,14 +774,22 @@ function CapsuleBrands({ sb }: any) {
   const [edit, setEdit] = React.useState<any>(null);
   const [busy, setBusy] = React.useState<string | null>(null);
   const save = async () => { setBusy(edit.id); try { await updateBrand(sb, edit.id, { name: edit.name, slug: edit.slug, website: edit.website, instagram: edit.instagram }); setEdit(null); bump(); } catch { /* ignore */ } setBusy(null); };
-  const remove = async (id: string) => { setBusy(id); try { await removeFromCapsule(sb, id); bump(); } catch { /* ignore */ } setBusy(null); };
+  const toggleHome = async (b: any) => { setBusy(b.id); try { await setBrandOnHome(sb, b.id, !b.onHome); bump(); } catch { /* ignore */ } setBusy(null); };
+  const remove = async (b: any) => {
+    if (typeof window !== 'undefined' && !window.confirm(`Remove “${b.name}” from The Capsule? It disappears from the directory (and the home page). Its reviews are kept.`)) return;
+    setBusy(b.id); try { await removeFromCapsule(sb, b.id); bump(); } catch { /* ignore */ } setBusy(null);
+  };
   return (
     <>
-      <Table head={['Brand', 'Slug', 'Actions']} rows={(rows || []).map((b: any) => [
+      <Table head={['Brand', 'Slug', 'Home', 'Actions']} rows={(rows || []).map((b: any) => [
         <b style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{b.name}</b>, b.slug,
-        <span style={{ display: 'flex', gap: 8 }}>
+        b.onHome
+          ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12.5, color: 'var(--text-secondary)' }}><span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--rating-positive)' }} />Featured</span>
+          : <span style={{ fontSize: 12.5, color: 'var(--text-muted)' }}>—</span>,
+        <span style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           <ActionBtn ghost onClick={() => setEdit({ ...b })}>Edit</ActionBtn>
-          <ActionBtn danger busy={busy === b.id} onClick={() => remove(b.id)}>Remove</ActionBtn>
+          <ActionBtn ghost busy={busy === b.id} onClick={() => toggleHome(b)}>{b.onHome ? 'Remove from home' : 'Feature on home'}</ActionBtn>
+          <ActionBtn danger busy={busy === b.id} onClick={() => remove(b)}>Remove from Capsule</ActionBtn>
         </span>,
       ])} loading={!rows} empty="No Capsule brands." />
       {edit && (
