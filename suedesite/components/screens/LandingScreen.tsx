@@ -46,7 +46,7 @@ function CapsuleCarousel({ brands, onRoute }: any) {
               display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 26, padding: 0,
             }}>
               <span style={{ height: imgH + 10, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
-                <img src={b.image} alt={b.name} style={{ height: imgH, width: 'auto', objectFit: 'contain' }} />
+                <img src={b.image} alt={b.name} decoding="async" style={{ height: imgH, width: 'auto', objectFit: 'contain' }} />
               </span>
               <span style={{ fontFamily: 'var(--font-serif)', fontSize: 15, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>{b.name}</span>
             </button>
@@ -194,14 +194,33 @@ function HowItWorks({ onRoute }: any) {
 export function LandingScreen({ onRoute, tweaks, authed = false }: any) {
   const HOME_HIDDEN = ['Akino', 'The Ekhator Label', 'Constructed for Women'];
   const curated = SUEDE_BRANDS.filter((b) => !HOME_HIDDEN.includes(b.name));
-  // Admin-featured Capsule brands (on_home) append to the curated marquee.
+  // Admin-featured Capsule brands (on_home) drive the marquee. We hold the
+  // marquee hidden until the data is decided AND the first cutouts have decoded,
+  // then fade it in as one finished unit — no curated→featured swap, no pop-in.
   const [featured, setFeatured] = React.useState<any[]>([]);
+  const [homeReady, setHomeReady] = React.useState(false);
   React.useEffect(() => {
     const sb = createClient();
-    if (!sb) return;
     let active = true;
-    loadHomeBrands(sb).then((bs) => { if (active) setFeatured(bs); }).catch(() => {});
-    return () => { active = false; };
+    const reveal = () => { if (active) setHomeReady(true); };
+    const safety = setTimeout(reveal, 2200);            // never hang on a slow image
+    const proceed = (list?: any[]) => {
+      if (!active) return;
+      const valid = (list || []).filter((b: any) => b && b.name && b.image);
+      if (valid.length) setFeatured(valid);
+      const chosen = (valid.length ? valid : curated).slice(0, 6);
+      let pending = chosen.length;
+      if (!pending) { reveal(); return; }
+      chosen.forEach((b: any) => {                       // warm the first row before revealing
+        const im = new Image();
+        const tick = () => { pending -= 1; if (pending <= 0) { clearTimeout(safety); reveal(); } };
+        im.onload = tick; im.onerror = tick; im.src = b.image;
+      });
+    };
+    if (!sb) proceed();
+    else loadHomeBrands(sb).then(proceed).catch(() => proceed());
+    return () => { active = false; clearTimeout(safety); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   // The on_home flag is the source of truth: once any brand is flagged, the
   // marquee shows exactly those (fully controllable from Brand Management).
@@ -217,7 +236,7 @@ export function LandingScreen({ onRoute, tweaks, authed = false }: any) {
             <div className="sd-hero-wordmark" aria-hidden="true" style={{ position: 'absolute', left: 0, right: 0, top: 20, height: 475, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 0, pointerEvents: 'none' }}>
               <Logo variant="wordmark" height={400} color="var(--ink-900)" style={{ maxWidth: 'none', width: 'auto', flex: 'none' }} />
             </div>
-            <div style={{ position: 'relative', zIndex: 1 }}>
+            <div style={{ position: 'relative', zIndex: 1, opacity: homeReady ? 1 : 0, transition: 'opacity 550ms var(--ease-out)' }}>
               <CapsuleCarousel brands={brands} onRoute={onRoute} />
             </div>
           </div>
