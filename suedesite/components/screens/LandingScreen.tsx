@@ -229,6 +229,22 @@ export function LandingScreen({ onRoute, tweaks, authed = false }: any) {
   const brands = featuredValid.length ? featuredValid : curated;
   return (
     <div>
+      {/* Branded loading veil — a full white screen with the Suede monogram,
+          held until the marquee data + first cutouts are ready, then dissolved. */}
+      <div aria-hidden="true" style={{
+        position: 'fixed', inset: 0, zIndex: 200, background: '#ffffff',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        opacity: homeReady ? 0 : 1,
+        visibility: homeReady ? 'hidden' : 'visible',
+        transition: `opacity 500ms var(--ease-out), visibility 0s linear ${homeReady ? '500ms' : '0s'}`,
+        pointerEvents: homeReady ? 'none' : 'auto',
+      }}>
+        <style>{`@keyframes suedeLoadPulse{0%,100%{opacity:.4}50%{opacity:1}}`}</style>
+        <div style={{ animation: 'suedeLoadPulse 1.5s var(--ease-inout, ease-in-out) infinite' }}>
+          <Logo variant="monogram" height={66} color="var(--ink-900)" />
+        </div>
+      </div>
+
       {/* HERO — giant SUEDE wordmark behind the auto-scrolling model carousel */}
       <section className="sd-hero-new" style={{ position: 'relative', overflow: 'hidden', height: 'calc(100vh - 75px)', minHeight: 540, display: 'flex', flexDirection: 'column', padding: '38px 0 40px', background: 'var(--surface-page)' }}>
         <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
@@ -236,7 +252,7 @@ export function LandingScreen({ onRoute, tweaks, authed = false }: any) {
             <div className="sd-hero-wordmark" aria-hidden="true" style={{ position: 'absolute', left: 0, right: 0, top: 20, height: 475, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 0, pointerEvents: 'none' }}>
               <Logo variant="wordmark" height={400} color="var(--ink-900)" style={{ maxWidth: 'none', width: 'auto', flex: 'none' }} />
             </div>
-            <div style={{ position: 'relative', zIndex: 1, opacity: homeReady ? 1 : 0, transition: 'opacity 550ms var(--ease-out)' }}>
+            <div style={{ position: 'relative', zIndex: 1 }}>
               <CapsuleCarousel brands={brands} onRoute={onRoute} />
             </div>
           </div>
