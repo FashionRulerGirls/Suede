@@ -147,6 +147,13 @@ export async function deleteReview(sb: SupabaseClient, userId: string, reviewId:
   if (error) throw error;
 }
 
+// Soft delete an inquiry: hide it from every feed (the inquiries_update RLS
+// policy permits the author to flip status). Responses remain but unreachable.
+export async function deleteInquiry(sb: SupabaseClient, userId: string, inquiryId: string) {
+  const { error } = await sb.from('inquiries').update({ status: 'removed' }).eq('id', inquiryId).eq('author_id', userId);
+  if (error) throw error;
+}
+
 export type NewInquiry = {
   brandName?: string;
   productName: string;

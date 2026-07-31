@@ -8,7 +8,7 @@ import { appState } from '@/lib/appState';
 import { InquiryCard } from '@/components/screens/LookbookScreen';
 import { useAuth } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/client';
-import { loadInquiryById, loadInquiryResponses, postInquiryResponse, loadReactions, setReaction, loadMemberReviews } from '@/lib/contentData';
+import { loadInquiryById, loadInquiryResponses, postInquiryResponse, loadReactions, setReaction, loadMemberReviews, deleteInquiry } from '@/lib/contentData';
 import { shopOut } from '@/lib/tracking';
 
 // Compact preview of a review cited in a response — click opens the full review.
@@ -103,6 +103,18 @@ export function InquiryDetailScreen({ onRoute, authed = false }: any) {
     onRoute('review');
   };
 
+  // Author-only: delete (soft-remove) the inquiry.
+  const isAuthor = real && !!user && !!full && full.author_id === user.id;
+  const [deleting, setDeleting] = React.useState(false);
+  const onDelete = async () => {
+    if (typeof window !== 'undefined' && !window.confirm('Delete this inquiry? This can’t be undone.')) return;
+    const sb = createClient();
+    if (!sb || !user) return;
+    setDeleting(true);
+    try { await deleteInquiry(sb, user.id, q._id); onRoute('yourprofile'); }
+    catch { setDeleting(false); }
+  };
+
   const toggleResponseLike = async (rid: string) => {
     if (!user) { onRoute('signin'); return; }
     const sb = createClient(); if (!sb) return;
@@ -167,7 +179,14 @@ export function InquiryDetailScreen({ onRoute, authed = false }: any) {
         <button onClick={() => { appState.lookbookTab = 'inquiries'; onRoute('lookbook'); }} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-secondary)' }}>
           <Icon name="arrow-left" size={16} color="var(--text-secondary)" /> Back to Lookbook
         </button>
-        {real && <ShareButton path={`/inquiry/${q._id}`} title={`${brand ? brand + ' — ' : ''}inquiry on Suede`} text={`${product ? product + ' · ' : ''}See this inquiry on Suede`} />}
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 18 }}>
+          {real && <ShareButton path={`/inquiry/${q._id}`} title={`${brand ? brand + ' — ' : ''}inquiry on Suede`} text={`${product ? product + ' · ' : ''}See this inquiry on Suede`} />}
+          {isAuthor && (
+            <button onClick={onDelete} disabled={deleting} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--rating-critical)', textDecoration: 'underline', textUnderlineOffset: 3 }}>
+              {deleting ? 'Deleting…' : 'Delete'}
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="sd-iqd-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 60, alignItems: 'start' }}>
