@@ -30,15 +30,18 @@ const WAIST_SIZES = ['24', '26', '28', '30', '32', '34', '36', '38', '40', '42',
 const PLUS_SIZES = ['1X', '2X', '3X', '4X', '5X'];
 
 const FEMALE_BODY = [
-  { v: 'defined waist, full bust and hips', l: 'Defined waist, full bust & hips', s: 'Clear waist with soft fullness above and below' },
-  { v: 'defined waist, lean build', l: 'Defined waist, lean build', s: 'Clear waist, slim or petite overall' },
-  { v: 'fuller hips than bust, soft lower body', l: 'Fuller through hips & thighs', s: 'Hips fuller than bust, soft thighs and seat' },
-  { v: 'fuller hips than bust, athletic lower body', l: 'Fuller hips, athletic legs', s: 'Hips wider than bust, strong legs and seat' },
-  { v: 'fuller midsection, slimmer hips and legs', l: 'Fuller through the midsection', s: 'Carries fullness at the middle, slimmer hips and legs' },
-  { v: 'balanced bust waist and hips, slim', l: 'Balanced & slim', s: 'Bust, waist, and hips fairly even — little taper' },
-  { v: 'balanced bust waist and hips, athletic', l: 'Balanced & athletic', s: 'Even proportions, toned and muscular' },
-  { v: 'shoulders broader than hips', l: 'Broader shoulders, narrower hips', s: 'Shoulders wider than hips, often athletic' },
-  { v: 'full and soft throughout', l: 'Full & soft throughout', s: 'Soft fullness across bust, waist, and hips' },
+  { v: 'small frame, defined waist, modest balanced bust and hips', l: 'Lean & defined', s: 'Small frame with a defined waist; bust and hips modest and balanced', img: '/assets/body-types/lean-defined.png' },
+  { v: 'full bust and hips, defined waist, balanced and curvy', l: 'Curvy & defined', s: 'Full bust and hips with a defined waist; balanced and distinctly curvy', img: '/assets/body-types/curvy-defined.png' },
+  { v: 'lower-body dominant, soft; hips butt and thighs widest, narrower upper body', l: 'Lower-body dominant (soft)', s: 'Hips, butt, and thighs are widest; upper body narrower with softer legs', img: '/assets/body-types/lower-body-soft.png' },
+  { v: 'lower-body dominant, athletic; hips butt and thighs widest, muscular legs', l: 'Lower-body dominant (athletic)', s: 'Hips, butt, and thighs are widest; legs muscular and well-defined', img: '/assets/body-types/lower-body-athletic.png' },
+  { v: 'midsection dominant; tummy and waist fullest, slimmer bust hips and limbs', l: 'Midsection dominant', s: 'Tummy and waist are fullest; bust, hips, and limbs comparatively slimmer', img: '/assets/body-types/midsection.png' },
+  { v: 'straight and slim; bust waist and hips nearly equal width, minimal curves', l: 'Straight & slim', s: 'Bust, waist, and hips nearly the same width; minimal curves, straight silhouette', img: '/assets/body-types/straight-slim.png' },
+  { v: 'straight and athletic; visible muscle tone, defined shoulders arms and legs', l: 'Straight & athletic', s: 'Straight silhouette with visible muscle tone; shoulders, arms, and legs defined', img: '/assets/body-types/straight-athletic.png' },
+  { v: 'shoulder dominant; shoulders and upper back widest, narrower hips, little waist definition', l: 'Shoulder dominant', s: 'Shoulders and upper back widest; hips narrower with little waist definition', img: '/assets/body-types/shoulder.png' },
+  { v: 'upper-body dominant; fuller bust upper arms and torso, slimmer hips and legs', l: 'Upper-body dominant', s: 'Fuller bust, upper arms, and torso; hips, butt, and legs slimmer', img: '/assets/body-types/upper-body.png' },
+  { v: 'bust dominant; very full bust, average waist and hips with little definition', l: 'Bust dominant', s: 'Very full bust as the primary feature; waist and hips average with little definition', img: '/assets/body-types/bust.png' },
+  { v: 'evenly full; fullness distributed through bust waist thighs and arms, no waist definition', l: 'Evenly full', s: 'Fullness distributed evenly through bust, waist, thighs, and arms; no waist definition', img: '/assets/body-types/evenly-full.png' },
+  { v: 'curvy plus; full bust and hips with a clearly defined waist, fuller and very curvy', l: 'Curvy plus', s: 'Full bust and hips with a clearly defined waist; overall fuller and very curvy', img: '/assets/body-types/curvy-plus.png' },
 ];
 const MALE_BODY = [
   { v: 'broad shoulders, narrow waist, muscular', l: 'Broad shoulders, narrow waist', s: 'Tapered, athletic build' },
@@ -92,8 +95,26 @@ function Pill({ active, onClick, children, disabled }: any) {
   );
 }
 
-function OptionCard({ active, onClick, label, sublabel }: any) {
+function OptionCard({ active, onClick, label, sublabel, img }: any) {
   const [hover, setHover] = React.useState(false);
+  if (img) {
+    return (
+      <button onClick={onClick} onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}
+        style={{
+          width: '100%', textAlign: 'center', padding: '16px 16px 20px', borderRadius: 0, cursor: 'pointer',
+          display: 'flex', flexDirection: 'column', alignItems: 'center',
+          transition: 'all var(--dur-base) var(--ease-out)',
+          background: active ? ink(0.04) : hover ? ink(0.03) : 'var(--white)',
+          border: `1px solid ${active ? INK : hover ? ink(0.4) : ink(0.12)}`,
+        }}>
+        <div style={{ width: '100%', height: 200, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', marginBottom: 12 }}>
+          <img src={img} alt={label} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', mixBlendMode: 'multiply' }} />
+        </div>
+        <div style={{ ...SERIF, fontSize: 16, fontWeight: 500, color: INK, lineHeight: 1.25 }}>{label}</div>
+        {sublabel && <div style={{ fontSize: 11.5, color: ink(0.5), marginTop: 6, letterSpacing: '0.02em', lineHeight: 1.4 }}>{sublabel}</div>}
+      </button>
+    );
+  }
   return (
     <button onClick={onClick} onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}
       style={{
@@ -430,9 +451,9 @@ Respond ONLY with a valid JSON object in this exact format, no markdown, no prea
           {!loading && !error && stepName === 'body-type' && (
             <div className="qf-fade" style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
               <div><Eyebrow>{stepNum('body-type')} — Your body</Eyebrow><H2 mb={12}>Your body type</H2><Sub>Pick the one that best captures both your shape and overall feel.</Sub></div>
-              <div style={{ display: 'grid', gap: 12 }}>
-                {(a.sex === 'female' ? FEMALE_BODY : MALE_BODY).map((o) => (
-                  <OptionCard key={o.v} active={a.bodyType === o.v} onClick={() => update('bodyType', o.v)} label={o.l} sublabel={o.s} />
+              <div style={{ display: 'grid', gap: 12, gridTemplateColumns: a.sex === 'female' ? 'repeat(auto-fill, minmax(150px, 1fr))' : undefined }}>
+                {(a.sex === 'female' ? FEMALE_BODY : MALE_BODY).map((o: any) => (
+                  <OptionCard key={o.v} active={a.bodyType === o.v} onClick={() => update('bodyType', o.v)} label={o.l} sublabel={o.s} img={o.img} />
                 ))}
               </div>
             </div>
