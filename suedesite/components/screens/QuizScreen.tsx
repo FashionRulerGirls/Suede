@@ -29,16 +29,22 @@ const BOT_LETTER = ['XXS', 'XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
 const WAIST_SIZES = ['24', '26', '28', '30', '32', '34', '36', '38', '40', '42', '44'];
 const PLUS_SIZES = ['1X', '2X', '3X', '4X', '5X'];
 
+// 12 reference body types (illustrations in /assets/bodytypes). `v` is the
+// proportional descriptor fed to the estimator; `s` is the card sub-label;
+// `desc` is the full description shown in the eyeball preview.
 const FEMALE_BODY = [
-  { v: 'defined waist, full bust and hips', l: 'Defined waist, full bust & hips', s: 'Clear waist with soft fullness above and below' },
-  { v: 'defined waist, lean build', l: 'Defined waist, lean build', s: 'Clear waist, slim or petite overall' },
-  { v: 'fuller hips than bust, soft lower body', l: 'Fuller through hips & thighs', s: 'Hips fuller than bust, soft thighs and seat' },
-  { v: 'fuller hips than bust, athletic lower body', l: 'Fuller hips, athletic legs', s: 'Hips wider than bust, strong legs and seat' },
-  { v: 'fuller midsection, slimmer hips and legs', l: 'Fuller through the midsection', s: 'Carries fullness at the middle, slimmer hips and legs' },
-  { v: 'balanced bust waist and hips, slim', l: 'Balanced & slim', s: 'Bust, waist, and hips fairly even — little taper' },
-  { v: 'balanced bust waist and hips, athletic', l: 'Balanced & athletic', s: 'Even proportions, toned and muscular' },
-  { v: 'shoulders broader than hips', l: 'Broader shoulders, narrower hips', s: 'Shoulders wider than hips, often athletic' },
-  { v: 'full and soft throughout', l: 'Full & soft throughout', s: 'Soft fullness across bust, waist, and hips' },
+  { v: 'small lean frame with a defined waist; bust and hips modest and balanced', l: 'Lean & defined', s: 'Small frame with a defined waist; modest, balanced bust & hips', img: '/assets/bodytypes/type-01.png', desc: 'Small frame with a defined waist. Bust and hips are modest and balanced.' },
+  { v: 'full bust and hips with a defined waist; balanced, distinctly curvy hourglass proportions', l: 'Curvy & defined', s: 'Full bust and hips with a defined waist; balanced and curvy', img: '/assets/bodytypes/type-02.png', desc: 'Full bust and hips with a defined waist. Proportions are balanced and distinctly curvy.' },
+  { v: 'hips, butt and thighs are the widest part; upper body is narrower with soft legs', l: 'Lower-body dominant (soft)', s: 'Hips, butt & thighs widest; narrower upper body, softer legs', img: '/assets/bodytypes/type-03.png', desc: 'Hips, butt, and thighs are the widest part. Upper body is narrower with softer legs.' },
+  { v: 'hips, butt and thighs are the widest part; legs are muscular and well-defined, upper body narrower', l: 'Lower-body dominant (athletic)', s: 'Hips, butt & thighs widest; muscular, well-defined legs', img: '/assets/bodytypes/type-04.png', desc: 'Hips, butt, and thighs are the widest part. Legs are muscular and well-defined.' },
+  { v: 'tummy and waist are the fullest area; bust, hips and limbs are comparatively slimmer', l: 'Midsection dominant', s: 'Tummy & waist fullest; slimmer bust, hips & limbs', img: '/assets/bodytypes/type-05.png', desc: 'Tummy and waist are the fullest area. Bust, hips, and limbs are comparatively slimmer.' },
+  { v: 'bust, waist and hips are nearly the same width; minimal curves and a straight silhouette', l: 'Straight & slim', s: 'Bust, waist & hips nearly the same width; straight silhouette', img: '/assets/bodytypes/type-06.png', desc: 'Bust, waist, and hips are nearly the same width. Minimal curves and a straight silhouette.' },
+  { v: 'straight silhouette with visible muscle tone; shoulders, arms and legs are defined', l: 'Straight & athletic', s: 'Straight silhouette with visible muscle tone', img: '/assets/bodytypes/type-07.png', desc: 'Straight silhouette with visible muscle tone. Shoulders, arms, and legs are defined.' },
+  { v: 'shoulders and upper back are the widest part; hips narrower with little waist definition', l: 'Shoulder dominant', s: 'Shoulders & upper back widest; narrower hips', img: '/assets/bodytypes/type-08.png', desc: 'Shoulders and upper back are the widest part. Hips are narrower with little waist definition.' },
+  { v: 'fuller bust, upper arms and upper torso; hips, butt and legs are slimmer', l: 'Upper-body dominant', s: 'Fuller bust & upper torso; slimmer hips & legs', img: '/assets/bodytypes/type-09.png', desc: 'Fuller bust, upper arms, and upper torso. Hips, butt, and legs are slimmer.' },
+  { v: 'very full bust as the primary feature; waist and hips average with little definition', l: 'Bust dominant', s: 'Very full bust; average waist & hips', img: '/assets/bodytypes/type-10.png', desc: 'Very full bust as the primary feature. Waist and hips are average with little definition.' },
+  { v: 'fullness distributed evenly through bust, waist, hips, thighs and arms; no waist definition', l: 'Evenly full', s: 'Evenly full through bust, waist, hips & arms', img: '/assets/bodytypes/type-11.png', desc: 'Fullness is distributed evenly through bust, waist, hips, thighs, and arms. No waist definition.' },
+  { v: 'full bust and hips with a clearly defined waist; overall fuller and very curvy', l: 'Curvy plus', s: 'Full bust & hips, clearly defined waist; fuller and curvy', img: '/assets/bodytypes/type-12.png', desc: 'Full bust and hips with a clearly defined waist. Overall fuller and very curvy.' },
 ];
 const MALE_BODY = [
   { v: 'broad shoulders, narrow waist, muscular', l: 'Broad shoulders, narrow waist', s: 'Tapered, athletic build' },
@@ -135,7 +141,15 @@ export function QuizScreen({ onRoute, authed }: any) {
   const [error, setError] = React.useState<any>(null);
   const [results, setResults] = React.useState<any>(null);
   const [saveStatus, setSaveStatus] = React.useState('idle');
+  const [preview, setPreview] = React.useState<any>(null); // body-type illustration popup
   const fileRef = React.useRef<any>(null);
+
+  React.useEffect(() => {
+    if (!preview) return;
+    const onKey = (e: any) => { if (e.key === 'Escape') setPreview(null); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [preview]);
 
   const update = (k, v) => setA((p) => ({ ...p, [k]: v }));
   const toggleMulti = (k, val) => setA((p) => {
@@ -220,7 +234,17 @@ USER PROFILE:
 - Waist definition: ${a.waistDef}
 - Pant length tendency: ${a.inseam}${photoNote}${descNote}
 
-Estimate ONLY the following four measurements in inches: bust, waist, hips, and inseam (inside-leg length). Be realistic — these should match what a tailor would measure, not vanity sizing. The bra size anchors the bust estimate; the waist-definition answer and usual bottom size anchor the waist and hips; the pant-length tendency and torso length anchor the inseam. Set confidence to "high" only with strong, consistent signal, otherwise "medium".
+Estimate ONLY the following four measurements in inches: bust, waist, hips, and inseam (inside-leg length). Be realistic — these should match what a tailor would measure, not vanity sizing.
+
+Anchoring rules:
+- The bra size anchors the bust; the waist-definition answer and usual bottom size anchor the waist and hips; the pant-length tendency and torso length anchor the inseam.
+- The BODY TYPE description is the primary driver of the RELATIVE proportions between bust, waist, and hips — apply it directly:
+  · lower-body dominant → hips clearly exceed bust (typically +2" to +5"), with a defined waist for the soft/athletic split affecting waist taper;
+  · upper-body / shoulder / bust dominant → bust (and upper frame) clearly exceeds hips;
+  · midsection dominant or evenly full → waist sits close to bust and hips with little or no taper (small waist-to-hip difference);
+  · lean & defined / straight & slim / straight & athletic → smaller overall circumferences with the stated amount of waist definition;
+  · curvy & defined / curvy plus → full bust AND hips with a distinctly smaller, defined waist (clear hourglass taper).
+Weight the body type above generic averages when they conflict. Set confidence to "high" only with strong, consistent signal, otherwise "medium".
 
 Respond ONLY with a valid JSON object in this exact format, no markdown, no preamble:
 {"bust": <number>, "waist": <number>, "hips": <number>, "inseam": <number>, "confidence": "<high|medium|low>", "reasoning": "<one short sentence explaining key factors that shaped the estimate>"}`;
@@ -429,10 +453,20 @@ Respond ONLY with a valid JSON object in this exact format, no markdown, no prea
 
           {!loading && !error && stepName === 'body-type' && (
             <div className="qf-fade" style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
-              <div><Eyebrow>{stepNum('body-type')} — Your body</Eyebrow><H2 mb={12}>Your body type</H2><Sub>Pick the one that best captures both your shape and overall feel.</Sub></div>
+              <div><Eyebrow>{stepNum('body-type')} — Your body</Eyebrow><H2 mb={12}>Your body type</H2><Sub>Pick the one that best captures both your shape and overall feel.{a.sex === 'female' && <> Tap the <Icon name="eye" size={13} color={ink(0.55)} style={{ verticalAlign: 'middle' }} /> to see an illustrated example.</>}</Sub></div>
               <div style={{ display: 'grid', gap: 12 }}>
-                {(a.sex === 'female' ? FEMALE_BODY : MALE_BODY).map((o) => (
-                  <OptionCard key={o.v} active={a.bodyType === o.v} onClick={() => update('bodyType', o.v)} label={o.l} sublabel={o.s} />
+                {(a.sex === 'female' ? FEMALE_BODY : MALE_BODY).map((o: any) => (
+                  <div key={o.v} style={{ position: 'relative' }}>
+                    <OptionCard active={a.bodyType === o.v} onClick={() => update('bodyType', o.v)} label={o.l} sublabel={o.s} />
+                    {o.img && (
+                      <button onClick={(e) => { e.stopPropagation(); setPreview(o); }} aria-label={`See an example of ${o.l}`} title="See example"
+                        onMouseEnter={(e) => { e.currentTarget.style.borderColor = INK; e.currentTarget.style.color = INK; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.borderColor = ink(0.15); e.currentTarget.style.color = ink(0.55); }}
+                        style={{ position: 'absolute', top: 12, right: 12, width: 34, height: 34, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'var(--white)', border: `1px solid ${ink(0.15)}`, borderRadius: '50%', cursor: 'pointer', color: ink(0.55), transition: 'all var(--dur-base) var(--ease-out)' }}>
+                        <Icon name="eye" size={17} />
+                      </button>
+                    )}
+                  </div>
                 ))}
               </div>
             </div>
@@ -610,6 +644,25 @@ Respond ONLY with a valid JSON object in this exact format, no markdown, no prea
           </div>
         )}
       </div>
+
+      {/* Body-type illustration preview — opened by the eye icon */}
+      {preview && (
+        <div onClick={() => setPreview(null)} style={{ position: 'fixed', inset: 0, zIndex: 120, background: 'rgba(20,18,15,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ position: 'relative', background: 'var(--white)', width: 'min(420px, 100%)', maxHeight: '92vh', overflowY: 'auto', padding: '30px 28px 28px', boxShadow: '0 30px 70px rgba(16,14,11,0.35)' }}>
+            <button onClick={() => setPreview(null)} aria-label="Close" style={{ position: 'absolute', top: 12, right: 12, width: 36, height: 36, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: 'none', cursor: 'pointer', color: ink(0.55) }}>
+              <Icon name="close" size={20} color={ink(0.55)} />
+            </button>
+            <div style={{ display: 'flex', justifyContent: 'center' }}>
+              <img src={preview.img} alt={preview.l} style={{ height: 340, width: 'auto', objectFit: 'contain' }} />
+            </div>
+            <h3 style={{ ...SERIF, fontSize: 24, fontWeight: 400, color: INK, margin: '18px 0 8px', textAlign: 'center' }}>{preview.l}</h3>
+            <p style={{ fontSize: 14, lineHeight: 1.6, color: ink(0.6), margin: '0 auto', textAlign: 'center', maxWidth: 320 }}>{preview.desc}</p>
+            <button onClick={() => { update('bodyType', preview.v); setPreview(null); }} style={primaryBtn({ width: '100%', marginTop: 24 })}>
+              {a.bodyType === preview.v ? 'Selected' : 'Choose this type'} <Icon name="arrow-right" size={16} color="var(--white)" />
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
