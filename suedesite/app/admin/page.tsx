@@ -77,6 +77,15 @@ export default function AdminPage() {
           .admin-aside button { flex: 0 0 auto; white-space: nowrap; padding: 8px 12px !important; }
           .admin-main { padding: 20px 16px !important; }
         }
+        /* Segmented tab controls never push the page wide — they scroll instead. */
+        .admin-seg { max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        .admin-seg::-webkit-scrollbar { display: none; }
+        .admin-seg button { flex: 0 0 auto; white-space: nowrap; }
+        @media (max-width: 720px) {
+          /* Two-column content layouts stack (Add Brand, Edit cutout, etc.). */
+          .ab-grid { grid-template-columns: minmax(0, 1fr) !important; }
+          .ab-preview { max-width: 460px; margin-left: auto; margin-right: auto; }
+        }
       `}</style>
       <aside className="admin-aside" style={{ borderRight: '1px solid var(--border-subtle)', background: 'var(--surface-card)', padding: '24px 16px', display: 'flex', flexDirection: 'column', gap: 6, position: 'sticky', top: 0, height: '100vh' }}>
         <div className="admin-brand" style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '4px 10px 20px' }}>
@@ -144,8 +153,8 @@ function H({ children, sub }: any) {
     </div>
   );
 }
-function Card({ children, style }: any) {
-  return <div style={{ background: 'var(--surface-card)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-xs)', padding: 20, ...style }}>{children}</div>;
+function Card({ children, style, className }: any) {
+  return <div className={className} style={{ background: 'var(--surface-card)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-xs)', padding: 20, ...style }}>{children}</div>;
 }
 function Stat({ label, value }: { label: string; value: any }) {
   return (
@@ -631,7 +640,7 @@ function AddBrandSection({ sb, adminId }: any) {
   return (
     <>
       <H sub="Create a new Capsule brand. It's added to the directory the moment you submit.">Add Brand</H>
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 300px', gap: 24, alignItems: 'start' }}>
+      <div className="ab-grid" style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 300px', gap: 24, alignItems: 'start' }}>
         <Card>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
             <div>
@@ -668,7 +677,7 @@ function AddBrandSection({ sb, adminId }: any) {
             </div>
           </div>
         </Card>
-        <Card style={{ padding: 0, overflow: 'hidden' }}>
+        <Card className="ab-preview" style={{ padding: 0, overflow: 'hidden' }}>
           <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--border-subtle)', fontSize: 12, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--text-muted)' }}>Preview</div>
           <div style={{ height: 360, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', background: 'var(--paper)', padding: 16 }}>
             {preview
@@ -687,7 +696,7 @@ function BrandsSection({ sb, adminId }: any) {
   return (
     <>
       <H sub="The brand directory.">Brand Management</H>
-      <div style={{ display: 'inline-flex', border: '1px solid var(--border-default)', borderRadius: 'var(--radius-xs)', overflow: 'hidden', marginBottom: 20 }}>
+      <div className="admin-seg" style={{ display: 'flex', width: 'fit-content', border: '1px solid var(--border-default)', borderRadius: 'var(--radius-xs)', marginBottom: 20 }}>
         {([['capsule', 'Capsule'], ['noncap', 'Non-Capsule'], ['flag', 'Flag for Review']] as const).map(([id, label]) => (
           <button key={id} onClick={() => setTab(id)} style={{ padding: '8px 18px', border: 'none', cursor: 'pointer', background: tab === id ? 'var(--ink-900)' : 'var(--surface-card)', color: tab === id ? 'var(--white)' : 'var(--text-secondary)', fontFamily: 'var(--font-body)', fontSize: 13 }}>{label}</button>
         ))}
