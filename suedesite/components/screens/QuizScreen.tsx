@@ -31,7 +31,7 @@ const PLUS_SIZES = ['1X', '2X', '3X', '4X', '5X'];
 
 // 12 reference body types (illustrations in /assets/bodytypes). `v` is the
 // proportional descriptor fed to the estimator; `s` is the card sub-label;
-// `desc` is the full description shown in the eyeball preview.
+// `desc` is the full description shown beneath the figure in the carousel.
 const FEMALE_BODY = [
   { v: 'small lean frame with a defined waist; bust and hips modest and balanced', l: 'Lean & defined', s: 'Small frame with a defined waist; modest, balanced bust & hips', img: '/assets/bodytypes/type-01.png', desc: 'Small frame with a defined waist. Bust and hips are modest and balanced.' },
   { v: 'full bust and hips with a defined waist; balanced, distinctly curvy hourglass proportions', l: 'Curvy & defined', s: 'Full bust and hips with a defined waist; balanced and curvy', img: '/assets/bodytypes/type-02.png', desc: 'Full bust and hips with a defined waist. Proportions are balanced and distinctly curvy.' },
@@ -114,6 +114,70 @@ function OptionCard({ active, onClick, label, sublabel }: any) {
   );
 }
 
+// Swipeable, looping gallery of the 12 body-type illustrations — flow through
+// them all with arrows / swipe / dots, then choose in one tap.
+function BodyCarousel({ items, selectedV, onSelect }: any) {
+  const n = items.length;
+  const [idx, setIdx] = React.useState(() => Math.max(0, items.findIndex((o: any) => o.v === selectedV)));
+  const [dir, setDir] = React.useState(1);
+  const drag = React.useRef<any>({ x: 0, active: false });
+  const go = (d: number) => { setDir(d); setIdx((i) => (i + d + n) % n); };
+  const jump = (i: number) => { setDir(i >= idx ? 1 : -1); setIdx(i); };
+
+  React.useEffect(() => { items.forEach((o: any) => { const im = new Image(); im.src = o.img; }); }, []); // eslint-disable-line
+  React.useEffect(() => {
+    const k = (e: any) => { if (e.key === 'ArrowLeft') go(-1); else if (e.key === 'ArrowRight') go(1); };
+    window.addEventListener('keydown', k);
+    return () => window.removeEventListener('keydown', k);
+  }, []); // eslint-disable-line
+
+  const down = (e: any) => { drag.current = { x: e.touches ? e.touches[0].clientX : e.clientX, active: true }; };
+  const up = (e: any) => {
+    if (!drag.current.active) return; drag.current.active = false;
+    const x = e.changedTouches ? e.changedTouches[0].clientX : e.clientX;
+    const dx = x - drag.current.x;
+    if (Math.abs(dx) > 40) go(dx < 0 ? 1 : -1);
+  };
+
+  const cur = items[idx], prev = items[(idx - 1 + n) % n], nxt = items[(idx + 1) % n];
+  const selected = cur.v === selectedV;
+  const noDrag = { draggable: false, onDragStart: (e: any) => e.preventDefault() } as any;
+  const arrow = (side: string): any => ({ position: 'absolute', top: '44%', [side]: 4, transform: 'translateY(-50%)', width: 44, height: 44, borderRadius: '50%', border: `1px solid ${ink(0.15)}`, background: 'var(--white)', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: ink(0.55), zIndex: 3 });
+
+  return (
+    <div>
+      <style>{`@keyframes qfSlideL{from{opacity:0;transform:translateX(46px)}to{opacity:1;transform:translateX(0)}}@keyframes qfSlideR{from{opacity:0;transform:translateX(-46px)}to{opacity:1;transform:translateX(0)}}`}</style>
+      <div onMouseDown={down} onMouseUp={up} onTouchStart={down} onTouchEnd={up}
+        style={{ position: 'relative', height: 360, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', userSelect: 'none', touchAction: 'pan-y', cursor: 'grab', overflow: 'hidden' }}>
+        <img {...noDrag} src={prev.img} alt="" aria-hidden onClick={() => go(-1)} style={{ position: 'absolute', left: '-5%', bottom: 0, height: 220, opacity: 0.2, cursor: 'pointer', zIndex: 0 }} />
+        <img {...noDrag} src={nxt.img} alt="" aria-hidden onClick={() => go(1)} style={{ position: 'absolute', right: '-5%', bottom: 0, height: 220, opacity: 0.2, cursor: 'pointer', zIndex: 0 }} />
+        <button onClick={() => go(-1)} aria-label="Previous body type" style={arrow('left')}><Icon name="arrow-left" size={18} color={ink(0.55)} /></button>
+        <button onClick={() => go(1)} aria-label="Next body type" style={arrow('right')}><Icon name="arrow-right" size={18} color={ink(0.55)} /></button>
+        <img {...noDrag} key={idx} src={cur.img} alt={cur.l}
+          style={{ position: 'relative', height: 344, zIndex: 1, filter: 'drop-shadow(0 22px 34px rgba(20,18,15,0.16))', animation: `${dir >= 0 ? 'qfSlideL' : 'qfSlideR'} .35s var(--ease-out)` }} />
+      </div>
+
+      <div style={{ textAlign: 'center', marginTop: 4 }}>
+        <div style={{ fontSize: 12, letterSpacing: '0.14em', color: ink(0.4) }}>{idx + 1} / {n}</div>
+        <h3 style={{ ...SERIF, fontSize: 26, fontWeight: 400, color: INK, margin: '8px 0 8px' }}>{cur.l}</h3>
+        <p style={{ fontSize: 14, lineHeight: 1.6, color: ink(0.6), margin: '0 auto', maxWidth: 360 }}>{cur.desc}</p>
+      </div>
+
+      <div style={{ display: 'flex', justifyContent: 'center', gap: 7, flexWrap: 'wrap', margin: '18px 0 4px' }}>
+        {items.map((o: any, i: number) => (
+          <button key={i} onClick={() => jump(i)} aria-label={o.l} title={o.l}
+            style={{ width: i === idx ? 22 : 8, height: 8, borderRadius: 999, border: 'none', padding: 0, cursor: 'pointer', background: i === idx ? INK : ink(0.2), transition: 'all var(--dur-base) var(--ease-out)' }} />
+        ))}
+      </div>
+
+      <button onClick={() => onSelect(cur.v)}
+        style={{ width: '100%', marginTop: 18, padding: '16px 24px', border: `1px solid ${INK}`, background: selected ? INK : 'var(--white)', color: selected ? 'var(--white)' : INK, cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: 13, letterSpacing: '0.15em', textTransform: 'uppercase', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 10, transition: 'all var(--dur-base) var(--ease-out)' }}>
+        {selected ? <>Selected <Icon name="check" size={16} color="var(--white)" /></> : 'Choose this body type'}
+      </button>
+    </div>
+  );
+}
+
 const Eyebrow = ({ children }: any) => (
   <div style={{ fontSize: 11, letterSpacing: '0.25em', color: ink(0.5), textTransform: 'uppercase', marginBottom: 12 }}>{children}</div>
 );
@@ -141,15 +205,7 @@ export function QuizScreen({ onRoute, authed }: any) {
   const [error, setError] = React.useState<any>(null);
   const [results, setResults] = React.useState<any>(null);
   const [saveStatus, setSaveStatus] = React.useState('idle');
-  const [preview, setPreview] = React.useState<any>(null); // body-type illustration popup
   const fileRef = React.useRef<any>(null);
-
-  React.useEffect(() => {
-    if (!preview) return;
-    const onKey = (e: any) => { if (e.key === 'Escape') setPreview(null); };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [preview]);
 
   const update = (k, v) => setA((p) => ({ ...p, [k]: v }));
   const toggleMulti = (k, val) => setA((p) => {
@@ -453,22 +509,16 @@ Respond ONLY with a valid JSON object in this exact format, no markdown, no prea
 
           {!loading && !error && stepName === 'body-type' && (
             <div className="qf-fade" style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
-              <div><Eyebrow>{stepNum('body-type')} — Your body</Eyebrow><H2 mb={12}>Your body type</H2><Sub>Pick the one that best captures both your shape and overall feel.{a.sex === 'female' && <> Tap the <Icon name="eye" size={13} color={ink(0.55)} style={{ verticalAlign: 'middle' }} /> to see an illustrated example.</>}</Sub></div>
-              <div style={{ display: 'grid', gap: 12 }}>
-                {(a.sex === 'female' ? FEMALE_BODY : MALE_BODY).map((o: any) => (
-                  <div key={o.v} style={{ position: 'relative' }}>
-                    <OptionCard active={a.bodyType === o.v} onClick={() => update('bodyType', o.v)} label={o.l} sublabel={o.s} />
-                    {o.img && (
-                      <button onClick={(e) => { e.stopPropagation(); setPreview(o); }} aria-label={`See an example of ${o.l}`} title="See example"
-                        onMouseEnter={(e) => { e.currentTarget.style.borderColor = INK; e.currentTarget.style.color = INK; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.borderColor = ink(0.15); e.currentTarget.style.color = ink(0.55); }}
-                        style={{ position: 'absolute', top: 12, right: 12, width: 34, height: 34, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'var(--white)', border: `1px solid ${ink(0.15)}`, borderRadius: '50%', cursor: 'pointer', color: ink(0.55), transition: 'all var(--dur-base) var(--ease-out)' }}>
-                        <Icon name="eye" size={17} />
-                      </button>
-                    )}
-                  </div>
-                ))}
-              </div>
+              <div><Eyebrow>{stepNum('body-type')} — Your body</Eyebrow><H2 mb={12}>Your body type</H2><Sub>{a.sex === 'female' ? 'Swipe through the shapes — with arrows, the dots, or by dragging — and choose the one that best captures both your shape and overall feel.' : 'Pick the one that best captures both your shape and overall feel.'}</Sub></div>
+              {a.sex === 'female' ? (
+                <BodyCarousel items={FEMALE_BODY} selectedV={a.bodyType} onSelect={(v: string) => update('bodyType', v)} />
+              ) : (
+                <div style={{ display: 'grid', gap: 12 }}>
+                  {MALE_BODY.map((o: any) => (
+                    <OptionCard key={o.v} active={a.bodyType === o.v} onClick={() => update('bodyType', o.v)} label={o.l} sublabel={o.s} />
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
@@ -644,25 +694,6 @@ Respond ONLY with a valid JSON object in this exact format, no markdown, no prea
           </div>
         )}
       </div>
-
-      {/* Body-type illustration preview — opened by the eye icon */}
-      {preview && (
-        <div onClick={() => setPreview(null)} style={{ position: 'fixed', inset: 0, zIndex: 120, background: 'rgba(20,18,15,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-          <div onClick={(e) => e.stopPropagation()} style={{ position: 'relative', background: 'var(--white)', width: 'min(420px, 100%)', maxHeight: '92vh', overflowY: 'auto', padding: '30px 28px 28px', boxShadow: '0 30px 70px rgba(16,14,11,0.35)' }}>
-            <button onClick={() => setPreview(null)} aria-label="Close" style={{ position: 'absolute', top: 12, right: 12, width: 36, height: 36, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: 'none', cursor: 'pointer', color: ink(0.55) }}>
-              <Icon name="close" size={20} color={ink(0.55)} />
-            </button>
-            <div style={{ display: 'flex', justifyContent: 'center' }}>
-              <img src={preview.img} alt={preview.l} style={{ height: 340, width: 'auto', objectFit: 'contain' }} />
-            </div>
-            <h3 style={{ ...SERIF, fontSize: 24, fontWeight: 400, color: INK, margin: '18px 0 8px', textAlign: 'center' }}>{preview.l}</h3>
-            <p style={{ fontSize: 14, lineHeight: 1.6, color: ink(0.6), margin: '0 auto', textAlign: 'center', maxWidth: 320 }}>{preview.desc}</p>
-            <button onClick={() => { update('bodyType', preview.v); setPreview(null); }} style={primaryBtn({ width: '100%', marginTop: 24 })}>
-              {a.bodyType === preview.v ? 'Selected' : 'Choose this type'} <Icon name="arrow-right" size={16} color="var(--white)" />
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
