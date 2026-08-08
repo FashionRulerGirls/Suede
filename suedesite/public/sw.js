@@ -2,7 +2,7 @@
    offline fallback. Deliberately conservative: it does NOT cache JS/CSS bundles
    (whose hashes change every deploy) to avoid serving stale app code. It only
    caches the app shell for an offline navigation fallback. */
-const CACHE = 'suede-shell-v1';
+const CACHE = 'suede-shell-v2';
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();
