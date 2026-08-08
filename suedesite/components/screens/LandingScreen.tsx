@@ -21,11 +21,19 @@ function CapsuleCarousel({ brands, onRoute }: any) {
   const isPhone = vw <= 640;
   const VISIBLE = isPhone ? 2 : vw <= 900 ? 3 : 5;
   const imgH = isPhone ? 250 : 360;
-  // On phones the animated track is promoted to a GPU layer; a full-length
-  // duplicated list makes it thousands of px wide and mobile Safari drops
-  // the layer (all models blank out). Cap the phone list so the track stays
-  // well under the max texture size.
-  const list = isPhone ? brands.slice(0, 6) : brands;
+  // On phones the animated track is promoted to a GPU layer; mobile Safari
+  // blanks it once its backing texture (track width × devicePixelRatio) exceeds
+  // the GPU limit (~16384px on modern devices). So instead of a hard cap of 6 —
+  // which made phones show fewer brands than desktop — keep as many brands as
+  // safely fit that budget, which is the whole lineup for any normal home page.
+  let list = brands;
+  if (isPhone && brands.length) {
+    const dpr = Math.min((typeof window !== 'undefined' ? window.devicePixelRatio : 2) || 2, 3);
+    const cellW = Math.max(120, vw / VISIBLE);          // each looped cell ≈ viewport / VISIBLE
+    const safeItems = Math.floor(14000 / (dpr * cellW)); // track stays under the texture limit
+    const maxBrands = Math.max(6, Math.floor(safeItems / 2)); // the track duplicates the list ×2
+    list = brands.slice(0, maxBrands);
+  }
   const loop = [...list, ...list];
   const trackWidth = (loop.length / VISIBLE) * 100;   // %
   const itemBasis = 100 / loop.length;                // % of track
