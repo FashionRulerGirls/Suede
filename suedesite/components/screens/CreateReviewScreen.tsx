@@ -9,7 +9,7 @@ import { SignInGate } from '@/components/screens/SignInGate';
 import { ProductFetch } from '@/components/screens/ProductFetch';
 import { useAuth } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/client';
-import { createReview, updateReview, loadReviewMedia, deleteReviewMedia, loadBrandProducts } from '@/lib/contentData';
+import { createReview, updateReview, loadReviewMedia, deleteReviewMedia, loadBrandProducts, loadBrands } from '@/lib/contentData';
 import { uploadReviewMedia } from '@/lib/storage';
 import { loadProfileData, inchesToHeight, inchesDisplay } from '@/lib/profileData';
 
@@ -96,7 +96,16 @@ function SectionCard({ title, action, children, headClass }: any) {
 
 export function CreateReviewScreen({ onRoute, authed = false }: any) {
   const { user } = useAuth();
-  const brands = SUEDE_BRANDS || [];
+  // Capsule brand picker — load the live directory from the DB so newly added
+  // brands appear automatically; fall back to the static samples if offline.
+  const [dbBrands, setDbBrands] = React.useState<any[]>([]);
+  React.useEffect(() => {
+    const sb = createClient(); if (!sb) return;
+    let active = true;
+    loadBrands(sb, { capsuleOnly: true }).then((bs) => { if (active && bs.length) setDbBrands(bs); }).catch(() => {});
+    return () => { active = false; };
+  }, []);
+  const brands = dbBrands.length ? dbBrands : (SUEDE_BRANDS || []);
   // When arriving from a brand page, that brand is pre-selected.
   const presetBrand = appState.reviewBrand;
   // Editing an existing review (within its 24h window). Read once on mount.

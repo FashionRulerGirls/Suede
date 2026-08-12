@@ -163,12 +163,14 @@ export function BrandScreen({ onRoute, authed = false }: any) {
   const shopHost = (brand.shopUrl || '').replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/+$/, '');
   const website = shopHost || ('www.' + brand.name.toLowerCase().replace(/[^a-z]/g, '') + '.com');
 
-  // Only Capsule brands get a brand page. Non-Capsule brands (names seen on
-  // reviews/inquiries but not curated into the Capsule) have no page — once the
-  // lookup resolves and the brand isn't a Capsule brand, we don't render one.
+  // Any real brand record gets a page — Capsule brands, brands featured on the
+  // home marquee (on_home), or a static sample. Only a bare name with no
+  // matching brand record (a non-Capsule name typed onto a review/inquiry)
+  // stays page-less. Using the resolved record (which always carries an id)
+  // avoids rejecting a brand whose is_capsule flag simply isn't set.
   const isCapsuleBrand = brandRow
-    ? brandRow.is_capsule === true
-    : (brand?.is_capsule === true || (SUEDE_BRANDS || []).some((b) => b.name.toLowerCase() === (brand?.name || '').toLowerCase()));
+    ? true
+    : (brand?.is_capsule === true || !!brand?.id || (SUEDE_BRANDS || []).some((b) => b.name.toLowerCase() === (brand?.name || '').toLowerCase()));
   if (lookupDone && !isCapsuleBrand) {
     return (
       <div style={{ maxWidth: 640, margin: '0 auto', padding: '96px 40px', textAlign: 'center' }}>

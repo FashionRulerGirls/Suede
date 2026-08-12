@@ -8,7 +8,7 @@ import { SignInGate } from '@/components/screens/SignInGate';
 import { ProductFetch } from '@/components/screens/ProductFetch';
 import { useAuth } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/client';
-import { createInquiry } from '@/lib/contentData';
+import { createInquiry, loadBrands } from '@/lib/contentData';
 import { loadProfileData, inchesToHeight, inchesDisplay } from '@/lib/profileData';
 
 function CISectionCard({ title, action, children }: any) {
@@ -36,7 +36,16 @@ export function CreateInquiryScreen({ onRoute, authed = false }: any) {
   const [productImage, setProductImage] = React.useState('');
   const [productUrl, setProductUrl] = React.useState('');
   const [productPrice, setProductPrice] = React.useState('');
-  const brands = SUEDE_BRANDS || [];
+  // Capsule brand picker — live directory from the DB (new brands appear
+  // automatically); fall back to the static samples if offline.
+  const [dbBrands, setDbBrands] = React.useState<any[]>([]);
+  React.useEffect(() => {
+    const sb = createClient(); if (!sb) return;
+    let active = true;
+    loadBrands(sb, { capsuleOnly: true }).then((bs) => { if (active && bs.length) setDbBrands(bs); }).catch(() => {});
+    return () => { active = false; };
+  }, []);
+  const brands = dbBrands.length ? dbBrands : (SUEDE_BRANDS || []);
   const presetBrand = appState.inquiryBrand;
   const [brandType, setBrandType] = React.useState('Capsule Brand');
   const [brandSel, setBrandSel] = React.useState(presetBrand?.name || '');
