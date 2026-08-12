@@ -7,7 +7,7 @@ import { appState } from '@/lib/appState';
 import { SuedeControls } from '@/lib/listControls';
 import { useAuth } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/client';
-import { loadPublishedReviews, loadPublishedInquiries } from '@/lib/contentData';
+import { loadPublishedReviews, loadPublishedInquiries, loadBrands } from '@/lib/contentData';
 
 export function InquiryCard({ asker = {}, measurements = {}, product, productUrl, size, brand, image, question, responses = [], responseCount, helpful, hideMeasurements = false, match, onOpen, onAsker, onBrand }: any) {
   const link = { background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-primary)', textDecoration: 'underline', textUnderlineOffset: 3 };
@@ -81,6 +81,7 @@ export function LookbookScreen({ onRoute, authed = false }: any) {
   // reviews/inquiries are public, so there's no sample data here anymore.
   const [dbReviews, setDbReviews] = React.useState<any[]>([]);
   const [dbInquiries, setDbInquiries] = React.useState<any[]>([]);
+  const [dbCapsule, setDbCapsule] = React.useState<any[]>([]); // real Capsule brands (e.g. bbx)
   React.useEffect(() => {
     const sb = createClient();
     if (!sb) { setDbReviews([]); setDbInquiries([]); return; }
@@ -89,16 +90,26 @@ export function LookbookScreen({ onRoute, authed = false }: any) {
     loadPublishedInquiries(sb, user?.id).then((q) => { if (active) setDbInquiries(q); }).catch(() => {});
     return () => { active = false; };
   }, [user?.id]);
+  React.useEffect(() => {
+    const sb = createClient();
+    if (!sb) return;
+    let active = true;
+    loadBrands(sb, { capsuleOnly: true }).then((bs) => { if (active) setDbCapsule(bs); }).catch(() => {});
+    return () => { active = false; };
+  }, []);
   const [tab, setTab] = React.useState(appState.lookbookTab || 'reviews');
   React.useEffect(() => { appState.lookbookTab = null; }, []);
   const isReviews = tab === 'reviews';
   const { SearchBar, Dropdown, FilterChip, CollapsibleToolbar } = SuedeControls;
-  const capsuleNames = (SUEDE_BRANDS || []).map(b => b.name);
-  // Only Capsule brands have a brand page. Non-Capsule brands (names seen on
-  // reviews/inquiries but not in the Capsule) render as plain, non-clickable text.
-  const capsuleSet = new Set(capsuleNames.map(n => n.toLowerCase()));
-  const isCapsuleBrand = (name: string) => capsuleSet.has((name || '').toLowerCase());
-  const openBrand = (name: string) => { appState.brand = (SUEDE_BRANDS || []).find(x => x.name === name); onRoute('brand'); };
+  // Capsule brands — static samples plus real DB brands (so admin-added ones
+  // like bbx are clickable and reach their brand page). Non-Capsule brands
+  // (names seen on reviews/inquiries but not in the Capsule) stay plain text.
+  const brandByName = new Map<string, any>();
+  (SUEDE_BRANDS || []).forEach((b: any) => brandByName.set(b.name.toLowerCase(), b));
+  dbCapsule.forEach((b: any) => brandByName.set(b.name.toLowerCase(), b)); // DB wins if both
+  const capsuleNames = Array.from(new Set([...(SUEDE_BRANDS || []).map((b: any) => b.name), ...dbCapsule.map((b: any) => b.name)]));
+  const isCapsuleBrand = (name: string) => brandByName.has((name || '').toLowerCase());
+  const openBrand = (name: string) => { appState.brand = brandByName.get((name || '').toLowerCase()) || { name }; onRoute('brand'); };
   const catOf = (p: any) => ({ 'Two Piece Motor Set': 'Bottoms', 'Bomber Jacket': 'Outerwear', 'The Nyomi Maxi': 'Dresses', 'Corset Top': 'Tops' }[p] || 'Dresses');
   const brandTypeOf = (b: any) => capsuleNames.includes(b) ? 'Capsule' : 'Non-Capsule';
 
