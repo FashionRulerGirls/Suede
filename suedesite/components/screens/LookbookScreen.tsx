@@ -151,7 +151,18 @@ export function LookbookScreen({ onRoute, authed = false }: any) {
 
       {/* controls */}
       <CollapsibleToolbar align="space-between">
-        <SearchBar value={query} onChange={setQuery} placeholder="Search by brand" />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <SearchBar value={query} onChange={setQuery} placeholder="Search by brand" />
+          <button
+            onClick={() => onRoute(isReviews ? 'createreview' : 'createinquiry')}
+            aria-label={isReviews ? 'Leave a review' : 'Leave an inquiry'}
+            title={isReviews ? 'Leave a review' : 'Leave an inquiry'}
+            onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--ink-900)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border-default)'; }}
+            style={{ flex: 'none', width: 40, height: 40, borderRadius: '50%', border: '1px solid var(--border-default)', background: 'var(--surface-card)', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-primary)', transition: 'border-color var(--dur-base) var(--ease-out)' }}>
+            <Icon name="pen" size={17} color="var(--text-primary)" />
+          </button>
+        </div>
         <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
           {isReviews ? (
             <React.Fragment>

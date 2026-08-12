@@ -256,7 +256,9 @@ export function ReviewDetailScreen({ onRoute, authed = false }: any) {
             <div style={{ display: 'flex', gap: 80, flexWrap: 'wrap', rowGap: 20 }}>
               <div>
                 <div style={{ fontFamily: 'var(--font-body)', fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--text-muted)' }}>Brand</div>
-                <div style={{ fontFamily: 'var(--font-body)', fontSize: 15, color: 'var(--text-primary)', marginTop: 5 }}>{brand}</div>
+                {brand
+                  ? <button onClick={() => { appState.brand = { name: brand }; onRoute('brand'); }} style={{ background: 'none', border: 'none', padding: 0, marginTop: 5, cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: 15, color: 'var(--text-primary)', textDecoration: 'underline', textUnderlineOffset: 3 }}>{brand}</button>
+                  : <div style={{ fontFamily: 'var(--font-body)', fontSize: 15, color: 'var(--text-primary)', marginTop: 5 }}>{brand}</div>}
               </div>
               {size && (
                 <div>
