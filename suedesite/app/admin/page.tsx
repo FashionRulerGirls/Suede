@@ -10,11 +10,11 @@ import {
   loadCapsuleRequests, approveCapsuleRequest, rejectCapsuleRequest,
   loadApplications, markApplicationReviewed, loadFeedback, markFeedbackReviewed,
   loadCapsuleBrands, loadNonCapsuleBrands, updateBrand, removeFromCapsule, setBrandOnHome, updateBrandCutout,
-  promoteBrandByName, flagBrandName,
+  flagBrandName,
   loadFlagForReview, mergeBrandName, correctBrandName, dismissBrandFlag,
   loadContentFlags, resolveContentFlag,
   loadBrandClaims, approveBrandClaim, rejectBrandClaim, loadApprovedClaims, markClaimNotified,
-  createCapsuleBrand,
+  createCapsuleBrand, promoteBrandToCapsule,
 } from '@/lib/adminActions';
 import { normalizeCutout } from '@/lib/imageNormalize';
 
@@ -574,8 +574,9 @@ function FeedbackSection({ sb }: any) {
   );
 }
 
-function AddBrandSection({ sb, adminId }: any) {
-  const [name, setName] = React.useState('');
+function AddBrandSection({ sb, adminId, promoteName, onDone }: any) {
+  const promoting = !!promoteName;
+  const [name, setName] = React.useState(promoteName || '');
   const [website, setWebsite] = React.useState('');
   const [desc, setDesc] = React.useState('');
   const [onHome, setOnHome] = React.useState(false);
@@ -611,7 +612,9 @@ function AddBrandSection({ sb, adminId }: any) {
     if (!cutout) { setState('error'); setMsg('Upload a model cutout.'); return; }
     setState('busy'); setMsg('');
     try {
-      const res = await createCapsuleBrand(sb, adminId, { name, website, description: desc, onHome, cutout });
+      const res = promoting
+        ? await promoteBrandToCapsule(sb, adminId, { name, website, description: desc, onHome, cutout })
+        : await createCapsuleBrand(sb, adminId, { name, website, description: desc, onHome, cutout });
       setDoneSlug(res.slug); setState('done');
     } catch (e: any) { setState('error'); setMsg(e?.message || 'Could not create the brand.'); }
   };
@@ -619,18 +622,20 @@ function AddBrandSection({ sb, adminId }: any) {
   if (state === 'done') {
     return (
       <>
-        <H sub="The brand is live in the Capsule directory.">Add Brand</H>
+        <H sub="The brand is live in the Capsule directory.">{promoting ? 'Promote to Capsule' : 'Add Brand'}</H>
         <Card style={{ maxWidth: 560 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
             <Icon name="check" size={20} color="var(--rating-positive)" />
-            <span style={{ fontFamily: 'var(--font-serif)', fontSize: 20, color: 'var(--text-heading)' }}>“{name.trim()}” added to the Capsule</span>
+            <span style={{ fontFamily: 'var(--font-serif)', fontSize: 20, color: 'var(--text-heading)' }}>“{name.trim()}” {promoting ? 'promoted to' : 'added to'} the Capsule</span>
           </div>
           <p style={{ fontSize: 14, color: 'var(--text-muted)', margin: '0 0 18px', lineHeight: 1.55 }}>
-            It now appears in the Capsule directory{onHome ? ' and on the home-page marquee' : ''}. It may take a moment to show as caches refresh.
+            It now has a brand page and appears in the Capsule directory{onHome ? ' and on the home-page marquee' : ''}{promoting ? '; its existing reviews and inquiries are linked to it' : ''}. It may take a moment to show as caches refresh.
           </p>
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
             <a href={`/brand/${doneSlug}`} style={{ ...inputStyle, width: 'auto', textDecoration: 'none', color: 'var(--text-primary)', borderColor: 'var(--ink-900)' }}>View brand page →</a>
-            <button onClick={reset} style={{ ...inputStyle, width: 'auto', cursor: 'pointer', background: 'var(--ink-900)', color: 'var(--white)', border: 'none' }}>Add another brand</button>
+            {promoting
+              ? <button onClick={() => onDone && onDone()} style={{ ...inputStyle, width: 'auto', cursor: 'pointer', background: 'var(--ink-900)', color: 'var(--white)', border: 'none' }}>Back to Non-Capsule</button>
+              : <button onClick={reset} style={{ ...inputStyle, width: 'auto', cursor: 'pointer', background: 'var(--ink-900)', color: 'var(--white)', border: 'none' }}>Add another brand</button>}
           </div>
         </Card>
       </>
@@ -639,7 +644,12 @@ function AddBrandSection({ sb, adminId }: any) {
 
   return (
     <>
-      <H sub="Create a new Capsule brand. It's added to the directory the moment you submit.">Add Brand</H>
+      <H sub={promoting ? 'Add a cutout and details so this brand gets a proper Capsule page. Its existing reviews and inquiries will be linked to it.' : "Create a new Capsule brand. It's added to the directory the moment you submit."}>{promoting ? 'Promote to Capsule' : 'Add Brand'}</H>
+      {promoting && (
+        <button onClick={() => onDone && onDone()} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', cursor: 'pointer', padding: 0, marginBottom: 16, fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-secondary)' }}>
+          <Icon name="arrow-left" size={15} color="var(--text-secondary)" /> Back to Non-Capsule
+        </button>
+      )}
       <div className="ab-grid" style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 300px', gap: 24, alignItems: 'start' }}>
         <Card>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
@@ -650,7 +660,8 @@ function AddBrandSection({ sb, adminId }: any) {
             </div>
             <div>
               <label style={labelStyle}>Brand name <span style={{ color: 'var(--rating-critical)' }}>*</span></label>
-              <input value={name} onChange={(e) => { setName(e.target.value); if (state === 'error') setState('idle'); }} placeholder="e.g. Nadi" style={inputStyle} />
+              <input value={name} onChange={(e) => { setName(e.target.value); if (state === 'error') setState('idle'); }} readOnly={promoting} placeholder="e.g. Nadi" style={{ ...inputStyle, ...(promoting ? { background: 'var(--linen)', color: 'var(--text-muted)', cursor: 'not-allowed' } : {}) }} />
+              {promoting && <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '6px 0 0' }}>Name is fixed so its existing reviews stay linked.</p>}
             </div>
             <div>
               <label style={labelStyle}>Website</label>
@@ -671,7 +682,7 @@ function AddBrandSection({ sb, adminId }: any) {
             </button>
             <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginTop: 4 }}>
               <button onClick={submit} disabled={state === 'busy'} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'var(--ink-900)', color: 'var(--white)', border: 'none', borderRadius: 'var(--radius-xs)', padding: '12px 22px', cursor: state === 'busy' ? 'default' : 'pointer', fontFamily: 'var(--font-body)', fontSize: 14, opacity: state === 'busy' ? 0.6 : 1 }}>
-                {state === 'busy' ? 'Adding…' : 'Add to Capsule'}
+                {state === 'busy' ? (promoting ? 'Promoting…' : 'Adding…') : (promoting ? 'Promote to Capsule' : 'Add to Capsule')}
               </button>
               {msg && <span style={{ fontSize: 13, color: state === 'error' ? 'var(--rating-critical)' : 'var(--text-muted)' }}>{msg}</span>}
             </div>
@@ -876,14 +887,20 @@ function NonCapsuleBrands({ sb, adminId }: any) {
   const [k, bump] = useReload();
   const [rows] = useAsync(() => loadNonCapsuleBrands(sb), [k]);
   const [busy, setBusy] = React.useState<string | null>(null);
+  const [promote, setPromote] = React.useState<string | null>(null);
   const act = async (name: string, fn: () => Promise<void>) => { setBusy(name); try { await fn(); bump(); } catch { /* ignore */ } setBusy(null); };
+
+  // Promoting opens the full Add-Brand form (cutout + details) so the brand
+  // gets a real page — not just an is_capsule flag flip.
+  if (promote) return <AddBrandSection sb={sb} adminId={adminId} promoteName={promote} onDone={() => { setPromote(null); bump(); }} />;
+
   return (
     <>
       <p style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: -8, marginBottom: 16 }}>Brand names that appear via reviews but aren't in The Capsule.</p>
       <Table head={['Brand', 'Reviews', 'Actions']} rows={(rows || []).map((b: any) => [
         <b style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{b.name}</b>, b.reviews,
         <span style={{ display: 'flex', gap: 8 }}>
-          <ActionBtn busy={busy === b.name} onClick={() => act(b.name, () => promoteBrandByName(sb, b.name))}>Promote to Capsule</ActionBtn>
+          <ActionBtn onClick={() => setPromote(b.name)}>Promote to Capsule</ActionBtn>
           <ActionBtn ghost busy={busy === b.name} onClick={() => act(b.name, () => flagBrandName(sb, b.name, adminId))}>Flag for Review</ActionBtn>
         </span>,
       ])} loading={!rows} empty="No non-Capsule brands." />

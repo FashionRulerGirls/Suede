@@ -203,6 +203,60 @@ export async function promoteBrandByName(sb: SupabaseClient, name: string) {
   if (id) await sb.from('reviews').update({ brand_id: id }).ilike('brand_name', name).is('brand_id', null);
 }
 
+// Promote a non-capsule brand into the Capsule WITH a proper brand page: it
+// takes the same required inputs as Add Brand (cutout + details), upserts the
+// brand row by name, uploads the cutout as the hero image, and relinks the
+// brand's existing reviews/inquiries. Returns the brand's id + slug.
+export async function promoteBrandToCapsule(
+  sb: SupabaseClient,
+  adminId: string,
+  input: { name: string; website: string; description: string; onHome: boolean; cutout: Blob },
+): Promise<{ id: string; slug: string }> {
+  const name = input.name.trim();
+  if (!name) throw new Error('Brand name is required.');
+  const fields: any = {
+    is_capsule: true,
+    on_home: !!input.onHome,
+    status: 'active',
+    tagline: input.description.trim() || null,
+    shop_url: input.website.trim() || null,
+  };
+
+  // Reuse the existing row for this name if there is one; otherwise create it.
+  const { data: existing } = await sb.from('brands').select('id, slug').ilike('name', name).limit(1).maybeSingle();
+  let id: string, slug: string;
+  if (existing?.id) {
+    id = existing.id;
+    slug = existing.slug || '';
+    const patch: any = { ...fields };
+    if (!slug) { slug = await uniqueBrandSlug(sb, name); patch.slug = slug; patch.social = '@' + slug; }
+    const { error } = await sb.from('brands').update(patch).eq('id', id);
+    if (error) throw error;
+  } else {
+    slug = await uniqueBrandSlug(sb, name);
+    const { data: inserted, error } = await sb.from('brands')
+      .insert({ name, slug, social: '@' + slug, ...fields }).select('id, slug').single();
+    if (error) throw error;
+    id = (inserted as any).id; slug = (inserted as any).slug;
+  }
+
+  // Upload the cutout as the hero image.
+  const path = `${adminId}/${id}/cutout-${Date.now()}.png`;
+  const { error: upErr } = await sb.storage.from('brand-assets').upload(path, input.cutout, {
+    upsert: true, contentType: 'image/png', cacheControl: '3600',
+  });
+  if (upErr) throw new Error('Could not upload the cutout. ' + upErr.message);
+  const url = sb.storage.from('brand-assets').getPublicUrl(path).data.publicUrl;
+  const { error: heroErr } = await sb.from('brands').update({ hero_image_url: url }).eq('id', id);
+  if (heroErr) throw heroErr;
+
+  // Relink existing reviews/inquiries that referenced this brand only by name.
+  await sb.from('reviews').update({ brand_id: id }).ilike('brand_name', name).is('brand_id', null);
+  await sb.from('inquiries').update({ brand_id: id }).ilike('brand_name', name).is('brand_id', null);
+
+  return { id, slug };
+}
+
 // Flag a non-capsule brand name for review (§5b action → moderation_flags).
 export async function flagBrandName(sb: SupabaseClient, name: string, adminId: string) {
   const { error } = await sb.from('moderation_flags').insert({
