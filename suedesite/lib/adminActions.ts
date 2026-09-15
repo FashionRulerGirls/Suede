@@ -78,11 +78,11 @@ export async function markFeedbackReviewed(sb: SupabaseClient, id: string) {
 
 // ── Brand Management — §5a / §5b ─────────────────────────────────────
 export async function loadCapsuleBrands(sb: SupabaseClient) {
-  const COLS = 'id, name, slug, shop_url, social, hero_image_url, created_at';
+  const COLS = 'id, name, slug, shop_url, social, tagline, hero_image_url, created_at';
   // Include on_home when present; fall back if migration 0034 isn't applied yet.
   let resp: any = await sb.from('brands').select(COLS + ', on_home').eq('is_capsule', true).order('name');
   if (resp.error) resp = await sb.from('brands').select(COLS).eq('is_capsule', true).order('name');
-  return (resp.data || []).map((b: any) => ({ id: b.id, name: b.name, slug: b.slug, website: b.shop_url || '', instagram: b.social || '', image: b.hero_image_url || '', onHome: !!b.on_home, created_at: b.created_at }));
+  return (resp.data || []).map((b: any) => ({ id: b.id, name: b.name, slug: b.slug, website: b.shop_url || '', instagram: b.social || '', tagline: b.tagline || '', image: b.hero_image_url || '', onHome: !!b.on_home, created_at: b.created_at }));
 }
 
 // Non-Capsule = brand names seen on reviews that aren't a Capsule brand.
@@ -101,12 +101,13 @@ export async function loadNonCapsuleBrands(sb: SupabaseClient) {
   return Array.from(counts, ([name, reviews]) => ({ name, reviews })).sort((a, b) => b.reviews - a.reviews);
 }
 
-export async function updateBrand(sb: SupabaseClient, id: string, fields: { name?: string; slug?: string; website?: string; instagram?: string }) {
+export async function updateBrand(sb: SupabaseClient, id: string, fields: { name?: string; slug?: string; website?: string; instagram?: string; tagline?: string }) {
   const patch: Record<string, any> = {};
   if (fields.name !== undefined) patch.name = fields.name.trim();
   if (fields.slug !== undefined) patch.slug = slugify(fields.slug);
   if (fields.website !== undefined) patch.shop_url = fields.website.trim() || null;
   if (fields.instagram !== undefined) patch.social = fields.instagram.trim() || null;
+  if (fields.tagline !== undefined) patch.tagline = fields.tagline.trim() || null;
   const { error } = await sb.from('brands').update(patch).eq('id', id);
   if (error) throw error;
 }

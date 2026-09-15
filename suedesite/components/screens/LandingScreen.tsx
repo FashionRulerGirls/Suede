@@ -38,32 +38,70 @@ function CapsuleCarousel({ brands, onRoute }: any) {
   const trackWidth = (loop.length / VISIBLE) * 100;   // %
   const itemBasis = 100 / loop.length;                // % of track
   const dur = isPhone ? 34 : 48;                       // phones scroll a touch faster
+
+  // When paused, ‹ › arrows manually scrub the marquee one brand at a time.
+  // The offset lives on a wrapper (separate from the frozen animation) and wraps
+  // by one list-length seamlessly, since the track is the list duplicated ×2.
+  const step = 100 / VISIBLE;                          // one brand, in viewport %
+  const listLen = list.length * step;                 // one full list, viewport %
+  const [manual, setManual] = React.useState(0);
+  const [smooth, setSmooth] = React.useState(true);
+  const go = (d: number) => { setSmooth(true); setManual((m) => m - d * step); };
+  React.useEffect(() => {
+    if (manual <= -listLen) { const id = requestAnimationFrame(() => { setSmooth(false); setManual((m) => m + listLen); }); return () => cancelAnimationFrame(id); }
+    if (manual > 0)         { const id = requestAnimationFrame(() => { setSmooth(false); setManual((m) => m - listLen); }); return () => cancelAnimationFrame(id); }
+  }, [manual, listLen]);
+  React.useEffect(() => { if (!smooth) { const id = requestAnimationFrame(() => setSmooth(true)); return () => cancelAnimationFrame(id); } }, [smooth]);
+
+  const chevron = (dir: 'left' | 'right') => (
+    <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round">
+      <path d={dir === 'left' ? 'M15 5l-7 7 7 7' : 'M9 5l7 7-7 7'} />
+    </svg>
+  );
+  const arrowStyle = (side: 'left' | 'right'): React.CSSProperties => ({
+    position: 'absolute', top: imgH * 0.5, [side]: isPhone ? 2 : 20, transform: 'translateY(-50%)',
+    width: 46, height: 46, border: 'none', background: 'none', cursor: 'pointer',
+    display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)',
+    zIndex: 4, opacity: paused ? 1 : 0, pointerEvents: paused ? 'auto' : 'none',
+    transition: 'opacity var(--dur-base) var(--ease-out), color var(--dur-base) var(--ease-out)',
+  });
   return (
     <div style={{ position: 'relative', marginTop: 22 }}>
       <style>{`@keyframes suedeMarquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }`}</style>
       <div style={{ overflow: 'hidden' }}>
-        <div key={VISIBLE} style={{
-          display: 'flex', alignItems: 'flex-end', width: trackWidth + '%',
-          animation: `suedeMarquee ${dur}s linear infinite`,
-          animationPlayState: paused ? 'paused' : 'running',
-          willChange: 'transform', WebkitBackfaceVisibility: 'hidden', backfaceVisibility: 'hidden',
-        }}>
-          {loop.map((b, i) => (
-            <button key={i} onClick={() => { appState.brand = b; onRoute('brand'); }} style={{
-              flex: `0 0 ${itemBasis}%`, background: 'none', border: 'none', cursor: 'pointer',
-              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 26, padding: 0,
-            }}>
-              <span style={{ height: imgH + 10, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
-                <img src={b.image} alt={b.name} decoding="async" style={{ height: imgH, width: 'auto', objectFit: 'contain' }} />
-              </span>
-              <span style={{ fontFamily: 'var(--font-serif)', fontSize: 15, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>{b.name}</span>
-            </button>
-          ))}
+        <div style={{ transform: `translateX(${manual}%)`, transition: smooth ? 'transform 600ms cubic-bezier(.4,0,.2,1)' : 'none', willChange: 'transform' }}>
+          <div key={VISIBLE} style={{
+            display: 'flex', alignItems: 'flex-end', width: trackWidth + '%',
+            animation: `suedeMarquee ${dur}s linear infinite`,
+            animationPlayState: paused ? 'paused' : 'running',
+            willChange: 'transform', WebkitBackfaceVisibility: 'hidden', backfaceVisibility: 'hidden',
+          }}>
+            {loop.map((b, i) => (
+              <button key={i} onClick={() => { appState.brand = b; onRoute('brand'); }} style={{
+                flex: `0 0 ${itemBasis}%`, background: 'none', border: 'none', cursor: 'pointer',
+                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 26, padding: 0,
+              }}>
+                <span style={{ height: imgH + 10, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+                  <img src={b.image} alt={b.name} decoding="async" style={{ height: imgH, width: 'auto', objectFit: 'contain' }} />
+                </span>
+                <span style={{ fontFamily: 'var(--font-serif)', fontSize: 15, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>{b.name}</span>
+              </button>
+            ))}
+          </div>
         </div>
         {/* edge fades — dissolve cutouts into the page (hidden on phone) */}
         <div className="sd-cap-fade" style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: 160, background: 'linear-gradient(to right, var(--paper), rgba(248,246,243,0))', pointerEvents: 'none', zIndex: 2 }} />
         <div className="sd-cap-fade" style={{ position: 'absolute', top: 0, bottom: 0, right: 0, width: 160, background: 'linear-gradient(to left, var(--paper), rgba(248,246,243,0))', pointerEvents: 'none', zIndex: 2 }} />
       </div>
+
+      {/* Manual scrub arrows — only appear while paused */}
+      <button onClick={() => go(-1)} aria-label="Previous brands" tabIndex={paused ? 0 : -1}
+        onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--text-primary)'; }} onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-muted)'; }}
+        style={arrowStyle('left')}>{chevron('left')}</button>
+      <button onClick={() => go(1)} aria-label="Next brands" tabIndex={paused ? 0 : -1}
+        onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--text-primary)'; }} onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-muted)'; }}
+        style={arrowStyle('right')}>{chevron('right')}</button>
+
       <div style={{ display: 'flex', justifyContent: 'center', marginTop: 40 }}>
         <button onClick={() => setPaused(p => !p)} aria-label={paused ? 'Play' : 'Pause'} title={paused ? 'Play' : 'Pause'}
           style={{ width: 38, height: 38, borderRadius: 0, border: 'none', background: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-primary)' }}>

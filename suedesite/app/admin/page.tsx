@@ -807,7 +807,7 @@ function CapsuleBrands({ sb, adminId }: any) {
   const save = async () => {
     setBusy(edit.id); setEditErr('');
     try {
-      await updateBrand(sb, edit.id, { name: edit.name, slug: edit.slug, website: edit.website, instagram: edit.instagram });
+      await updateBrand(sb, edit.id, { name: edit.name, slug: edit.slug, website: edit.website, instagram: edit.instagram, tagline: edit.tagline });
       if (edit._newCutout) await updateBrandCutout(sb, adminId, edit.id, edit._newCutout);
       closeEdit(); bump();
     } catch (e: any) { setEditErr(e?.message || 'Could not save.'); }
@@ -859,6 +859,10 @@ function CapsuleBrands({ sb, adminId }: any) {
                 <input value={edit[key] || ''} onChange={(e) => setEdit({ ...edit, [key]: e.target.value })} style={{ width: '100%', boxSizing: 'border-box', border: '1px solid var(--border-default)', borderRadius: 'var(--radius-xs)', padding: '10px 12px', fontFamily: 'var(--font-body)', fontSize: 14 }} />
               </label>
             ))}
+            <label style={{ display: 'block', marginBottom: 14 }}>
+              <span style={{ fontSize: 12, color: 'var(--text-muted)', display: 'block', marginBottom: 5 }}>Tagline</span>
+              <textarea value={edit.tagline || ''} onChange={(e) => setEdit({ ...edit, tagline: e.target.value })} rows={3} maxLength={280} placeholder="One or two lines about the brand." style={{ width: '100%', boxSizing: 'border-box', border: '1px solid var(--border-default)', borderRadius: 'var(--radius-xs)', padding: '10px 12px', fontFamily: 'var(--font-body)', fontSize: 14, resize: 'vertical', lineHeight: 1.5 }} />
+            </label>
             <div style={{ marginBottom: 14 }}>
               <span style={{ fontSize: 12, color: 'var(--text-muted)', display: 'block', marginBottom: 7 }}>Model cutout</span>
               <div style={{ display: 'flex', alignItems: 'flex-end', gap: 14 }}>

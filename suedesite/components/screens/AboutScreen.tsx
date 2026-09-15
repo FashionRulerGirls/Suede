@@ -42,8 +42,8 @@ export function AboutScreen() {
             </div>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-            <p style={{ fontFamily: 'var(--font-body)', fontSize: 15, lineHeight: 1.7, color: 'var(--text-secondary)', margin: 0 }}>The name means both. Suede is a material you <b style={{ fontWeight: 600, color: 'var(--text-primary)' }}>choose on purpose</b> — the pick of someone who cares what a thing is actually made of, not just how it looks in a photo. To be swayed is to be moved by proof — not a well-curated brand shoot.</p>
-            <p style={{ fontFamily: 'var(--font-body)', fontSize: 15, lineHeight: 1.7, color: 'var(--text-secondary)', margin: 0 }}>That's the whole idea. Suede runs on <b style={{ fontWeight: 600, color: 'var(--text-primary)' }}>real evidence</b> — not ads, not trend cycles, not a model whose body is nothing like yours. Just reviews from people who share your measurements, bought the piece, and actually wore it.</p>
+            <p style={{ fontFamily: 'var(--font-body)', fontSize: 15, lineHeight: 1.7, color: 'var(--text-secondary)', margin: 0 }}>The name means both. Suede is a material you <b style={{ fontWeight: 600, color: 'var(--text-primary)' }}>choose on purpose</b> — picked by someone who cares what a product is actually made of, not just how it looks in a photo. To be swayed is to be influenced by evidence and experience to take an action (i.e., make a purchase).</p>
+            <p style={{ fontFamily: 'var(--font-body)', fontSize: 15, lineHeight: 1.7, color: 'var(--text-secondary)', margin: 0 }}>That's the whole idea. Suede runs on <b style={{ fontWeight: 600, color: 'var(--text-primary)' }}>real evidence</b> — not ads, not trend cycles, not a model whose body is nothing like yours. Just independent reviews from people who share your measurements and want to help the next shopper shop with confidence.</p>
           </div>
         </div>
       </div>
