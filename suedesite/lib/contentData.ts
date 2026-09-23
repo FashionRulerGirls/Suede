@@ -526,6 +526,13 @@ export async function loadFollowedBrandIds(sb: SupabaseClient, userId: string): 
   return (data || []).map((r: any) => r.brand_id).filter(Boolean);
 }
 
+// Ids of the members this user follows — for the Collective Feed (their reviews
+// and inquiries).
+export async function loadFollowingMemberIds(sb: SupabaseClient, userId: string): Promise<string[]> {
+  const { data } = await sb.from('member_follows').select('followee_id').eq('follower_id', userId);
+  return (data || []).map((r: any) => r.followee_id).filter(Boolean);
+}
+
 export async function isFollowingMember(sb: SupabaseClient, followerId: string, followeeId: string) {
   const { data } = await sb.from('member_follows').select('followee_id').eq('follower_id', followerId).eq('followee_id', followeeId).maybeSingle();
   return !!data;

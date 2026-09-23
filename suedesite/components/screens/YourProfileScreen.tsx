@@ -10,7 +10,7 @@ import { InquiryCard } from '@/components/screens/LookbookScreen';
 import { useAuth } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/client';
 import { loadProfileData, inchesToHeight, inchesDisplay } from '@/lib/profileData';
-import { loadUserReviews, loadUserInquiries, countFollowedBrands, memberFollowerCount, loadFollowedBrandNames, loadPublishedReviews, loadPublishedInquiries, loadBrands, loadMemberFollowers } from '@/lib/contentData';
+import { loadUserReviews, loadUserInquiries, countFollowedBrands, memberFollowerCount, loadFollowedBrandNames, loadPublishedReviews, loadPublishedInquiries, loadBrands, loadMemberFollowers, loadFollowingMemberIds } from '@/lib/contentData';
 
 function YProfStat({ value, label, links, onValue }: any) {
   const valueStyle = { fontFamily: 'var(--font-meta)', fontWeight: 500, fontSize: 30, lineHeight: 1, color: 'var(--text-heading)' } as const;
@@ -63,6 +63,7 @@ export function YourProfileScreen({ onRoute }: any) {
   const [followedNames, setFollowedNames] = React.useState<string[]>([]);
   const [communityReviews, setCommunityReviews] = React.useState<any[]>([]);
   const [communityInquiries, setCommunityInquiries] = React.useState<any[]>([]);
+  const [followingIds, setFollowingIds] = React.useState<string[]>([]);
   const [feedLoaded, setFeedLoaded] = React.useState(false);
   const view0 = appState.profileView; // read once for the initial-load decision
 
@@ -106,15 +107,21 @@ export function YourProfileScreen({ onRoute }: any) {
     window.addEventListener('suede-profile-view', onView);
     return () => window.removeEventListener('suede-profile-view', onView);
   }, []);
-  // Load the community feed the first time a real member opens the Capsule Feed.
+  // Load the community feed the first time a real member opens the Capsule or
+  // Collective feed. Capsule = reviews/inquiries from brands you follow;
+  // Collective = reviews/inquiries from members you follow.
   React.useEffect(() => {
-    if (!real || view !== 'capsulefeed' || feedLoaded) return;
+    if (!real || (view !== 'capsulefeed' && view !== 'collectivefeed') || feedLoaded) return;
     const sb = createClient();
     if (!sb || !user) return;
     let active = true;
-    Promise.all([loadPublishedReviews(sb, user.id), loadPublishedInquiries(sb, user.id)]).then(([r, q]) => {
+    Promise.all([
+      loadPublishedReviews(sb, user.id),
+      loadPublishedInquiries(sb, user.id),
+      loadFollowingMemberIds(sb, user.id),
+    ]).then(([r, q, ids]) => {
       if (!active) return;
-      setCommunityReviews(r); setCommunityInquiries(q); setFeedLoaded(true);
+      setCommunityReviews(r); setCommunityInquiries(q); setFollowingIds(ids); setFeedLoaded(true);
     }).catch(() => {});
     return () => { active = false; };
   }, [real, view, feedLoaded, user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -145,14 +152,18 @@ export function YourProfileScreen({ onRoute }: any) {
     const followers = real
       ? dbFollowers.filter(p => (p.name + ' ' + p.handle).toLowerCase().includes(ql))
       : (SUEDE_MEMBERS || []).filter(p => (p.name + ' ' + p.handle).toLowerCase().includes(ql));
-    // Capsule Feed = community reviews/inquiries from the brands you follow.
-    // Collective Feed (from members who follow you) is empty until the member
-    // graph exists.
+    // Capsule Feed = community reviews/inquiries from the BRANDS you follow.
+    // Collective Feed = community reviews/inquiries from the MEMBERS you follow.
+    const followingIdSet = new Set(followingIds);
     const feedReviews = real
-      ? (view === 'capsulefeed' ? communityReviews.filter(r => followedSet.has((r.brand || '').toLowerCase())) : [])
+      ? (view === 'capsulefeed'
+          ? communityReviews.filter(r => followedSet.has((r.brand || '').toLowerCase()))
+          : communityReviews.filter(r => followingIdSet.has(r.authorId)))
       : [...reviews].slice(0, 4);
     const feedInquiries = real
-      ? (view === 'capsulefeed' ? communityInquiries.filter(it => followedSet.has((it.brand || '').toLowerCase())) : [])
+      ? (view === 'capsulefeed'
+          ? communityInquiries.filter(it => followedSet.has((it.brand || '').toLowerCase()))
+          : communityInquiries.filter(it => followingIdSet.has(it.authorId)))
       : (SUEDE_INQUIRIES || []);
     const openBrand = (b: any) => { appState.brand = b; onRoute('brand'); };
     const openMember = (p: any, avatar: string) => {
@@ -165,13 +176,13 @@ export function YourProfileScreen({ onRoute }: any) {
           <Icon name="arrow-left" size={16} color="var(--text-secondary)" /> Back to your profile
         </button>
         <header style={{ display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'center', textAlign: 'center', marginBottom: 28 }}>
-          <span style={{ fontFamily: 'var(--font-body)', fontSize: 12, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--text-muted)' }}>{isBrandSide ? 'Brands You Follow' : 'Your Followers'}</span>
+          <span style={{ fontFamily: 'var(--font-body)', fontSize: 12, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--text-muted)' }}>{isBrandSide ? 'Brands You Follow' : (view === 'collectivefeed' ? 'Members You Follow' : 'Your Followers')}</span>
           <h1 style={{ fontFamily: 'var(--font-serif)', fontWeight: 400, fontSize: 48, color: 'var(--text-heading)', margin: 0 }}>
             {isFeed ? (isBrandSide ? 'Capsule Feed' : 'Collective Feed') : (isBrandSide ? `${m.brands} Brands` : `${m.followers} Followers`)}
           </h1>
           <p style={{ fontFamily: 'var(--font-body)', fontSize: 15, color: 'var(--text-muted)', margin: 0, maxWidth: 560 }}>
             {isFeed
-              ? (isBrandSide ? 'The latest reviews and inquiries from the brands you follow.' : 'The latest reviews and inquiries from the members who follow you.')
+              ? (isBrandSide ? 'The latest reviews and inquiries from the brands you follow.' : 'The latest reviews and inquiries from the members you follow.')
               : (isBrandSide ? 'Every Capsule brand you follow. Tap any brand to view its page.' : 'Everyone following your fit and reviews. Tap a member to view their profile.')}
           </p>
         </header>
@@ -202,7 +213,7 @@ export function YourProfileScreen({ onRoute }: any) {
                   <div style={{ textAlign: 'center', padding: '48px 0 24px' }}>
                     <p style={{ fontFamily: 'var(--font-serif)', fontSize: 21, color: 'var(--text-heading)', margin: '0 0 6px' }}>Nothing here yet</p>
                     <p style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-muted)', margin: 0 }}>
-                      {view === 'capsulefeed' ? 'Follow brands to see their latest reviews and inquiries here.' : 'When members who follow you post, it’ll show up here.'}
+                      {view === 'capsulefeed' ? 'Follow brands to see their latest reviews and inquiries here.' : 'Follow members to see their latest reviews and inquiries here.'}
                     </p>
                   </div>
                 );
