@@ -3,39 +3,43 @@
 // auth state, scroll management, and visual tweaks from ui_kits/suede/index.html.
 
 import React from 'react';
+import dynamic from 'next/dynamic';
 
+// Eager: only what the home page needs on first paint. Everything else is
+// code-split with next/dynamic so a home visitor doesn't download the review
+// composer, quiz, admin-adjacent screens, etc. — they load on navigation.
 import { Nav } from '@/components/screens/Nav';
 import { Footer } from '@/components/screens/Footer';
 import { ProfileProgress } from '@/components/screens/ProfileProgress';
 import { LandingScreen } from '@/components/screens/LandingScreen';
-import { CapsuleScreen } from '@/components/screens/CapsuleScreen';
-import { BrandScreen } from '@/components/screens/BrandScreen';
-import { ReviewDetailScreen } from '@/components/screens/ReviewDetailScreen';
-import { MemberProfileScreen } from '@/components/screens/MemberProfileScreen';
-import { YourProfileScreen } from '@/components/screens/YourProfileScreen';
-import { InquiryDetailScreen } from '@/components/screens/InquiryDetailScreen';
-import { CreateReviewScreen } from '@/components/screens/CreateReviewScreen';
-import { CreateInquiryScreen } from '@/components/screens/CreateInquiryScreen';
-import { AboutScreen } from '@/components/screens/AboutScreen';
-import { NotificationsScreen } from '@/components/screens/NotificationsScreen';
-import { PrivacyScreen } from '@/components/screens/PrivacyScreen';
-import { TermsScreen } from '@/components/screens/TermsScreen';
-import { SuggestBrandScreen } from '@/components/screens/SuggestBrandScreen';
-import { EditProfileScreen } from '@/components/screens/EditProfileScreen';
-import { QuizScreen } from '@/components/screens/QuizScreen';
-import { ConsultationScreen } from '@/components/screens/ConsultationScreen';
-import { LookbookScreen } from '@/components/screens/LookbookScreen';
-import { CollectiveScreen } from '@/components/screens/CollectiveScreen';
-import { AuthScreen } from '@/components/screens/AuthScreen';
-import {
-  CreateAccountScreen,
-  ForgotPasswordScreen,
-  VerificationCodeScreen,
-  ResetPasswordScreen,
-} from '@/components/screens/AuthFlowScreens';
-import { ApplyScreen } from '@/components/screens/ApplyScreen';
-import { BrandSignInScreen } from '@/components/screens/BrandSignInScreen';
-import { ClaimBrandScreen } from '@/components/screens/ClaimBrandScreen';
+
+// Lazily-loaded route screens (each its own chunk).
+const CapsuleScreen = dynamic(() => import('@/components/screens/CapsuleScreen').then((m) => m.CapsuleScreen));
+const BrandScreen = dynamic(() => import('@/components/screens/BrandScreen').then((m) => m.BrandScreen));
+const ReviewDetailScreen = dynamic(() => import('@/components/screens/ReviewDetailScreen').then((m) => m.ReviewDetailScreen));
+const MemberProfileScreen = dynamic(() => import('@/components/screens/MemberProfileScreen').then((m) => m.MemberProfileScreen));
+const YourProfileScreen = dynamic(() => import('@/components/screens/YourProfileScreen').then((m) => m.YourProfileScreen));
+const InquiryDetailScreen = dynamic(() => import('@/components/screens/InquiryDetailScreen').then((m) => m.InquiryDetailScreen));
+const CreateReviewScreen = dynamic(() => import('@/components/screens/CreateReviewScreen').then((m) => m.CreateReviewScreen));
+const CreateInquiryScreen = dynamic(() => import('@/components/screens/CreateInquiryScreen').then((m) => m.CreateInquiryScreen));
+const AboutScreen = dynamic(() => import('@/components/screens/AboutScreen').then((m) => m.AboutScreen));
+const NotificationsScreen = dynamic(() => import('@/components/screens/NotificationsScreen').then((m) => m.NotificationsScreen));
+const PrivacyScreen = dynamic(() => import('@/components/screens/PrivacyScreen').then((m) => m.PrivacyScreen));
+const TermsScreen = dynamic(() => import('@/components/screens/TermsScreen').then((m) => m.TermsScreen));
+const SuggestBrandScreen = dynamic(() => import('@/components/screens/SuggestBrandScreen').then((m) => m.SuggestBrandScreen));
+const EditProfileScreen = dynamic(() => import('@/components/screens/EditProfileScreen').then((m) => m.EditProfileScreen));
+const QuizScreen = dynamic(() => import('@/components/screens/QuizScreen').then((m) => m.QuizScreen));
+const ConsultationScreen = dynamic(() => import('@/components/screens/ConsultationScreen').then((m) => m.ConsultationScreen));
+const LookbookScreen = dynamic(() => import('@/components/screens/LookbookScreen').then((m) => m.LookbookScreen));
+const CollectiveScreen = dynamic(() => import('@/components/screens/CollectiveScreen').then((m) => m.CollectiveScreen));
+const AuthScreen = dynamic(() => import('@/components/screens/AuthScreen').then((m) => m.AuthScreen));
+const CreateAccountScreen = dynamic(() => import('@/components/screens/AuthFlowScreens').then((m) => m.CreateAccountScreen));
+const ForgotPasswordScreen = dynamic(() => import('@/components/screens/AuthFlowScreens').then((m) => m.ForgotPasswordScreen));
+const VerificationCodeScreen = dynamic(() => import('@/components/screens/AuthFlowScreens').then((m) => m.VerificationCodeScreen));
+const ResetPasswordScreen = dynamic(() => import('@/components/screens/AuthFlowScreens').then((m) => m.ResetPasswordScreen));
+const ApplyScreen = dynamic(() => import('@/components/screens/ApplyScreen').then((m) => m.ApplyScreen));
+const BrandSignInScreen = dynamic(() => import('@/components/screens/BrandSignInScreen').then((m) => m.BrandSignInScreen));
+const ClaimBrandScreen = dynamic(() => import('@/components/screens/ClaimBrandScreen').then((m) => m.ClaimBrandScreen));
 import {
   useTweaks,
   TweaksPanel,

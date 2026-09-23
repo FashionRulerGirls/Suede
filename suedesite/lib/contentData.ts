@@ -270,21 +270,31 @@ async function attachReviewMedia(sb: SupabaseClient, cards: any[]) {
   });
 }
 
-// Like + comment counts for a batch of review cards.
-async function attachReviewStats(sb: SupabaseClient, cards: any[]) {
+// Like + comment counts for a batch of review cards, keyed by review id.
+async function reviewStatsById(sb: SupabaseClient, cards: any[]): Promise<Record<string, { likes: number; comments: number }>> {
   const ids = cards.map((c) => c._id).filter(Boolean);
-  if (!ids.length) return cards;
+  if (!ids.length) return {};
   const [rx, cm] = await Promise.all([
     loadReactions(sb, undefined, 'review', ids),
     sb.from('review_comments').select('review_id').in('review_id', ids),
   ]);
   const cc: Record<string, number> = {};
   ((cm as any).data || []).forEach((r: any) => { cc[r.review_id] = (cc[r.review_id] || 0) + 1; });
-  return cards.map((c) => ({ ...c, likes: rx.counts[c._id] || 0, comments: cc[c._id] || 0 }));
+  const out: Record<string, { likes: number; comments: number }> = {};
+  for (const c of cards) out[c._id] = { likes: rx.counts[c._id] || 0, comments: cc[c._id] || 0 };
+  return out;
 }
 
 async function enrichReviewCards(sb: SupabaseClient, cards: any[], viewerId?: string) {
-  return attachMatches(sb, viewerId, await attachReviewStats(sb, await attachReviewMedia(sb, cards)));
+  // Media and stats are independent, so fetch them in parallel instead of
+  // chaining (media → stats → matches was three serial network waves). Matches
+  // still run last since they depend on the deduped author set.
+  const [withMedia, statsById] = await Promise.all([
+    attachReviewMedia(sb, cards),
+    reviewStatsById(sb, cards),
+  ]);
+  const withStats = withMedia.map((c: any) => ({ ...c, ...(statsById[c._id] || { likes: 0, comments: 0 }) }));
+  return attachMatches(sb, viewerId, withStats);
 }
 
 // Suede Match (proximity + confidence) between the viewer and one other member.
@@ -391,25 +401,34 @@ function mapBrand(b: any, s: any) {
   };
 }
 
-export async function loadBrands(sb: SupabaseClient, opts: { capsuleOnly?: boolean; homeOnly?: boolean } = {}) {
+export async function loadBrands(
+  sb: SupabaseClient,
+  opts: { capsuleOnly?: boolean; homeOnly?: boolean; withStats?: boolean } = {},
+) {
+  // brand_stats is a 4-table aggregate view (brands ⋈ reviews ⋈ inquiries ⋈
+  // follows) that recomputes on every read and gets slower as engagement grows.
+  // Only fetch it for views that actually display ratings/counts; callers that
+  // just need names + images (e.g. the home marquee) pass withStats: false.
+  const withStats = opts.withStats !== false;
   let q = sb.from('brands').select('*');
   if (opts.capsuleOnly) q = q.eq('is_capsule', true);
   if (opts.homeOnly) q = q.eq('on_home', true);
-  const [{ data: brands }, { data: stats }] = await Promise.all([
+  const [{ data: brands }, statsRes] = await Promise.all([
     q.order('name'),
-    sb.from('brand_stats').select('*'),
+    withStats ? sb.from('brand_stats').select('*') : Promise.resolve({ data: [] as any[] }),
   ]);
   const statsById: Record<string, any> = {};
-  (stats || []).forEach((s: any) => { statsById[s.id] = s; });
+  ((statsRes as any).data || []).forEach((s: any) => { statsById[s.id] = s; });
   return (brands || []).map((b: any) => mapBrand(b, statsById[b.id]));
 }
 
 // Capsule brands flagged to also appear on the home-page marquee. Resilient:
 // if the on_home column isn't present yet (migration 0034 not applied), returns
 // [] rather than throwing, so the home page falls back to its curated list.
+// The marquee shows only name + cutout, so it skips the expensive brand_stats.
 export async function loadHomeBrands(sb: SupabaseClient) {
   try {
-    const brands = await loadBrands(sb, { homeOnly: true });
+    const brands = await loadBrands(sb, { homeOnly: true, withStats: false });
     return brands.filter((b: any) => b.image);
   } catch {
     return [];
