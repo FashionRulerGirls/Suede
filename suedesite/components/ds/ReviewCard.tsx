@@ -6,6 +6,7 @@ import { MeasurementSpec } from './MeasurementSpec';
 import { Icon } from './Icon';
 import { createClient } from '@/lib/supabase/client';
 import { shopOut } from '@/lib/tracking';
+import { truncate } from '@/lib/text';
 
 /* The Lookbook review card — reviewer lockup + measurement match, a fit
    photo with a "+N" stack badge, product/size, excerpt, brand wordmark,
@@ -80,7 +81,7 @@ export function ReviewCard({
             {size && <span style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-secondary)' }}>Size: {size}</span>}
           </div>
           <p style={{ fontFamily: 'var(--font-body)', fontSize: 13.5, lineHeight: 1.55, color: 'var(--text-muted)', margin: 0 }}>
-            {excerpt}
+            {truncate(excerpt, 250)}
           </p>
           <div style={{ display: 'flex', alignItems: 'center', gap: 18, alignSelf: 'flex-end', marginTop: 'auto' }}>
             {productUrl && (
@@ -94,8 +95,8 @@ export function ReviewCard({
             </button>
           </div>
         </div>
-        <div style={{ position: 'relative', minWidth: 0, borderRadius: 0, overflow: 'hidden', aspectRatio: '3/4', background: 'var(--linen)' }}>
-          {image && <img src={image} alt={product} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
+        <div className="sd-rc-imgbox" style={{ position: 'relative', minWidth: 0, borderRadius: 0, overflow: 'hidden', aspectRatio: '3/4', alignSelf: 'start', background: 'var(--linen)' }}>
+          {image && <img src={image} alt={product} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center' }} />}
           {extraCount != null && (
             <span style={{ position: 'absolute', right: 8, bottom: 8, display: 'inline-flex', alignItems: 'center', gap: 4, background: 'rgba(0,0,0,0.6)', color: '#fff', borderRadius: 'var(--radius-xs)', padding: '3px 7px', fontSize: 11, fontFamily: 'var(--font-body)' }}>
               <Icon name="plus" size={11} color="#fff" />{extraCount}

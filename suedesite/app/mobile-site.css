@@ -116,10 +116,10 @@ html, body { max-width: 100%; overflow-x: hidden; }
   #root .sd-brating-pop > span:first-child { display: none !important; }
   #root .sd-rc-body { grid-template-columns: 1fr 104px !important; gap: 14px !important; }
   #root .sd-rc-body > div:first-child { min-width: 0 !important; }
-  /* Review image cell: width follows the fixed 104px column; height just fills
-     the row. (Without this the aspect-ratio derives width from the tall text
-     height and the photo blows past the card edge.) */
-  #root .sd-rc-body > div:last-child { aspect-ratio: auto !important; min-height: 138px !important; }
+  /* Review image cell: fixed 3:4 box (width from the 104px column) with
+     object-fit cover, so any upload displays consistently and never stretches
+     with the text. align-self:start (set inline) keeps it from filling a tall row. */
+  #root .sd-rc-imgbox { aspect-ratio: 3 / 4 !important; height: auto !important; min-height: 0 !important; }
   /* Inquiry cards restack on mobile: the product photo becomes a full-width
      3:4 portrait on top, and the text (brand / product / question / actions)
      flows below across the whole card — no more slim side frame + boxed-in

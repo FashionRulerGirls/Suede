@@ -8,6 +8,7 @@ import { SuedeControls } from '@/lib/listControls';
 import { useAuth } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/client';
 import { loadPublishedReviews, loadPublishedInquiries, loadBrands } from '@/lib/contentData';
+import { truncate } from '@/lib/text';
 
 export function InquiryCard({ asker = {}, measurements = {}, product, productUrl, size, brand, image, question, responses = [], responseCount, helpful, hideMeasurements = false, match, onOpen, onAsker, onBrand }: any) {
   const link = { background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-primary)', textDecoration: 'underline', textUnderlineOffset: 3 };
@@ -53,7 +54,7 @@ export function InquiryCard({ asker = {}, measurements = {}, product, productUrl
             <span style={{ fontFamily: 'var(--font-body)', fontSize: 15, color: 'var(--text-primary)' }}>{product}</span>
             {size && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, border: '1px solid var(--border-default)', borderRadius: 'var(--radius-xs)', padding: '4px 9px', fontFamily: 'var(--font-body)', fontSize: 11, color: 'var(--text-secondary)' }}><Icon name="search" size={11} color="var(--text-muted)" />Size {size}</span>}
           </div>
-          <p style={{ fontFamily: 'var(--font-body)', fontSize: 13.5, lineHeight: 1.6, color: 'var(--text-secondary)', margin: '14px 0 0', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', minHeight: 44 }}>{question}</p>
+          <p style={{ fontFamily: 'var(--font-body)', fontSize: 13.5, lineHeight: 1.6, color: 'var(--text-secondary)', margin: '14px 0 0', minHeight: 44 }}>{truncate(question, 250)}</p>
           <div className="sd-iq-foot" style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 10, marginTop: 'auto', paddingTop: 18 }}>
             <span style={{ display: 'inline-flex', flexDirection: 'column', gap: 8 }}>
               <span style={{ fontFamily: 'var(--font-body)', fontSize: 12, letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--text-muted)' }}>{respCount} {respCount === 1 ? 'Response' : 'Responses'}</span>
@@ -67,8 +68,8 @@ export function InquiryCard({ asker = {}, measurements = {}, product, productUrl
             </span>
           </div>
         </div>
-        <div style={{ minWidth: 0, borderRadius: 0, overflow: 'hidden', aspectRatio: '3/4', background: 'var(--linen)' }}>
-          {image && <img className="sd-iq-img" src={image} alt={product} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
+        <div style={{ minWidth: 0, borderRadius: 0, overflow: 'hidden', aspectRatio: '3/4', alignSelf: 'start', background: 'var(--linen)' }}>
+          {image && <img className="sd-iq-img" src={image} alt={product} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center' }} />}
         </div>
       </div>
     </article>
