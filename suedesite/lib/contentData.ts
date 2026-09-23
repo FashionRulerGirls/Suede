@@ -134,7 +134,14 @@ export async function updateReview(sb: SupabaseClient, userId: string, reviewId:
   }
   if (r.body !== undefined) patch.body = r.body.trim();
   if (r.recommend !== undefined) patch.recommend = r.recommend;
-  if (r.hideMeasurements !== undefined) patch.hide_measurements = !!r.hideMeasurements;
+  if (r.hideMeasurements !== undefined) {
+    patch.hide_measurements = !!r.hideMeasurements;
+    // Un-hiding: the security trigger (0008) nulls measurements_snapshot whenever
+    // a review is hidden, so once toggled off the snapshot is gone. Recompute it
+    // from the author's current measurements so turning measurements back on
+    // actually restores them. (When hiding, the trigger nulls it again.)
+    if (!r.hideMeasurements) patch.measurements_snapshot = await measurementSnapshot(sb, userId);
+  }
   if (r.sizeSatisfaction !== undefined) patch.size_satisfaction = r.sizeSatisfaction ?? null;
   const { error } = await sb.from('reviews').update(patch).eq('id', reviewId).eq('author_id', userId);
   if (error) throw error;

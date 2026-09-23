@@ -10,7 +10,7 @@ import { useAuth } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/client';
 import {
   loadProfileData, saveProfileFields, saveMeasurements,
-  heightToInches, inchesToHeight, toInches, inchesDisplay,
+  toInches, inchesDisplay,
   buildUsualSizes, splitUsualSizes,
 } from '@/lib/profileData';
 import { uploadAvatar } from '@/lib/storage';
@@ -126,6 +126,30 @@ function MeasurementsStep({ f, set, sizes, setSize }: any) {
   const mi = (label: string, key: string, opts: any = {}) => (
     <EPInput label={label} sub={opts.sub} optional={opts.optional} maxLength={opts.maxLength || 8} value={f[key]} onChange={(e: any) => set(key, e.target.value)} placeholder={opts.ph} />
   );
+  // Height uses two dropdowns (feet + inches) instead of a free-text field, so
+  // it can't be entered ambiguously (e.g. "511" being read as 511 inches).
+  const selStyle: React.CSSProperties = {
+    width: '100%', boxSizing: 'border-box', height: 50, padding: '0 14px',
+    border: '1px solid var(--border-default)', borderRadius: 'var(--radius-xs)',
+    background: 'var(--surface-card)', fontFamily: 'var(--font-body)', fontSize: 15,
+    color: f.heightFt === '' ? 'var(--text-muted)' : 'var(--text-primary)', outline: 'none',
+  };
+  const heightField = () => (
+    <div>
+      <span style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-primary)' }}>Height</span>
+      <div style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>feet &amp; inches</div>
+      <div style={{ marginTop: 8, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+        <select aria-label="Height — feet" value={f.heightFt ?? ''} onChange={(e: any) => set('heightFt', e.target.value)} style={selStyle}>
+          <option value="">Feet</option>
+          {[3, 4, 5, 6, 7].map((v) => <option key={v} value={v}>{v} ft</option>)}
+        </select>
+        <select aria-label="Height — inches" value={f.heightIn ?? ''} onChange={(e: any) => set('heightIn', e.target.value)} style={{ ...selStyle, color: f.heightIn === '' ? 'var(--text-muted)' : 'var(--text-primary)' }}>
+          <option value="">Inches</option>
+          {Array.from({ length: 12 }, (_, i) => i).map((v) => <option key={v} value={v}>{v} in</option>)}
+        </select>
+      </div>
+    </div>
+  );
   return (
     <div>
       <h2 style={{ fontFamily: 'var(--font-serif)', fontWeight: 400, fontSize: 26, color: 'var(--text-heading)', margin: 0 }}>Measurement Profile</h2>
@@ -138,7 +162,7 @@ function MeasurementsStep({ f, set, sizes, setSize }: any) {
       </div>
 
       <div className="sd-ep-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 28, rowGap: 24 }}>
-        {mi('Height', 'height', { sub: 'feet & inches', maxLength: 12, ph: `5'6"` })}
+        {heightField()}
         {mi('Bust', 'bust', { sub: 'inches', ph: `36"` })}
         {mi('Waist', 'waist', { sub: 'inches', ph: `28"` })}
         {mi('Hips', 'hips', { sub: 'inches', ph: `40"` })}
@@ -236,7 +260,7 @@ function AccountStep({ f, set, email, onRoute }: any) {
 const BLANK = {
   display_name: '', username: '', bio: '',
   instagram: '', tiktok: '', website: '',
-  height: '', bust: '', waist: '', hips: '', inseam: '', shoulder: '', arm: '', torso: '',
+  heightFt: '', heightIn: '', bust: '', waist: '', hips: '', inseam: '', shoulder: '', arm: '', torso: '',
   private_measurements: false, email_notifications: true, show_in_collective: true,
 };
 
@@ -293,7 +317,11 @@ export function EditProfileScreen({ onRoute, authed = false }: any) {
       if (measurements) {
         setF((p: any) => ({
           ...p,
-          height: inchesToHeight(measurements.height_in),
+          // Split stored inches into feet + inches for the structured picker.
+          // Out-of-range legacy values (e.g. a bad 511) leave feet unselected so
+          // the member must re-pick a valid height rather than re-saving garbage.
+          heightFt: measurements.height_in != null ? String(Math.floor(measurements.height_in / 12)) : '',
+          heightIn: measurements.height_in != null ? String(Math.round(measurements.height_in % 12)) : '',
           bust: inchesDisplay(measurements.bust_in),
           waist: inchesDisplay(measurements.waist_in),
           hips: inchesDisplay(measurements.hips_in),
@@ -336,7 +364,11 @@ export function EditProfileScreen({ onRoute, authed = false }: any) {
         ...(avatar_url ? { avatar_url } : {}),
       } as any),
       saveMeasurements(sb, user.id, {
-        height_in: heightToInches(f.height),
+        // Compose from the structured picker; blank feet → no height (null),
+        // so an invalid legacy value is cleared rather than persisted.
+        height_in: f.heightFt !== '' && f.heightFt != null
+          ? Number(f.heightFt) * 12 + Number(f.heightIn || 0)
+          : null,
         bust_in: toInches(f.bust),
         waist_in: toInches(f.waist),
         hips_in: toInches(f.hips),
