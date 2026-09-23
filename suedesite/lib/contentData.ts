@@ -309,12 +309,33 @@ export async function loadMatch(sb: SupabaseClient, viewerId: string, otherId: s
   } catch { return null; }
 }
 
+// Suede Match for many members in ONE call (batch RPC), keyed by member id.
+// Replaces the old N+1 pattern of one suede_match RPC per member.
+export async function loadMatchesMap(
+  sb: SupabaseClient,
+  viewerId: string | undefined,
+  otherIds: string[],
+): Promise<Record<string, { score: number; confidence: string }>> {
+  const map: Record<string, { score: number; confidence: string }> = {};
+  if (!viewerId) return map;
+  const ids = Array.from(new Set(otherIds.filter((id) => id && id !== viewerId)));
+  if (!ids.length) return map;
+  try {
+    const { data } = await sb.rpc('suede_match_many', { viewer: viewerId, others: ids });
+    for (const row of (data || []) as any[]) {
+      if (row && row.other && row.score != null) {
+        map[row.other] = { score: row.score as number, confidence: row.confidence as string };
+      }
+    }
+  } catch { /* ignore — everyone falls back to no match */ }
+  return map;
+}
+
 // Attach each card's match for the viewer (deduped by author; self → null).
 export async function attachMatches(sb: SupabaseClient, viewerId: string | undefined, cards: any[]) {
   if (!viewerId) return cards;
-  const ids = Array.from(new Set(cards.map((c) => c.authorId).filter((id) => id && id !== viewerId)));
-  const entries = await Promise.all(ids.map(async (id) => [id, await loadMatch(sb, viewerId, id)] as const));
-  const map = Object.fromEntries(entries);
+  const ids = cards.map((c) => c.authorId).filter((id) => id && id !== viewerId);
+  const map = await loadMatchesMap(sb, viewerId, ids);
   return cards.map((c) => ({ ...c, match: c.authorId && c.authorId !== viewerId ? (map[c.authorId] || null) : null }));
 }
 
@@ -413,12 +434,17 @@ export async function loadBrands(
   let q = sb.from('brands').select('*');
   if (opts.capsuleOnly) q = q.eq('is_capsule', true);
   if (opts.homeOnly) q = q.eq('on_home', true);
-  const [{ data: brands }, statsRes] = await Promise.all([
-    q.order('name'),
-    withStats ? sb.from('brand_stats').select('*') : Promise.resolve({ data: [] as any[] }),
-  ]);
+  const { data: brands } = await q.order('name');
+
   const statsById: Record<string, any> = {};
-  ((statsRes as any).data || []).forEach((s: any) => { statsById[s.id] = s; });
+  if (withStats && brands && brands.length) {
+    // Fetch stats ONLY for the brands we're showing. brand_stats groups by
+    // b.id, so filtering on id pushes the aggregate down to just these brands
+    // instead of recomputing counts across the entire catalog on every read.
+    const ids = brands.map((b: any) => b.id);
+    const { data: stats } = await sb.from('brand_stats').select('*').in('id', ids);
+    (stats || []).forEach((s: any) => { statsById[s.id] = s; });
+  }
   return (brands || []).map((b: any) => mapBrand(b, statsById[b.id]));
 }
 
@@ -581,14 +607,16 @@ export async function loadCollectiveMembers(sb: SupabaseClient, viewerId?: strin
     const { data: f } = await sb.from('member_follows').select('followee_id').eq('follower_id', viewerId);
     followingSet = new Set((f || []).map((r: any) => r.followee_id));
   }
-  const withMatch = await Promise.all(members.map(async (p: any) => ({
+  // One batch call for every member's match, instead of one RPC per member.
+  const matchMap = await loadMatchesMap(sb, viewerId, members.map((p: any) => p.id));
+  return members.map((p: any) => ({
     id: p.id,
     name: p.display_name || p.username,
     handle: '@' + p.username,
     avatar: p.avatar_url || '',
     bio: p.bio || '',
     following: followingSet.has(p.id),
-    match: viewerId ? await loadMatch(sb, viewerId, p.id) : null,
+    match: viewerId ? (matchMap[p.id] || null) : null,
     // Card footer + measurement spec (0033). The RPC returns measurements only
     // when the member made them public; the plain-profiles fallback omits them.
     measurements: measurementsDisplay({
@@ -599,8 +627,7 @@ export async function loadCollectiveMembers(sb: SupabaseClient, viewerId?: strin
       inquiries: Number(p.inquiries_count ?? 0),
       followers: Number(p.followers_count ?? 0),
     },
-  })));
-  return withMatch;
+  }));
 }
 
 export async function loadMemberProfile(sb: SupabaseClient, memberId: string, viewerId?: string) {
