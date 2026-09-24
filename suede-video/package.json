@@ -1,0 +1,22 @@
+{
+  "name": "suede-video",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Suede — product promo video, built with Remotion.",
+  "scripts": {
+    "studio": "remotion studio",
+    "render": "remotion render SuedeProduct out/suede-product.mp4",
+    "still": "remotion still SuedeProduct out/frame.png --frame=120",
+    "upgrade": "remotion upgrade"
+  },
+  "dependencies": {
+    "@remotion/cli": "^4.0.527",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "remotion": "^4.0.527"
+  },
+  "devDependencies": {
+    "@types/react": "^19.3.0",
+    "typescript": "^5.5.3"
+  }
+}
