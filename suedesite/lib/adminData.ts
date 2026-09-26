@@ -118,7 +118,7 @@ export async function loadGrowth(sb: SupabaseClient, granularity: 'week' | 'mont
 
 const REV_SEL = 'id, brand_name, created_at, rating_sizing, rating_material, rating_value, rating_photos, rating_service, status, author:profiles!author_id(display_name, username)';
 function ratingAvg(r: any): number | null {
-  const v = ['rating_sizing', 'rating_material', 'rating_value', 'rating_photos', 'rating_service'].map((k) => r[k]).filter((x) => x != null);
+  const v = ['rating_sizing', 'rating_material', 'rating_value', 'rating_photos'].map((k) => r[k]).filter((x) => x != null);
   return v.length ? Math.round((v.reduce((a: number, b: number) => a + b, 0) / v.length) * 2) / 2 : null;
 }
 

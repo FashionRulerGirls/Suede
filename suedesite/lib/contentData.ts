@@ -44,9 +44,11 @@ const clampRating = (n: any) => {
   return v >= 1 && v <= 5 ? Math.round(v) : null; // 0 / unrated → null (satisfies 1–5 check)
 };
 
-// Average of the rated dimensions, to the nearest half-star (for card display).
+// Average of the product-level rated dimensions, to the nearest half-star (for
+// card display). Customer service is intentionally excluded — it's a brand-level
+// rating (see brand_service_ratings), not a per-product one.
 function ratingAverage(row: any): number | null {
-  const vals = ['rating_sizing', 'rating_material', 'rating_value', 'rating_photos', 'rating_service']
+  const vals = ['rating_sizing', 'rating_material', 'rating_value', 'rating_photos']
     .map((k) => row[k]).filter((v) => v != null);
   if (!vals.length) return null;
   const avg = vals.reduce((a: number, b: number) => a + b, 0) / vals.length;
@@ -62,7 +64,7 @@ export type NewReview = {
   sizeScale?: string;
   sizeValue?: string;
   sizeOther?: string;
-  ratings: { sizing: number; material: number; value: number; photos: number; service: number };
+  ratings: { sizing: number; material: number; value: number; photos: number };
   body: string;
   recommend: boolean | null;
   hideMeasurements: boolean;
@@ -93,7 +95,7 @@ export async function createReview(sb: SupabaseClient, userId: string, r: NewRev
     rating_material: clampRating(r.ratings.material),
     rating_value: clampRating(r.ratings.value),
     rating_photos: clampRating(r.ratings.photos),
-    rating_service: clampRating(r.ratings.service),
+    rating_service: null, // customer service is now a brand-level rating (0040)
     body: r.body.trim(),
     recommend: r.recommend,
     hide_measurements: !!r.hideMeasurements,
@@ -130,7 +132,6 @@ export async function updateReview(sb: SupabaseClient, userId: string, reviewId:
     patch.rating_material = clampRating(r.ratings.material);
     patch.rating_value = clampRating(r.ratings.value);
     patch.rating_photos = clampRating(r.ratings.photos);
-    patch.rating_service = clampRating(r.ratings.service);
   }
   if (r.body !== undefined) patch.body = r.body.trim();
   if (r.recommend !== undefined) patch.recommend = r.recommend;
@@ -426,6 +427,10 @@ function mapBrand(b: any, s: any) {
     reviews: s?.review_count || 0,
     inquiries: s?.inquiry_count || 0,
     followers: s?.follower_count || 0,
+    // Brand-level customer service (product-agnostic). serviceRating is null
+    // until at least one member has rated the brand's service.
+    serviceRating: s?.service_avg != null ? Number(s.service_avg) : null,
+    serviceCount: s?.service_count || 0,
   };
 }
 
@@ -449,8 +454,16 @@ export async function loadBrands(
     // b.id, so filtering on id pushes the aggregate down to just these brands
     // instead of recomputing counts across the entire catalog on every read.
     const ids = brands.map((b: any) => b.id);
-    const { data: stats } = await sb.from('brand_stats').select('*').in('id', ids);
-    (stats || []).forEach((s: any) => { statsById[s.id] = s; });
+    const [{ data: stats }, svc] = await Promise.all([
+      sb.from('brand_stats').select('*').in('id', ids),
+      sb.rpc('brand_service_stats', { ids }),
+    ]);
+    (stats || []).forEach((s: any) => { statsById[s.id] = { ...s }; });
+    if (!svc.error) {
+      for (const row of (svc.data || []) as any[]) {
+        statsById[row.brand_id] = { ...(statsById[row.brand_id] || { id: row.brand_id }), service_avg: row.avg, service_count: row.count };
+      }
+    }
   }
   return (brands || []).map((b: any) => mapBrand(b, statsById[b.id]));
 }
@@ -466,6 +479,38 @@ export async function loadHomeBrands(sb: SupabaseClient) {
   } catch {
     return [];
   }
+}
+
+// ── brand-level customer service rating (product-agnostic) ─────────
+// The viewer's own service rating for a brand (0/undefined = not yet rated).
+export async function loadMyBrandServiceRating(sb: SupabaseClient, userId: string, brandId: string): Promise<number | null> {
+  if (!userId || !brandId) return null;
+  const { data } = await sb.from('brand_service_ratings').select('rating').eq('user_id', userId).eq('brand_id', brandId).maybeSingle();
+  return data ? Number((data as any).rating) : null;
+}
+
+// Set (or clear, when rating is 0/null) the viewer's brand customer-service rating.
+export async function setBrandServiceRating(sb: SupabaseClient, userId: string, brandId: string, rating: number | null) {
+  if (!userId || !brandId) return;
+  if (!rating) {
+    const { error } = await sb.from('brand_service_ratings').delete().eq('user_id', userId).eq('brand_id', brandId);
+    if (error) throw error;
+    return;
+  }
+  const { error } = await sb.from('brand_service_ratings').upsert(
+    { user_id: userId, brand_id: brandId, rating: Math.max(1, Math.min(5, Math.round(rating))), updated_at: new Date().toISOString() },
+    { onConflict: 'user_id,brand_id' },
+  );
+  if (error) throw error;
+}
+
+// Aggregate service score for one brand (avg + count), privacy-preserving RPC.
+export async function loadBrandServiceStats(sb: SupabaseClient, brandId: string): Promise<{ avg: number | null; count: number }> {
+  if (!brandId) return { avg: null, count: 0 };
+  const { data, error } = await sb.rpc('brand_service_stats', { ids: [brandId] });
+  if (error || !data || !(data as any[]).length) return { avg: null, count: 0 };
+  const row = (data as any[])[0];
+  return { avg: row.avg != null ? Number(row.avg) : null, count: Number(row.count) || 0 };
 }
 
 // A brand's uploaded documents (public read) for the back of the brand card.

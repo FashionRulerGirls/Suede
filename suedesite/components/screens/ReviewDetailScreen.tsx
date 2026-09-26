@@ -115,10 +115,12 @@ export function ReviewDetailScreen({ onRoute, authed = false }: any) {
   const productUrl = real ? full?.product_url : null;
   const contentLink = real ? (full?.content_link || '') : (r.contentLink || '');
   const thumbs = real ? media : (image ? [image, image, image, image] : []);
+  // Customer service is a brand-level rating now (product-agnostic), so it's no
+  // longer part of a product review's dimension breakdown.
   const subRatings = real
-    ? ([['Sizing Accuracy', 'rating_sizing'], ['Material Quality', 'rating_material'], ['Value for Price', 'rating_value'], ['True to Photos', 'rating_photos'], ['Customer service', 'rating_service']] as const)
+    ? ([['Sizing Accuracy', 'rating_sizing'], ['Material Quality', 'rating_material'], ['Value for Price', 'rating_value'], ['True to Photos', 'rating_photos']] as const)
         .map(([label, key]) => ({ label, value: full?.[key] })).filter((s) => s.value != null)
-    : [{ label: 'Sizing Accuracy', value: 4 }, { label: 'Material Quality', value: 4 }, { label: 'Value for Price', value: 4 }, { label: 'True to Photos', value: 4 }, { label: 'Customer service', value: 4 }];
+    : [{ label: 'Sizing Accuracy', value: 4 }, { label: 'Material Quality', value: 4 }, { label: 'Value for Price', value: 4 }, { label: 'True to Photos', value: 4 }];
 
   // Author-only actions: edit (within 24h of posting) and delete.
   const isAuthor = real && !!user && !!full && full.author_id === user.id;

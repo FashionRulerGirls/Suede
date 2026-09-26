@@ -12,7 +12,7 @@ function anon() {
 }
 
 function ratingAvg(r: any): number | null {
-  const v = ['rating_sizing', 'rating_material', 'rating_value', 'rating_photos', 'rating_service']
+  const v = ['rating_sizing', 'rating_material', 'rating_value', 'rating_photos']
     .map((k) => r[k]).filter((x) => x != null);
   return v.length ? Math.round((v.reduce((a: number, b: number) => a + b, 0) / v.length) * 2) / 2 : null;
 }

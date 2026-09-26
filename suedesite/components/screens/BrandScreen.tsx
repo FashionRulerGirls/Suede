@@ -10,7 +10,27 @@ import { ExploreModal } from '@/components/screens/ExploreModal';
 import { shopOut } from '@/lib/tracking';
 import { useAuth } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/client';
-import { loadBrandReviews, loadBrandInquiries, resolveBrandId, isFollowingBrand, setBrandFollow, brandFollowerCount, loadBrandByName, loadBrandDocs } from '@/lib/contentData';
+import { loadBrandReviews, loadBrandInquiries, resolveBrandId, isFollowingBrand, setBrandFollow, brandFollowerCount, loadBrandByName, loadBrandDocs, loadBrandServiceStats, loadMyBrandServiceRating, setBrandServiceRating } from '@/lib/contentData';
+
+// Interactive star input for the brand customer-service rating.
+function RateStars({ value, onChange, size = 26 }: any) {
+  const [hover, setHover] = React.useState(0);
+  return (
+    <span style={{ display: 'inline-flex', gap: 6 }}>
+      {[1, 2, 3, 4, 5].map((n) => {
+        const on = (hover || value) >= n;
+        return (
+          <button key={n} type="button" onMouseEnter={() => setHover(n)} onMouseLeave={() => setHover(0)} onClick={() => onChange(n)}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, lineHeight: 0 }} aria-label={`Customer service ${n} star${n > 1 ? 's' : ''}`}>
+            <svg width={size} height={size} viewBox="0 0 24 24" style={{ display: 'block' }}>
+              <path d="M12 3.2l2.66 5.7 6.14.72-4.6 4.2 1.24 6.06L12 16.9l-5.48 2.98 1.24-6.06-4.6-4.2 6.14-.72z" fill={on ? 'var(--ink-900)' : 'var(--ink-200)'} />
+            </svg>
+          </button>
+        );
+      })}
+    </span>
+  );
+}
 
 function BrandStat({ value, label, icon, breakdown }: any) {
   const [hover, setHover] = React.useState(false);
@@ -89,6 +109,9 @@ export function BrandScreen({ onRoute, authed = false }: any) {
   const [followBusy, setFollowBusy] = React.useState(false);
   const [explore, setExplore] = React.useState(false);
   const [lookupDone, setLookupDone] = React.useState(false);
+  const [serviceAvg, setServiceAvg] = React.useState<number | null>(null);
+  const [serviceCount, setServiceCount] = React.useState(0);
+  const [myService, setMyService] = React.useState(0);
   React.useEffect(() => {
     const sb = createClient();
     const name = appState.brand?.name;
@@ -114,9 +137,33 @@ export function BrandScreen({ onRoute, authed = false }: any) {
       if (active) setFollowers(fc);
       // Follow state is per-member; only meaningful when signed in.
       if (user) { const isF = await isFollowingBrand(sb, user.id, id); if (active) setFollowing(isF); }
+      // Brand-level customer service: the public aggregate + the viewer's own score.
+      const svc = await loadBrandServiceStats(sb, id);
+      if (active) { setServiceAvg(svc.avg); setServiceCount(svc.count); }
+      if (user) { const mine = await loadMyBrandServiceRating(sb, user.id, id); if (active) setMyService(mine || 0); }
     }).catch(() => {});
     return () => { active = false; };
   }, [user?.id, brand?.name]);
+
+  // Save the viewer's brand customer-service rating, optimistically folding it
+  // into the displayed average (approximate; the exact value refreshes on reload).
+  const rateService = async (v: number) => {
+    if (!user) { onRoute('signin'); return; }
+    if (!brandId) return;
+    const prevMine = myService;
+    const hadMine = prevMine > 0;
+    setMyService(v);
+    setServiceAvg((avg) => {
+      const count = serviceCount + (hadMine ? 0 : 1);
+      const total = (avg ?? 0) * serviceCount - (hadMine ? prevMine : 0) + v;
+      return Math.round((total / count) * 10) / 10;
+    });
+    if (!hadMine) setServiceCount((c) => c + 1);
+    const sb = createClient();
+    if (!sb) return;
+    try { await setBrandServiceRating(sb, user.id, brandId, v); }
+    catch { setMyService(prevMine); }
+  };
 
   const toggleFollow = async () => {
     if (!user) { onRoute('signin'); return; }
@@ -279,12 +326,13 @@ export function BrandScreen({ onRoute, authed = false }: any) {
           {[[statRating, 'Rating', 'star'], [statReviews, 'Reviews', 'reviews'], [statInquiries, 'Inquiries', 'message'], [statFollowers, 'Followers', 'user']].map(([val, lbl, ic]: any) => {
             const isRating = lbl === 'Rating';
             const base = rAvg;
+            // Product dimensions only — customer service is shown separately as
+            // a brand-level score (see the Customer Service block below).
             const breakdown = (isRating && base > 0) ? [
               ['Sizing accuracy', Math.max(1, Math.min(5, Math.round((base - 0.3) * 2) / 2))],
               ['Material quality', Math.max(1, Math.min(5, Math.round((base + 0.2) * 2) / 2))],
               ['Value for price', Math.max(1, Math.min(5, Math.round((base - 0.1) * 2) / 2))],
               ['True to photos', Math.max(1, Math.min(5, Math.round((base + 0.1) * 2) / 2))],
-              ['Customer service', Math.max(1, Math.min(5, Math.round(base * 2) / 2))],
             ] : null;
             return (
               <div key={lbl} className={isRating ? ('rating-stat' + (rateOpen ? ' rating-open' : '')) : undefined} onClick={isRating ? () => setRateOpen(o => !o) : undefined} style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, textAlign: 'center', cursor: isRating ? 'default' : 'inherit' }}>
@@ -309,6 +357,31 @@ export function BrandScreen({ onRoute, authed = false }: any) {
         </div>
         <div style={{ textAlign: 'center', marginTop: 28 }}>
           <button onClick={() => { if (brand.shopUrl) { doShop(); } else { window.open('https://' + website, '_blank', 'noopener,noreferrer'); } }} style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: 15, color: 'var(--text-primary)', textDecoration: 'underline', textUnderlineOffset: 4 }}>{website}</button>
+        </div>
+
+        {/* Brand-level customer service — product-agnostic. Aggregate + rate control. */}
+        <div style={{ maxWidth: 520, margin: '30px auto 0', padding: '24px 26px', border: '1px solid var(--border-subtle)', background: 'var(--surface-card)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, textAlign: 'center' }}>
+          <span style={{ fontFamily: 'var(--font-body)', fontSize: 12, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--text-secondary)' }}>Customer Service</span>
+          <span style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.5, maxWidth: 380 }}>How this brand treats its shoppers — independent of any single product.</span>
+          {serviceAvg != null ? (
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 12, marginTop: 2 }}>
+              <StarRating value={serviceAvg} size={20} />
+              <span style={{ fontFamily: 'var(--font-serif)', fontWeight: 400, fontSize: 22, color: 'var(--text-heading)' }}>{serviceAvg.toFixed(1)}</span>
+              <span style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-muted)' }}>· {serviceCount} {serviceCount === 1 ? 'rating' : 'ratings'}</span>
+            </div>
+          ) : (
+            <span style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-muted)' }}>Not yet rated</span>
+          )}
+          <div style={{ marginTop: 8, paddingTop: 14, borderTop: '1px solid var(--border-subtle)', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+            {user ? (
+              <React.Fragment>
+                <span style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-secondary)' }}>{myService ? 'Your rating' : 'Rate this brand’s customer service'}</span>
+                <RateStars value={myService} onChange={rateService} />
+              </React.Fragment>
+            ) : (
+              <button onClick={() => onRoute('signin')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-primary)', textDecoration: 'underline', textUnderlineOffset: 3 }}>Sign in to rate customer service</button>
+            )}
+          </div>
         </div>
       </div>
 

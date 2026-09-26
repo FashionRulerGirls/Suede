@@ -64,7 +64,7 @@ export async function loadBrandOverview(sb: SupabaseClient, brand: { id: string;
   ]);
   const rows = revs || [];
   const perReview = rows.map((r: any) => {
-    const v = ['rating_sizing', 'rating_material', 'rating_value', 'rating_photos', 'rating_service'].map((k) => r[k]).filter((x) => x != null);
+    const v = ['rating_sizing', 'rating_material', 'rating_value', 'rating_photos'].map((k) => r[k]).filter((x) => x != null);
     return v.length ? v.reduce((a: number, b: number) => a + b, 0) / v.length : null;
   }).filter((x): x is number => x != null);
   const avg = perReview.length ? Math.round((perReview.reduce((a, b) => a + b, 0) / perReview.length) * 10) / 10 : null;

@@ -9,7 +9,7 @@ import { SignInGate } from '@/components/screens/SignInGate';
 import { ProductFetch } from '@/components/screens/ProductFetch';
 import { useAuth } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/client';
-import { createReview, updateReview, loadReviewMedia, deleteReviewMedia, loadBrandProducts, loadBrands } from '@/lib/contentData';
+import { createReview, updateReview, loadReviewMedia, deleteReviewMedia, loadBrandProducts, loadBrands, loadMyBrandServiceRating, setBrandServiceRating } from '@/lib/contentData';
 import { uploadReviewMedia } from '@/lib/storage';
 import { loadProfileData, inchesToHeight, inchesDisplay } from '@/lib/profileData';
 
@@ -117,8 +117,8 @@ export function CreateReviewScreen({ onRoute, authed = false }: any) {
   const startedRef = React.useRef(new Date().toISOString());
   const [mode, setMode] = React.useState(editing ? 'manual' : 'search');
   const [ratings, setRatings] = React.useState(editing
-    ? { sizing: editReview.rating_sizing || 0, material: editReview.rating_material || 0, value: editReview.rating_value || 0, photos: editReview.rating_photos || 0, service: editReview.rating_service || 0 }
-    : { sizing: 0, material: 0, value: 0, photos: 0, service: 0 });
+    ? { sizing: editReview.rating_sizing || 0, material: editReview.rating_material || 0, value: editReview.rating_value || 0, photos: editReview.rating_photos || 0 }
+    : { sizing: 0, material: 0, value: 0, photos: 0 });
   const [scale, setScale] = React.useState(editing ? (editReview.size_scale || 'Letter') : 'Letter');
   const [size, setSize] = React.useState(editing ? (editReview.size_value || '') : '');
   const [rec, setRec] = React.useState<any>(editing ? (editReview.recommend === true ? 'yes' : editReview.recommend === false ? 'no' : null) : null);
@@ -147,6 +147,28 @@ export function CreateReviewScreen({ onRoute, authed = false }: any) {
     loadBrandProducts(sb, activeBrandName).then((ps) => { if (active) setProductList(ps); }).catch(() => {});
     return () => { active = false; };
   }, [activeBrandName]);
+
+  // Brand-level customer-service rating (product-agnostic). Only offered for a
+  // known brand record; free-typed non-capsule brands have no id to attach to.
+  const [serviceRating, setServiceRating] = React.useState(0);
+  const [serviceSaved, setServiceSaved] = React.useState(false);
+  const serviceBrandId: string | null = editing
+    ? (editReview?.brand_id || null)
+    : (brandType === 'Capsule Brand' && brandSel ? (brands.find((b: any) => b.name === brandSel)?.id || null) : null);
+  const serviceBrandName = brandType === 'Capsule Brand' ? brandSel : nonCapsuleBrand.trim();
+  React.useEffect(() => {
+    const sb = createClient();
+    if (!sb || !user || !serviceBrandId) { setServiceRating(0); setServiceSaved(false); return; }
+    let active = true;
+    loadMyBrandServiceRating(sb, user.id, serviceBrandId).then((v) => { if (active) setServiceRating(v || 0); }).catch(() => {});
+    return () => { active = false; };
+  }, [serviceBrandId, user?.id]);
+  const saveService = async (v: number) => {
+    setServiceRating(v);
+    const sb = createClient();
+    if (!sb || !user || !serviceBrandId) return;
+    try { await setBrandServiceRating(sb, user.id, serviceBrandId, v); setServiceSaved(true); } catch { /* ignore */ }
+  };
   const [photos, setPhotos] = React.useState<{ url: string; file: File; poster?: File; posterUrl?: string }[]>([]);
   // Existing media (edit mode): shown with remove buttons; removals apply on save.
   const [existingMedia, setExistingMedia] = React.useState<any[]>([]);
@@ -272,7 +294,7 @@ export function CreateReviewScreen({ onRoute, authed = false }: any) {
   };
   const resetForm = () => {
     setSubmitted(false); setErrors([]); setReviewText(''); setProductSel(''); setProductImage(''); setProductUrl(''); setProductPrice(''); setNonCapsuleBrand('');
-    setRatings({ sizing: 0, material: 0, value: 0, photos: 0, service: 0 }); setSize(''); setRec(null); setPhotos([]);
+    setRatings({ sizing: 0, material: 0, value: 0, photos: 0 }); setSize(''); setRec(null); setPhotos([]); setServiceSaved(false);
   };
 
   const sizes = ['XXS', 'XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL', 'OS'];
@@ -299,6 +321,20 @@ export function CreateReviewScreen({ onRoute, authed = false }: any) {
         <p style={{ fontFamily: 'var(--font-body)', fontSize: 16, color: 'var(--text-secondary)', margin: 0, maxWidth: 480, lineHeight: 1.6 }}>
           {editing ? 'Your changes are live.' : 'Thank you for sharing your fit. Your review helps the community shop with confidence.'}
         </p>
+        {serviceBrandId && (
+          <div style={{ marginTop: 12, width: '100%', maxWidth: 460, borderTop: '1px solid var(--border-subtle)', paddingTop: 24, display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'center' }}>
+            <span style={{ fontFamily: 'var(--font-serif)', fontWeight: 500, fontSize: 22, color: 'var(--text-heading)' }}>How’s {serviceBrandName}’s customer service?</span>
+            <span style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-muted)' }}>Rates the brand overall — not this product. Optional.</span>
+            <div style={{ width: '100%', maxWidth: 300, marginTop: 4 }}>
+              <StarRow label="Customer service" value={serviceRating} onChange={(v: any) => saveService(v)} />
+            </div>
+            {serviceSaved && (
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--rating-positive)' }}>
+                <Icon name="check" size={14} color="var(--rating-positive)" /> Saved
+              </span>
+            )}
+          </div>
+        )}
         {photoWarn && (
           <p role="alert" style={{ display: 'flex', alignItems: 'center', gap: 8, fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--rating-critical)', margin: 0 }}>
             <Icon name="info" size={16} color="var(--rating-critical)" /> Your review saved, but the photos couldn’t be uploaded. You can edit the review to try again.
@@ -429,7 +465,6 @@ export function CreateReviewScreen({ onRoute, authed = false }: any) {
           <StarRow label="Material Quality" value={ratings.material} onChange={(v: any) => setRating('material', v)} />
           <StarRow label="Value for Price" value={ratings.value} onChange={(v: any) => setRating('value', v)} />
           <StarRow label="True to Photos" value={ratings.photos} onChange={(v: any) => setRating('photos', v)} />
-          <StarRow label="Customer Service" value={ratings.service} onChange={(v: any) => setRating('service', v)} />
         </SectionCard>
 
         <SectionCard title="What size(s) did you order?">
