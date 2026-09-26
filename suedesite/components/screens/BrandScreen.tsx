@@ -362,7 +362,7 @@ export function BrandScreen({ onRoute, authed = false }: any) {
         {/* Brand-level customer service — product-agnostic. Aggregate + rate control. */}
         <div style={{ maxWidth: 520, margin: '30px auto 0', padding: '24px 26px', border: '1px solid var(--border-subtle)', background: 'var(--surface-card)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, textAlign: 'center' }}>
           <span style={{ fontFamily: 'var(--font-body)', fontSize: 12, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--text-secondary)' }}>Customer Service</span>
-          <span style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.5, maxWidth: 380 }}>How this brand treats its shoppers — independent of any single product.</span>
+          <span style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.5, maxWidth: 380 }}>Providing a customer service rating</span>
           {serviceAvg != null ? (
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 12, marginTop: 2 }}>
               <StarRating value={serviceAvg} size={20} />
