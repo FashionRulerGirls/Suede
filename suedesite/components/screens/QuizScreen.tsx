@@ -311,8 +311,11 @@ Respond ONLY with a valid JSON object in this exact format, no markdown, no prea
       const match = cleaned.match(/\{[\s\S]*\}/);
       const parsed = JSON.parse(match ? match[0] : cleaned);
       setSaveStatus('ready'); setResults(parsed); setStep(steps.length - 1);
-    } catch (err) {
-      setError('Something went wrong reading your measurements. Please try again.');
+    } catch (err: any) {
+      // Surface the underlying reason so setup issues (e.g. estimator not
+      // configured) are diagnosable instead of a generic message.
+      const detail = err?.message ? ` (${String(err.message).slice(0, 160)})` : '';
+      setError(`Something went wrong reading your measurements. Please try again.${detail}`);
     } finally { setLoading(false); }
   };
 
