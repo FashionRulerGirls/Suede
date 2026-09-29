@@ -109,6 +109,10 @@ html, body { max-width: 100%; overflow-x: hidden; }
   #root .sd-collcard > div:last-child { margin-top: 24px !important; padding-top: 18px !important; }
   #root .sd-rating-pop { left: 50% !important; transform: translateX(-50%) !important; width: calc(100vw - 40px) !important; max-width: 340px !important; }
   #root .sd-rating-pop > span:first-child { left: 50% !important; }
+  /* Suede Match explainer: stays anchored to the right-aligned tag but capped to
+     the viewport so it never overflows the screen edge (which body overflow-x
+     hidden would otherwise clip). */
+  #root .sd-match-pop { width: 250px !important; max-width: calc(100vw - 28px) !important; }
   #root .sd-brating-pop { left: 0 !important; margin-left: 0 !important; transform: translateY(-6px) !important; width: calc(100vw - 36px) !important; max-width: 340px !important; }
   #root .rating-stat.rating-open .sd-brating-pop { transform: translateY(0) !important; }
   #root .sd-mprof-stats { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 24px 16px !important; }

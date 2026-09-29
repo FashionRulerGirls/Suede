@@ -43,7 +43,7 @@ export function SuedeMatchTag({ match, align = 'right' }: { match?: Match; align
       </span>
       <span
         data-tip
-        className="sd-rating-pop"
+        className="sd-match-pop"
         style={{
           position: 'absolute', top: 'calc(100% + 8px)', ...(align === 'right' ? { right: 0 } : { left: 0 }),
           width: 258, whiteSpace: 'normal', textAlign: 'left',
