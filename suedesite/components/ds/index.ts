@@ -19,6 +19,7 @@ export { EditorialBanner } from './EditorialBanner';
 export { Tabs } from './Tabs';
 export { BrandCard } from './BrandCard';
 export { ReviewCard } from './ReviewCard';
+export { SuedeMatchTag } from './SuedeMatchTag';
 export { StatCard } from './StatCard';
 export { Reveal } from './Reveal';
 export { Lightbox } from './Lightbox';

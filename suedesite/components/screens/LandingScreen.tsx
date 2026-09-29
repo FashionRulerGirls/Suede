@@ -1,7 +1,7 @@
 'use client';
 import React from 'react';
 /* Suede — Landing screen. */
-import { Button, BrandCard, ReviewCard, SectionHeading, Eyebrow, EditorialBanner, Icon, Logo, MeasurementSpec, Badge, Reveal } from '@/components/ds';
+import { Button, BrandCard, ReviewCard, SectionHeading, Eyebrow, EditorialBanner, Icon, Logo, MeasurementSpec, Badge, Reveal, SuedeMatchTag } from '@/components/ds';
 import { SUEDE_BRANDS, SUEDE_REVIEWS } from '@/lib/data';
 import { appState } from '@/lib/appState';
 import { createClient } from '@/lib/supabase/client';
@@ -124,16 +124,7 @@ function MemberCard() {
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8 }}>
           <MeasurementSpec height="5'6&quot;" bust="35&quot;" waist="28&quot;" hips="43&quot;" size="sm" tone="muted" />
-          <span style={{ position: 'relative', display: 'inline-flex' }}
-            onMouseEnter={(e) => { const t = e.currentTarget.querySelector('[data-tip]') as any; if (t) { t.style.opacity = '1'; t.style.pointerEvents = 'auto'; } }}
-            onMouseLeave={(e) => { const t = e.currentTarget.querySelector('[data-tip]') as any; if (t) { t.style.opacity = '0'; t.style.pointerEvents = 'none'; } }}>
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: 'var(--font-body)', fontSize: 12, letterSpacing: '0.02em', color: 'var(--text-muted)' }}>
-              <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--rating-positive)', flex: 'none' }} />Suede Match
-            </span>
-            <span data-tip className="sd-rating-pop" style={{ position: 'absolute', top: 'calc(100% + 8px)', right: 0, whiteSpace: 'nowrap', background: 'var(--surface-card)', border: '1px solid var(--border-subtle)', boxShadow: 'var(--shadow-lg)', padding: '8px 12px', display: 'inline-flex', alignItems: 'center', opacity: 0, pointerEvents: 'none', transition: 'opacity var(--dur-base) var(--ease-out)', zIndex: 20 }}>
-              <span style={{ fontFamily: 'var(--font-body)', fontSize: 12.5, color: 'var(--text-secondary)' }}>High Confidence</span>
-            </span>
-          </span>
+          <SuedeMatchTag match={{ score: 92, confidence: 'high' }} align="right" />
         </div>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', gap: 16, marginTop: 14 }}>

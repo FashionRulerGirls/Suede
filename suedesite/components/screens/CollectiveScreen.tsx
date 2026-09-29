@@ -1,7 +1,7 @@
 'use client';
 import React from 'react';
 /* Suede — The Collective (member discovery) screen. */
-import { SectionHeading, Button, Avatar, MeasurementSpec } from '@/components/ds';
+import { SectionHeading, Button, Avatar, MeasurementSpec, SuedeMatchTag } from '@/components/ds';
 import { appState } from '@/lib/appState';
 import { SuedeControls } from '@/lib/listControls';
 import { useAuth } from '@/lib/auth';
@@ -13,9 +13,6 @@ import { loadCollectiveMembers, setMemberFollow } from '@/lib/contentData';
 // Follow+/View Profile links, and a Reviews/Inquiries/Followers stats footer.
 function RealMemberCard({ mem, viewerId, onView }: any) {
   const [following, setFollowing] = React.useState(!!mem.following);
-  const conf = mem.match?.confidence as string | undefined;
-  const dot = conf === 'high' ? 'var(--rating-positive)' : conf === 'medium' ? 'var(--denim)' : conf === 'low' ? 'var(--text-muted)' : 'var(--border-strong)';
-  const confLabel = conf === 'high' ? 'High Confidence' : conf === 'medium' ? 'Medium Confidence' : conf === 'low' ? 'Exploratory' : '';
   const toggle = async () => {
     if (!viewerId) return;
     const on = !following; setFollowing(on);
@@ -36,18 +33,7 @@ function RealMemberCard({ mem, viewerId, onView }: any) {
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8 }}>
           {hasMeas && <MeasurementSpec height={m.height} bust={m.bust} waist={m.waist} hips={m.hips} size="sm" tone="muted" />}
-          {mem.match && (
-            <span style={{ position: 'relative', display: 'inline-flex' }}
-              onMouseEnter={(e) => { const t = e.currentTarget.querySelector('[data-tip]') as any; if (t) { t.style.opacity = '1'; t.style.pointerEvents = 'auto'; } }}
-              onMouseLeave={(e) => { const t = e.currentTarget.querySelector('[data-tip]') as any; if (t) { t.style.opacity = '0'; t.style.pointerEvents = 'none'; } }}>
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: 'var(--font-body)', fontSize: 12, letterSpacing: '0.02em', color: 'var(--text-muted)' }}>
-                <span style={{ width: 6, height: 6, borderRadius: '50%', background: dot, flex: 'none' }} />Suede Match
-              </span>
-              <span data-tip className="sd-rating-pop" style={{ position: 'absolute', top: 'calc(100% + 8px)', right: 0, whiteSpace: 'nowrap', background: 'var(--surface-card)', border: '1px solid var(--border-subtle)', boxShadow: 'var(--shadow-lg)', padding: '8px 12px', display: 'inline-flex', alignItems: 'center', opacity: 0, pointerEvents: 'none', transition: 'opacity var(--dur-base) var(--ease-out)', zIndex: 20 }}>
-                <span style={{ fontFamily: 'var(--font-body)', fontSize: 12.5, color: 'var(--text-secondary)' }}>{mem.match.score != null ? `${mem.match.score}% match` : ''}{mem.match.score != null && confLabel ? ' · ' : ''}{confLabel}</span>
-              </span>
-            </span>
-          )}
+          {mem.match && <SuedeMatchTag match={mem.match} align="right" />}
         </div>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', gap: 16, marginTop: 14 }}>

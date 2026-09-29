@@ -1,7 +1,7 @@
 'use client';
 /* Suede — The Lookbook (review feed) screen. */
 import React from 'react';
-import { ReviewCard, SectionHeading, Tabs, Button, Avatar, MeasurementSpec, Badge, Icon } from '@/components/ds';
+import { ReviewCard, SectionHeading, Tabs, Button, Avatar, MeasurementSpec, Badge, Icon, SuedeMatchTag } from '@/components/ds';
 import { SUEDE_BRANDS } from '@/lib/data';
 import { appState } from '@/lib/appState';
 import { SuedeControls } from '@/lib/listControls';
@@ -13,9 +13,6 @@ import { truncate } from '@/lib/text';
 export function InquiryCard({ asker = {}, measurements = {}, product, productUrl, size, brand, image, question, responses = [], responseCount, helpful, hideMeasurements = false, match, onOpen, onAsker, onBrand }: any) {
   const link = { background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-primary)', textDecoration: 'underline', textUnderlineOffset: 3 };
   const [voted, setVoted] = React.useState(false);
-  const conf = match?.confidence as string | undefined;
-  const matchDot = conf === 'high' ? 'var(--rating-positive)' : conf === 'medium' ? 'var(--denim)' : conf === 'low' ? 'var(--text-muted)' : 'var(--rating-positive)';
-  const matchTip = match ? `${conf!.charAt(0).toUpperCase() + conf!.slice(1)} confidence · ${match.score}% match` : 'High Confidence';
   // Real count from the DB (responseCount) when present; the demo/sample cards
   // still pass an inline responses[] array.
   const respCount = responseCount != null ? responseCount : (responses || []).length;
@@ -30,18 +27,7 @@ export function InquiryCard({ asker = {}, measurements = {}, product, productUrl
         {!hideMeasurements && (
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8 }}>
           <MeasurementSpec {...measurements} size="sm" tone="muted" />
-          {match !== null && (
-          <span style={{ position: 'relative', display: 'inline-flex' }}
-            onMouseEnter={(e) => { const t = e.currentTarget.querySelector('[data-tip]') as any; if (t) { t.style.opacity = '1'; t.style.pointerEvents = 'auto'; } }}
-            onMouseLeave={(e) => { const t = e.currentTarget.querySelector('[data-tip]') as any; if (t) { t.style.opacity = '0'; t.style.pointerEvents = 'none'; } }}>
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: 'var(--font-body)', fontSize: 12, letterSpacing: '0.02em', color: 'var(--text-muted)' }}>
-              <span style={{ width: 6, height: 6, borderRadius: '50%', background: matchDot, flex: 'none' }} />Suede Match
-            </span>
-            <span data-tip style={{ position: 'absolute', top: 'calc(100% + 8px)', right: 0, whiteSpace: 'nowrap', background: 'var(--surface-card)', border: '1px solid var(--border-subtle)', boxShadow: 'var(--shadow-lg)', padding: '8px 12px', display: 'inline-flex', alignItems: 'center', opacity: 0, pointerEvents: 'none', transition: 'opacity var(--dur-base) var(--ease-out)', zIndex: 20 }}>
-              <span style={{ fontFamily: 'var(--font-body)', fontSize: 12.5, color: 'var(--text-secondary)' }}>{matchTip}</span>
-            </span>
-          </span>
-          )}
+          {match !== null && <SuedeMatchTag match={match} align="right" />}
         </div>
         )}
       </div>
