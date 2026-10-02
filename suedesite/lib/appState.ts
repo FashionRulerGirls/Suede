@@ -10,4 +10,5 @@ export const appState: Record<string, any> = {
   reviewBrand: null,
   inquiryBrand: null,
   claimBrand: null,
+  capsuleBrands: null, // cached Capsule directory so returning renders instantly
 };

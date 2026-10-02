@@ -38,13 +38,15 @@ export function CapsuleScreen({ onRoute, authed = false }: any) {
   // The Capsule is public: load the real brand directory for everyone; fall
   // back to the sample list if Supabase isn't reachable (e.g. offline preview).
   const { user } = useAuth();
-  const [dbBrands, setDbBrands] = React.useState<any[] | null>(null);
+  // Seed from the cached directory so returning to The Capsule renders the grid
+  // instantly (full height) — which also lets scroll restoration land correctly.
+  const [dbBrands, setDbBrands] = React.useState<any[] | null>(appState.capsuleBrands || null);
   const [followIds, setFollowIds] = React.useState<Set<string>>(new Set());
   React.useEffect(() => {
     const sb = createClient();
     if (!sb) return;
     let active = true;
-    loadBrands(sb, { capsuleOnly: true }).then((bs) => { if (active && bs.length) setDbBrands(bs); }).catch(() => {});
+    loadBrands(sb, { capsuleOnly: true }).then((bs) => { if (active && bs.length) { appState.capsuleBrands = bs; setDbBrands(bs); } }).catch(() => {});
     return () => { active = false; };
   }, []);
   React.useEffect(() => {

@@ -74,6 +74,11 @@ function AppInner() {
   const { user, signOut, recovery } = useAuth();
   const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
   const [route, setRouteRaw] = React.useState('landing');
+  // Per-route scroll memory: records where you were on each view so returning to
+  // it (e.g. "Back to The Capsule") lands where you left off instead of the top.
+  const scrollMemory = React.useRef<Record<string, number>>({});
+  const routeRef = React.useRef(route);
+  routeRef.current = route;
   // Real auth drives `authed`; the test override lets the QA harness (and any
   // environment where Supabase is unreachable) exercise signed-in screens.
   const [testAuthed, setTestAuthed] = React.useState(false);
@@ -168,7 +173,9 @@ function AppInner() {
       returnToRef.current = route;
     }
     setRouteRaw(r);
-    scrollTop();
+    // A brand-new view goes to the top immediately (avoids a flash); a view we
+    // have a remembered position for is restored by the route-change effect.
+    if (!scrollMemory.current[r]) scrollTop();
     // Push a new entry onto our stack (dropping any forward history), and store
     // only its index in browser history so mobile can't lose the payload.
     const nav = navRef.current;
@@ -181,14 +188,46 @@ function AppInner() {
     try { window.history.pushState({ i: nav.idx, route: r }, '', pathForRoute(r)); } catch { /* history unavailable */ }
   };
 
+  // Continuously record the current route's scroll position (throttled) so we
+  // can restore it when the user returns to that view.
   React.useEffect(() => {
-    const top = () => {
-      window.scrollTo(0, 0);
-      document.documentElement.scrollTop = 0;
-      if (document.body) document.body.scrollTop = 0;
+    if (typeof window === 'undefined') return;
+    let raf = 0;
+    const onScroll = () => {
+      if (raf) return;
+      raf = requestAnimationFrame(() => {
+        raf = 0;
+        scrollMemory.current[routeRef.current] = window.scrollY || document.documentElement.scrollTop || 0;
+      });
     };
-    top();
-    requestAnimationFrame(top);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => { window.removeEventListener('scroll', onScroll); if (raf) cancelAnimationFrame(raf); };
+  }, []);
+
+  // On route change, restore that route's remembered scroll (or go to the top if
+  // there's none). The target is re-applied over ~1.2s because list screens (the
+  // Capsule grid, feeds) load data after mount and grow the page, so the final
+  // height isn't available on the first frame.
+  React.useEffect(() => {
+    const target = scrollMemory.current[route] ?? 0;
+    if (target <= 0) {
+      const top = () => {
+        window.scrollTo(0, 0);
+        document.documentElement.scrollTop = 0;
+        if (document.body) document.body.scrollTop = 0;
+      };
+      top();
+      requestAnimationFrame(top);
+    } else {
+      const start = typeof performance !== 'undefined' ? performance.now() : Date.now();
+      const now = () => (typeof performance !== 'undefined' ? performance.now() : Date.now());
+      const restore = () => {
+        window.scrollTo(0, target);
+        const reached = Math.abs((window.scrollY || 0) - target) <= 2;
+        if (!reached && now() - start < 1200) requestAnimationFrame(restore);
+      };
+      requestAnimationFrame(restore);
+    }
     if (process.env.NODE_ENV !== 'production') (window as any).__suedeRoute = route;
   }, [route]);
 
@@ -223,7 +262,8 @@ function AppInner() {
         persistNav(); // remember where we landed, so a reload-after-Back restores it
         if (entry.sel) Object.assign(appState, entry.sel);
         setRouteRaw(entry.route);
-        scrollTop();
+        // Back/Forward: restore the remembered position if we have one.
+        if (!scrollMemory.current[entry.route]) scrollTop();
         return;
       }
       // Stack entry missing (e.g. after a reload) — derive the target from the
