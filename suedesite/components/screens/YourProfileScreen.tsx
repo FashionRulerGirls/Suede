@@ -137,6 +137,12 @@ export function YourProfileScreen({ onRoute }: any) {
     ? dbInquiries.map(it => ({ ...it, asker: meReviewer }))
     : (SUEDE_INQUIRIES || []).slice(0, 2).map(it => ({ ...it, asker: meReviewer }));
   const openReview = (r: any) => { appState.review = r; onRoute('review'); };
+  // Open a feed card's author on their Collective profile (by real id).
+  const openFeedMember = (authorId: string, who: any) => {
+    if (!authorId || !who) return;
+    appState.member = { id: authorId, name: who.name, handle: who.handle, avatar: who.avatar, social: who.handle };
+    onRoute('member');
+  };
 
   if (view !== 'profile') {
     const isFeed = view === 'capsulefeed' || view === 'collectivefeed';
@@ -220,11 +226,11 @@ export function YourProfileScreen({ onRoute }: any) {
               }
               return feedTab === 'reviews' ? (
                 <div className="sd-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 28, paddingBottom: 24 }}>
-                  {list.map((r: any, i: number) => <ReviewCard key={i} {...r} onSeeFull={() => openReview(r)} />)}
+                  {list.map((r: any, i: number) => <ReviewCard key={i} {...r} onSeeFull={() => openReview(r)} onReviewer={() => openFeedMember(r.authorId, r.reviewer)} />)}
                 </div>
               ) : (
                 <div className="sd-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 28, paddingBottom: 24 }}>
-                  {list.map((it: any, i: number) => <InquiryCard key={i} {...it} onOpen={() => { appState.inquiry = it; onRoute('inquiry'); }} />)}
+                  {list.map((it: any, i: number) => <InquiryCard key={i} {...it} onOpen={() => { appState.inquiry = it; onRoute('inquiry'); }} onAsker={() => openFeedMember(it.authorId, it.asker)} />)}
                 </div>
               );
             })()}
