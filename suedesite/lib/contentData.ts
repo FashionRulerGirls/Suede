@@ -753,6 +753,7 @@ export async function loadPublishedReviews(sb: SupabaseClient, viewerId?: string
     .from('reviews')
     .select(REVIEW_SELECT)
     .eq('status', 'published')
+    .eq('lookbook_hidden', false) // QC: admin-hidden reviews stay off the Lookbook/feeds
     .order('created_at', { ascending: false })
     .limit(limit);
   return enrichReviewCards(sb, (data || []).map(reviewRowToCard), viewerId);

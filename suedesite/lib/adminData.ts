@@ -116,7 +116,7 @@ export async function loadGrowth(sb: SupabaseClient, granularity: 'week' | 'mont
   return Array.from(buckets, ([label, count]) => ({ label, count }));
 }
 
-const REV_SEL = 'id, brand_name, created_at, rating_sizing, rating_material, rating_value, rating_photos, rating_service, status, author:profiles!author_id(display_name, username)';
+const REV_SEL = 'id, brand_name, product_name, created_at, rating_sizing, rating_material, rating_value, rating_photos, rating_service, status, lookbook_hidden, author:profiles!author_id(display_name, username)';
 function ratingAvg(r: any): number | null {
   const v = ['rating_sizing', 'rating_material', 'rating_value', 'rating_photos'].map((k) => r[k]).filter((x) => x != null);
   return v.length ? Math.round((v.reduce((a: number, b: number) => a + b, 0) / v.length) * 2) / 2 : null;
@@ -127,8 +127,16 @@ export async function loadReviewActivity(sb: SupabaseClient, limit = 200) {
   return (data || []).map((r: any) => ({
     id: r.id, reviewer: r.author?.display_name || r.author?.username || 'Member',
     handle: r.author?.username ? '@' + r.author.username : '', brand: r.brand_name || '—',
-    created_at: r.created_at, rating: ratingAvg(r), status: r.status,
+    product: r.product_name || '', created_at: r.created_at, rating: ratingAvg(r), status: r.status,
+    lookbookHidden: !!r.lookbook_hidden,
   }));
+}
+
+// QC: hide/show a review in the public Lookbook (and the community feeds that
+// mirror it) WITHOUT removing it — it stays on the author's Collective profile.
+export async function setReviewLookbookHidden(sb: SupabaseClient, reviewId: string, hidden: boolean) {
+  const { error } = await sb.from('reviews').update({ lookbook_hidden: hidden }).eq('id', reviewId);
+  if (error) throw error;
 }
 
 export async function loadInquiryActivity(sb: SupabaseClient, limit = 200) {

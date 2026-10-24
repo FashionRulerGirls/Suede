@@ -4,7 +4,7 @@ import { Logo, Icon } from '@/components/ds';
 import { createClient } from '@/lib/supabase/client';
 import {
   amIAdmin, loadOverview, loadGrowth, loadReviewActivity, loadInquiryActivity,
-  loadMemberDirectory, loadOutboundClicks, toCSV, downloadCSV, type Overview,
+  loadMemberDirectory, loadOutboundClicks, setReviewLookbookHidden, toCSV, downloadCSV, type Overview,
 } from '@/lib/adminData';
 import {
   loadCapsuleRequests, approveCapsuleRequest, rejectCapsuleRequest,
@@ -261,13 +261,28 @@ function GrowthSection({ sb }: any) {
 
 function ReviewsSection({ sb }: any) {
   const [rows] = useAsync(() => loadReviewActivity(sb), []);
+  const [list, setList] = React.useState<any[] | null>(null);
+  const [busy, setBusy] = React.useState<string | null>(null);
+  React.useEffect(() => { setList(rows); }, [rows]);
+  const toggleHidden = async (id: string, hide: boolean) => {
+    setBusy(id);
+    try {
+      await setReviewLookbookHidden(sb, id, hide);
+      setList((cur) => (cur || []).map((r: any) => (r.id === id ? { ...r, lookbookHidden: hide } : r)));
+    } catch { /* leave as-is on failure */ }
+    finally { setBusy(null); }
+  };
   return (
     <>
-      <H sub="All reviews, newest first. Read-only.">Review Activity</H>
-      <Table head={['Reviewer', 'Brand', 'Date', 'Rating']} rows={(rows || []).map((r: any) => [
+      <H sub="All reviews, newest first. Hiding a review removes it from the public Lookbook and feeds, but keeps it on the member's Collective profile.">Review Activity</H>
+      <Table head={['Reviewer', 'Brand', 'Date', 'Rating', 'Lookbook', '']} rows={(list || []).map((r: any) => [
         <span><b style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{r.reviewer}</b> <span style={{ color: 'var(--text-muted)' }}>{r.handle}</span></span>,
         r.brand, fmtDate(r.created_at), r.rating != null ? `${r.rating} ★` : '—',
-      ])} loading={!rows} empty="No reviews yet." />
+        <Pill ok={!r.lookbookHidden}>{r.lookbookHidden ? 'Hidden' : 'Visible'}</Pill>,
+        <ActionBtn busy={busy === r.id} ghost={!r.lookbookHidden} danger={false} onClick={() => toggleHidden(r.id, !r.lookbookHidden)}>
+          {r.lookbookHidden ? 'Unhide' : 'Hide from Lookbook'}
+        </ActionBtn>,
+      ])} loading={!list} empty="No reviews yet." />
     </>
   );
 }
