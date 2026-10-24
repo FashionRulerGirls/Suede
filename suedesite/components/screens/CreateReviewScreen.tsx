@@ -9,7 +9,7 @@ import { SignInGate } from '@/components/screens/SignInGate';
 import { ProductFetch } from '@/components/screens/ProductFetch';
 import { useAuth } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/client';
-import { createReview, updateReview, loadReviewMedia, deleteReviewMedia, loadBrandProducts, loadBrands, loadMyBrandServiceRating, setBrandServiceRating } from '@/lib/contentData';
+import { createReview, updateReview, loadReviewMedia, deleteReviewMedia, loadBrandProducts, loadBrands, loadMyBrandServiceRating, setBrandServiceRating, findRecentDuplicateReview } from '@/lib/contentData';
 import { uploadReviewMedia } from '@/lib/storage';
 import { loadProfileData, inchesToHeight, inchesDisplay } from '@/lib/profileData';
 
@@ -35,7 +35,7 @@ function StarRow({ label, value, onChange }: any) {
   );
 }
 
-function SizeSatisfactionModal({ open, onClose, onContinue }: any) {
+function SizeSatisfactionModal({ open, onClose, onContinue, saving }: any) {
   const [scale, setScale] = React.useState('Letter');
   const [size, setSize] = React.useState('M');
   const [other, setOther] = React.useState('');
@@ -49,7 +49,7 @@ function SizeSatisfactionModal({ open, onClose, onContinue }: any) {
     fontFamily: 'var(--font-body)', fontSize: 14, transition: 'all var(--dur-fast) var(--ease-out)',
   });
   return (
-    <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 70, background: 'rgba(20,18,15,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+    <div onClick={saving ? undefined : onClose} style={{ position: 'fixed', inset: 0, zIndex: 70, background: 'rgba(20,18,15,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
       <div onClick={(e) => e.stopPropagation()} style={{ width: 720, maxWidth: '100%', maxHeight: '86vh', overflowY: 'auto', background: 'var(--surface-card)', boxShadow: 'var(--shadow-lg)', padding: '40px 44px', position: 'relative' }}>
         <button onClick={onClose} aria-label="Close" style={{ position: 'absolute', top: 24, right: 26, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-primary)', display: 'flex' }}>
           <Icon name="close" size={22} />
@@ -75,7 +75,7 @@ function SizeSatisfactionModal({ open, onClose, onContinue }: any) {
           <button type="button" onClick={() => setTailoring('no')} style={{ ...chip(tailoring === 'no'), padding: '18px 0' }}>No</button>
         </div>
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 32 }}>
-          <Button variant="primary" onClick={() => (onContinue ? onContinue({ scale, size, other, tailoring }) : onClose())}>Continue review</Button>
+          <Button variant="primary" disabled={saving} onClick={() => (onContinue ? onContinue({ scale, size, other, tailoring }) : onClose())}>{saving ? 'Submitting…' : 'Continue review'}</Button>
         </div>
       </div>
     </div>
@@ -235,14 +235,33 @@ export function CreateReviewScreen({ onRoute, authed = false }: any) {
   };
   // Persist to Supabase (when configured + a real user), then show success.
   // In demo/unconfigured mode this just advances to the success state.
+  // Guards against the double-submit problem: submitting can take a few seconds
+  // (size follow-ups, photo upload), so people re-click and post duplicates.
+  const submittingRef = React.useRef(false);       // blocks concurrent submits
+  const dupConfirmedRef = React.useRef(false);      // "Submit anyway" bypasses the dup check
+  const lastSatisfactionRef = React.useRef<any>(undefined);
+  const [dupPrompt, setDupPrompt] = React.useState<{ brand: string; product: string } | null>(null);
   const finalize = async (satisfaction?: any) => {
+    if (submittingRef.current) return; // ignore extra clicks while a submit is in flight
+    submittingRef.current = true;
+    lastSatisfactionRef.current = satisfaction;
     const sb = createClient();
     if (sb && user) {
+      const brandName = brandType === 'Capsule Brand' ? brandSel : nonCapsuleBrand.trim();
+      const productName = productSel.trim();
+      // Duplicate guard (new reviews only): if the same brand + product was just
+      // posted, ask before creating another — unless they chose "Submit anyway".
+      if (!editing && !dupConfirmedRef.current) {
+        try {
+          const dupe = await findRecentDuplicateReview(sb, user.id, brandName, productName);
+          if (dupe) { submittingRef.current = false; setModal(false); setDupPrompt({ brand: brandName, product: productName }); return; }
+        } catch { /* non-fatal — fall through and submit */ }
+      }
       setSaving(true);
       try {
         const payload = {
-          brandName: brandType === 'Capsule Brand' ? brandSel : nonCapsuleBrand.trim(),
-          productName: productSel.trim(),
+          brandName,
+          productName,
           productImage: productImage.trim() || undefined,
           productUrl: productUrl.trim() || undefined,
           productPrice: productPrice.trim() || undefined,
@@ -276,25 +295,31 @@ export function CreateReviewScreen({ onRoute, authed = false }: any) {
         }
       } catch (err: any) {
         setSaving(false);
+        submittingRef.current = false;
         setErrors([err?.message || 'Something went wrong saving your review. Please try again.']);
         return;
       }
       setSaving(false);
     }
+    submittingRef.current = false;
     setModal(false);
+    setDupPrompt(null);
     setSubmitted(true);
   };
 
   const submitReview = () => {
+    if (saving || submittingRef.current) return;
     const e = validate();
     setErrors(e);
     if (e.length) return;
     if (ratings.sizing > 0 && ratings.sizing < 5) setModal(true);
     else void finalize();
   };
+  const confirmDuplicate = () => { dupConfirmedRef.current = true; setDupPrompt(null); void finalize(lastSatisfactionRef.current); };
   const resetForm = () => {
     setSubmitted(false); setErrors([]); setReviewText(''); setProductSel(''); setProductImage(''); setProductUrl(''); setProductPrice(''); setNonCapsuleBrand('');
     setRatings({ sizing: 0, material: 0, value: 0, photos: 0 }); setSize(''); setRec(null); setPhotos([]); setServiceSaved(false);
+    dupConfirmedRef.current = false; submittingRef.current = false; setDupPrompt(null);
   };
 
   const sizes = ['XXS', 'XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL', 'OS'];
@@ -618,7 +643,21 @@ export function CreateReviewScreen({ onRoute, authed = false }: any) {
         <Button variant="primary" fullWidth size="lg" disabled={saving} onClick={submitReview}>{saving ? 'Saving…' : (editing ? 'Save Changes' : 'Submit Review')}</Button>
       </div>
 
-      <SizeSatisfactionModal open={modal} onClose={() => setModal(false)} onContinue={(s: any) => void finalize(s)} />
+      <SizeSatisfactionModal open={modal} saving={saving} onClose={() => setModal(false)} onContinue={(s: any) => void finalize(s)} />
+      {dupPrompt && (
+        <div onClick={() => setDupPrompt(null)} style={{ position: 'fixed', inset: 0, zIndex: 80, background: 'rgba(20,18,15,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ width: 460, maxWidth: '100%', background: 'var(--surface-card)', boxShadow: 'var(--shadow-lg)', padding: '34px 36px', textAlign: 'center' }}>
+            <h2 style={{ fontFamily: 'var(--font-serif)', fontWeight: 500, fontSize: 24, color: 'var(--text-heading)', margin: '0 0 12px' }}>Whoops — did you already submit this?</h2>
+            <p style={{ fontFamily: 'var(--font-body)', fontSize: 14.5, color: 'var(--text-secondary)', lineHeight: 1.6, margin: '0 0 24px' }}>
+              You just posted a review for <b style={{ color: 'var(--text-primary)' }}>{dupPrompt.product}</b>{dupPrompt.brand ? <> at <b style={{ color: 'var(--text-primary)' }}>{dupPrompt.brand}</b></> : null} a moment ago. Submitting can take a few seconds, so it may have looked like nothing happened — it did save. Post another anyway?
+            </p>
+            <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
+              <Button variant="secondary" onClick={() => { setDupPrompt(null); onRoute('yourprofile'); }}>No, view my reviews</Button>
+              <Button variant="primary" onClick={confirmDuplicate}>Submit anyway</Button>
+            </div>
+          </div>
+        </div>
+      )}
       {lb !== null && <Lightbox items={gallery} index={lb} onClose={() => setLb(null)} onIndex={setLb} />}
       {exPreview && <Lightbox items={[exPreview]} index={0} onClose={() => setExPreview(null)} onIndex={() => {}} />}
       </React.Fragment>}

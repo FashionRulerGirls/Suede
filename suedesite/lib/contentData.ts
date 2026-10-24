@@ -109,7 +109,35 @@ export async function createReview(sb: SupabaseClient, userId: string, r: NewRev
 
 // Edits are allowed for 24h after posting.
 export const EDIT_WINDOW_MS = 24 * 60 * 60 * 1000;
-export function canEditReview(createdAt?: string): boolean {
+
+// Catch accidental duplicate submissions: a review by the same member for the
+// same brand + product within the last few minutes. Submitting can take a few
+// seconds (size follow-ups, photo upload), so people re-click and double-post.
+export async function findRecentDuplicateReview(
+  sb: SupabaseClient,
+  userId: string,
+  brandName: string,
+  productName: string,
+  windowMinutes = 10,
+) {
+  if (!userId) return null;
+  const sinceIso = new Date(Date.now() - windowMinutes * 60000).toISOString();
+  const { data } = await sb
+    .from('reviews')
+    .select('id, created_at, product_name, brand_name')
+    .eq('author_id', userId)
+    .neq('status', 'removed')
+    .gte('created_at', sinceIso)
+    .order('created_at', { ascending: false })
+    .limit(10);
+  const pn = (productName || '').trim().toLowerCase();
+  const bn = (brandName || '').trim().toLowerCase();
+  if (!pn) return null;
+  return (data || []).find((r: any) =>
+    (r.product_name || '').trim().toLowerCase() === pn &&
+    (r.brand_name || '').trim().toLowerCase() === bn,
+  ) || null;
+}export function canEditReview(createdAt?: string): boolean {
   if (!createdAt) return false;
   return Date.now() - new Date(createdAt).getTime() < EDIT_WINDOW_MS;
 }
