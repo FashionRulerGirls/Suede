@@ -178,7 +178,7 @@ export function ReviewDetailScreen({ onRoute, authed = false }: any) {
           <Icon name="arrow-left" size={16} color="var(--text-secondary)" /> Back to Lookbook
         </button>
         <div style={{ display: 'inline-flex', alignItems: 'center', gap: 18 }}>
-          {real && <ShareButton path={`/review/${r._id}`} title={`${brand ? brand + ' — ' : ''}review on Suede`} text={`${product ? product + ' · ' : ''}Read this review on Suede`} />}
+          {real && <ShareButton path={`/review/${r._id}`} title={`${brand ? brand + ' — ' : ''}review on Suede`} text={`${product ? product + ' · ' : ''}Read this review on Suede`} card={{ kind: 'review', brand, product, snippet: body, rating: r.rating, by: reviewer.handle || reviewer.name, img: image }} />}
         {isAuthor && (
           <>
             {editable ? (

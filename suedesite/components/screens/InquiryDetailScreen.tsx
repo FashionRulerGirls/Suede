@@ -180,7 +180,7 @@ export function InquiryDetailScreen({ onRoute, authed = false }: any) {
           <Icon name="arrow-left" size={16} color="var(--text-secondary)" /> Back to Lookbook
         </button>
         <div style={{ display: 'inline-flex', alignItems: 'center', gap: 18 }}>
-          {real && <ShareButton path={`/inquiry/${q._id}`} title={`${brand ? brand + ' — ' : ''}inquiry on Suede`} text={`${product ? product + ' · ' : ''}See this inquiry on Suede`} />}
+          {real && <ShareButton path={`/inquiry/${q._id}`} title={`${brand ? brand + ' — ' : ''}inquiry on Suede`} text={`${product ? product + ' · ' : ''}See this inquiry on Suede`} card={{ kind: 'inquiry', brand, product, snippet: question, by: asker.handle || asker.name, img: image }} />}
           {isAuthor && (
             <button onClick={onDelete} disabled={deleting} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--rating-critical)', textDecoration: 'underline', textUnderlineOffset: 3 }}>
               {deleting ? 'Deleting…' : 'Delete'}
