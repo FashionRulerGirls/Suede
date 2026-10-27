@@ -205,3 +205,20 @@ export const CapsulePost: React.FC = () => {
 };
 
 export const CAPSULE_POST_TOTAL = 900; // one seamless scroll cycle @ 30fps = 30s (one model every 2s)
+
+// ── Overlay variant: the scrolling column alone on a transparent background ──
+// Rendered as VP9 WebM with alpha so it can sit on top of an existing design
+// (e.g. page 4 of the Canva "THE CAPSULE" post) and let that page show through.
+export const CAPSULE_SCROLL_OVERLAY_W = 420;
+
+export const CapsuleScrollOverlay: React.FC = () => (
+  <AbsoluteFill
+    style={{
+      WebkitMaskImage:
+        'linear-gradient(180deg, transparent 0%, #000 12%, #000 88%, transparent 100%)',
+      maskImage: 'linear-gradient(180deg, transparent 0%, #000 12%, #000 88%, transparent 100%)',
+    }}
+  >
+    <Column />
+  </AbsoluteFill>
+);
