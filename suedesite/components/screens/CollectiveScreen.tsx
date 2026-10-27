@@ -66,16 +66,20 @@ export function CollectiveScreen({ onRoute, authed = false }: any) {
   const [query, setQuery] = React.useState('');
   const [sort, setSort] = React.useState('join');
   const [match, setMatch] = React.useState(false);
-  const [realMembers, setRealMembers] = React.useState<any[] | null>(null);
+  // Seed from a per-viewer cache (matches are viewer-specific) so returning to
+  // the Collective shows instantly and revalidates in the background.
+  const collCacheOk = appState.collectiveUser === (user?.id ?? null);
+  const [realMembers, setRealMembers] = React.useState<any[] | null>(collCacheOk && appState.collectiveMembers ? appState.collectiveMembers : null);
   React.useEffect(() => {
     let alive = true;
     const sb = createClient();
     if (!sb) { setRealMembers([]); return; }
+    appState.collectiveUser = user?.id ?? null;
     (async () => {
       try {
         const rows = await loadCollectiveMembers(sb, user?.id);
-        if (alive) setRealMembers(rows);
-      } catch { if (alive) setRealMembers([]); }
+        if (alive) { appState.collectiveMembers = rows; setRealMembers(rows); }
+      } catch { if (alive && !appState.collectiveMembers) setRealMembers([]); }
     })();
     return () => { alive = false; };
   }, [user?.id]);

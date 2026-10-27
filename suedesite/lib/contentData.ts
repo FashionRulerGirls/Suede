@@ -451,10 +451,14 @@ function mapBrand(b: any, s: any) {
     hero: b.hero_image_url || '',
     is_capsule: b.is_capsule,
     status: b.status,
-    rating: s?.avg_rating != null ? Number(s.avg_rating) : 0,
-    reviews: s?.review_count || 0,
-    inquiries: s?.inquiry_count || 0,
-    followers: s?.follower_count || 0,
+    // Prefer the denormalized counters on the brand row (0042); fall back to the
+    // brand_stats view (s) when the migration hasn't been applied yet.
+    rating: b.cached_rating_n > 0
+      ? Math.round((Number(b.cached_rating_sum) / b.cached_rating_n) * 10) / 10
+      : (s?.avg_rating != null ? Number(s.avg_rating) : 0),
+    reviews: b.cached_review_count ?? (s?.review_count || 0),
+    inquiries: b.cached_inquiry_count ?? (s?.inquiry_count || 0),
+    followers: b.cached_follower_count ?? (s?.follower_count || 0),
     // Brand-level customer service (product-agnostic). serviceRating is null
     // until at least one member has rated the brand's service.
     serviceRating: s?.service_avg != null ? Number(s.service_avg) : null,
@@ -478,15 +482,15 @@ export async function loadBrands(
 
   const statsById: Record<string, any> = {};
   if (withStats && brands && brands.length) {
-    // Fetch stats ONLY for the brands we're showing. brand_stats groups by
-    // b.id, so filtering on id pushes the aggregate down to just these brands
-    // instead of recomputing counts across the entire catalog on every read.
     const ids = brands.map((b: any) => b.id);
-    const [{ data: stats }, svc] = await Promise.all([
-      sb.from('brand_stats').select('*').in('id', ids),
+    // If the denormalized counters exist on the brand rows (0042 applied), skip
+    // the brand_stats aggregate entirely — mapBrand reads them from the row.
+    const hasCached = (brands[0] as any).cached_review_count !== undefined;
+    const [statsRes, svc] = await Promise.all([
+      hasCached ? Promise.resolve({ data: [] as any[] }) : sb.from('brand_stats').select('*').in('id', ids),
       sb.rpc('brand_service_stats', { ids }),
     ]);
-    (stats || []).forEach((s: any) => { statsById[s.id] = { ...s }; });
+    ((statsRes as any).data || []).forEach((s: any) => { statsById[s.id] = { ...s }; });
     if (!svc.error) {
       for (const row of (svc.data || []) as any[]) {
         statsById[row.brand_id] = { ...(statsById[row.brand_id] || { id: row.brand_id }), service_avg: row.avg, service_count: row.count };

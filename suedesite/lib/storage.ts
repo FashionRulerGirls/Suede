@@ -1,6 +1,7 @@
 /* Suede — Supabase Storage uploads. Files live under a {userId}/ folder so the
    owner-folder storage policies allow the write; buckets are public-read. */
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { downscaleImage } from './imageResize';
 
 function extOf(file: File): string {
   const m = file.name?.match(/\.([a-zA-Z0-9]+)$/);
@@ -11,10 +12,11 @@ function extOf(file: File): string {
 
 // Upload (or replace) the member's avatar; returns a cache-busted public URL.
 export async function uploadAvatar(sb: SupabaseClient, userId: string, file: File): Promise<string> {
-  const path = `${userId}/avatar.${extOf(file)}`;
-  const { error } = await sb.storage.from('avatars').upload(path, file, {
+  const small = await downscaleImage(file, 512, 0.85); // displayed at ≤244px
+  const path = `${userId}/avatar.${extOf(small)}`;
+  const { error } = await sb.storage.from('avatars').upload(path, small, {
     upsert: true,
-    contentType: file.type || undefined,
+    contentType: small.type || undefined,
     cacheControl: '3600',
   });
   if (error) throw error;
@@ -39,9 +41,11 @@ export async function uploadReviewMedia(
   for (let i = 0; i < items.length; i++) {
     const { file, poster } = items[i];
     const kind = (file.type || '').startsWith('video') ? 'video' : 'image';
-    const path = `${userId}/${reviewId}/${stamp}-${i}.${extOf(file)}`;
-    const { error } = await sb.storage.from('review-media').upload(path, file, {
-      upsert: true, contentType: file.type || undefined, cacheControl: '3600',
+    // Downscale photos before upload (videos pass through untouched).
+    const upFile = kind === 'image' ? await downscaleImage(file, 1600, 0.82) : file;
+    const path = `${userId}/${reviewId}/${stamp}-${i}.${extOf(upFile)}`;
+    const { error } = await sb.storage.from('review-media').upload(path, upFile, {
+      upsert: true, contentType: upFile.type || undefined, cacheControl: '3600',
     });
     if (error) { failed++; continue; }
     const { data } = sb.storage.from('review-media').getPublicUrl(path);
@@ -49,9 +53,10 @@ export async function uploadReviewMedia(
 
     let poster_url: string | null = null;
     if (kind === 'video' && poster) {
-      const pPath = `${userId}/${reviewId}/${stamp}-${i}-poster.${extOf(poster)}`;
-      const { error: pErr } = await sb.storage.from('review-media').upload(pPath, poster, {
-        upsert: true, contentType: poster.type || undefined, cacheControl: '3600',
+      const upPoster = await downscaleImage(poster, 1280, 0.82);
+      const pPath = `${userId}/${reviewId}/${stamp}-${i}-poster.${extOf(upPoster)}`;
+      const { error: pErr } = await sb.storage.from('review-media').upload(pPath, upPoster, {
+        upsert: true, contentType: upPoster.type || undefined, cacheControl: '3600',
       });
       if (!pErr) poster_url = sb.storage.from('review-media').getPublicUrl(pPath).data.publicUrl;
     }

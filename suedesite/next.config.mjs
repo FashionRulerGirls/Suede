@@ -11,9 +11,13 @@ const BUILD_ID =
 const nextConfig = {
   reactStrictMode: true,
   env: { NEXT_PUBLIC_BUILD: BUILD_ID },
-  // Ensure the OG-card fonts are bundled into the /api/og serverless function.
-  outputFileTracingIncludes: {
-    '/api/og': ['./app/api/og/fonts/**', './app/api/og/assets/**'],
+  // Ensure the OG-card fonts/assets are traced into the /api/og serverless
+  // function. In Next 14 this key lives under `experimental` (top-level is
+  // ignored with an "Unrecognized key" warning, so the files wouldn't ship).
+  experimental: {
+    outputFileTracingIncludes: {
+      '/api/og': ['./app/api/og/fonts/**', './app/api/og/assets/**'],
+    },
   },
 };
 

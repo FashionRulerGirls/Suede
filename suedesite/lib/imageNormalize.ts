@@ -2,7 +2,8 @@
 // trimmed to its opaque content, then centred (horizontally) and bottom-aligned
 // on a fixed 1:2 transparent canvas. This makes every brand's model render at a
 // consistent size and baseline across the web grid and the mobile marquee,
-// regardless of how the source PNG was exported. Returns a PNG Blob (alpha kept).
+// regardless of how the source PNG was exported. Returns a WebP Blob (alpha
+// kept) — far smaller than PNG, which matters for the home marquee/Capsule grid.
 
 const TARGET_W = 720;   // generous width so wide poses never need shrinking
 const TARGET_H = 1200;
@@ -98,6 +99,6 @@ export async function normalizeCutout(file: Blob): Promise<Blob> {
   octx.drawImage(img, box.x, box.y, box.w, box.h, dx, dy, dw, dh);
 
   return await new Promise<Blob>((resolve, reject) =>
-    out.toBlob((b) => (b ? resolve(b) : reject(new Error('Could not process that image.'))), 'image/png'),
+    out.toBlob((b) => (b ? resolve(b) : reject(new Error('Could not process that image.'))), 'image/webp', 0.9),
   );
 }

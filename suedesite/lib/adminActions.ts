@@ -132,9 +132,9 @@ export async function setBrandOnHome(sb: SupabaseClient, id: string, on: boolean
 // Replace a brand's cutout with a (re)normalized PNG. The caller normalizes the
 // blob client-side; this uploads it and re-links hero_image_url.
 export async function updateBrandCutout(sb: SupabaseClient, adminId: string, brandId: string, cutout: Blob): Promise<string> {
-  const path = `${adminId}/${brandId}/cutout-${Date.now()}.png`;
+  const path = `${adminId}/${brandId}/cutout-${Date.now()}.webp`;
   const { error: upErr } = await sb.storage.from('brand-assets').upload(path, cutout, {
-    upsert: true, contentType: 'image/png', cacheControl: '3600',
+    upsert: true, contentType: cutout.type || 'image/webp', cacheControl: '3600',
   });
   if (upErr) throw upErr;
   const url = sb.storage.from('brand-assets').getPublicUrl(path).data.publicUrl;
@@ -182,9 +182,9 @@ export async function createCapsuleBrand(
 
   // Upload the cutout into the public brand-assets bucket, under the admin's
   // uid folder (the owner-folder write policy allows this).
-  const path = `${adminId}/${id}/cutout-${Date.now()}.png`;
+  const path = `${adminId}/${id}/cutout-${Date.now()}.webp`;
   const { error: upErr } = await sb.storage.from('brand-assets').upload(path, input.cutout, {
-    upsert: true, contentType: 'image/png', cacheControl: '3600',
+    upsert: true, contentType: input.cutout.type || 'image/webp', cacheControl: '3600',
   });
   if (upErr) {
     // Roll back the row so a failed image doesn't leave a pictureless brand.
@@ -242,9 +242,9 @@ export async function promoteBrandToCapsule(
   }
 
   // Upload the cutout as the hero image.
-  const path = `${adminId}/${id}/cutout-${Date.now()}.png`;
+  const path = `${adminId}/${id}/cutout-${Date.now()}.webp`;
   const { error: upErr } = await sb.storage.from('brand-assets').upload(path, input.cutout, {
-    upsert: true, contentType: 'image/png', cacheControl: '3600',
+    upsert: true, contentType: input.cutout.type || 'image/webp', cacheControl: '3600',
   });
   if (upErr) throw new Error('Could not upload the cutout. ' + upErr.message);
   const url = sb.storage.from('brand-assets').getPublicUrl(path).data.publicUrl;

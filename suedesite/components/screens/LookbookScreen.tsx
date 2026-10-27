@@ -66,17 +66,22 @@ export function LookbookScreen({ onRoute, authed = false }: any) {
   const { user } = useAuth();
   // The live community feed loads for everyone — guests included. Published
   // reviews/inquiries are public, so there's no sample data here anymore.
-  const [dbReviews, setDbReviews] = React.useState<any[]>([]);
-  const [dbInquiries, setDbInquiries] = React.useState<any[]>([]);
+  // Seed from a per-viewer cache so returning to the Lookbook renders instantly
+  // and revalidates in the background (matches are viewer-specific, so the cache
+  // is keyed to the current user).
+  const lbCacheOk = appState.lookbookUser === (user?.id ?? null);
+  const [dbReviews, setDbReviews] = React.useState<any[]>(lbCacheOk && appState.lookbookReviews ? appState.lookbookReviews : []);
+  const [dbInquiries, setDbInquiries] = React.useState<any[]>(lbCacheOk && appState.lookbookInquiries ? appState.lookbookInquiries : []);
   const [dbCapsule, setDbCapsule] = React.useState<any[]>([]); // real Capsule brands (e.g. bbx)
-  const [revReady, setRevReady] = React.useState(false);
-  const [inqReady, setInqReady] = React.useState(false);
+  const [revReady, setRevReady] = React.useState(lbCacheOk && !!appState.lookbookReviews);
+  const [inqReady, setInqReady] = React.useState(lbCacheOk && !!appState.lookbookInquiries);
   React.useEffect(() => {
     const sb = createClient();
     if (!sb) { setDbReviews([]); setDbInquiries([]); setRevReady(true); setInqReady(true); return; }
     let active = true;
-    loadPublishedReviews(sb, user?.id).then((r) => { if (active) setDbReviews(r); }).catch(() => {}).finally(() => { if (active) setRevReady(true); });
-    loadPublishedInquiries(sb, user?.id).then((q) => { if (active) setDbInquiries(q); }).catch(() => {}).finally(() => { if (active) setInqReady(true); });
+    appState.lookbookUser = user?.id ?? null;
+    loadPublishedReviews(sb, user?.id).then((r) => { if (active) { appState.lookbookReviews = r; setDbReviews(r); } }).catch(() => {}).finally(() => { if (active) setRevReady(true); });
+    loadPublishedInquiries(sb, user?.id).then((q) => { if (active) { appState.lookbookInquiries = q; setDbInquiries(q); } }).catch(() => {}).finally(() => { if (active) setInqReady(true); });
     return () => { active = false; };
   }, [user?.id]);
   React.useEffect(() => {

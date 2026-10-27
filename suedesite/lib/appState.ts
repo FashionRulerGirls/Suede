@@ -11,4 +11,6 @@ export const appState: Record<string, any> = {
   inquiryBrand: null,
   claimBrand: null,
   capsuleBrands: null, // cached Capsule directory so returning renders instantly
+  lookbookReviews: null, lookbookInquiries: null, lookbookUser: undefined, // cached Lookbook feed (per viewer)
+  collectiveMembers: null, collectiveUser: undefined, // cached Collective directory (per viewer)
 };
