@@ -20,6 +20,7 @@ export { Tabs } from './Tabs';
 export { BrandCard } from './BrandCard';
 export { ReviewCard } from './ReviewCard';
 export { SuedeMatchTag } from './SuedeMatchTag';
+export { LoadingMono } from './LoadingMono';
 export { StatCard } from './StatCard';
 export { Reveal } from './Reveal';
 export { Lightbox } from './Lightbox';

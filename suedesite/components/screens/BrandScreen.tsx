@@ -1,7 +1,7 @@
 'use client';
 import React from 'react';
 /* Suede — Brand detail page (one per Capsule brand). */
-import { StarRating, MeasurementSpec, Button, Tabs, Icon, ReviewCard, Avatar, Badge } from '@/components/ds';
+import { StarRating, MeasurementSpec, Button, Tabs, Icon, ReviewCard, Avatar, Badge, LoadingMono } from '@/components/ds';
 import { SUEDE_BRANDS } from '@/lib/data';
 import { appState } from '@/lib/appState';
 import { SuedeControls } from '@/lib/listControls';
@@ -103,6 +103,8 @@ export function BrandScreen({ onRoute, authed = false }: any) {
   // guests included. No sample feed anymore.
   const [dbReviews, setDbReviews] = React.useState<any[]>([]);
   const [dbInq, setDbInq] = React.useState<any[]>([]);
+  const [reviewsReady, setReviewsReady] = React.useState(false);
+  const [inqReady, setInqReady] = React.useState(false);
   const [brandId, setBrandId] = React.useState<string | null>(null);
   const [following, setFollowing] = React.useState(false);
   const [followers, setFollowers] = React.useState(0);
@@ -126,10 +128,11 @@ export function BrandScreen({ onRoute, authed = false }: any) {
   }, []);
   React.useEffect(() => {
     const sb = createClient();
-    if (!sb || !brand?.name) { setDbReviews([]); setDbInq([]); setBrandId(null); setFollowing(false); setFollowers(0); return; }
+    if (!sb || !brand?.name) { setDbReviews([]); setDbInq([]); setBrandId(null); setFollowing(false); setFollowers(0); setReviewsReady(true); setInqReady(true); return; }
     let active = true;
-    loadBrandReviews(sb, brand.name, user?.id).then((r) => { if (active) setDbReviews(r); }).catch(() => {});
-    loadBrandInquiries(sb, brand.name, user?.id).then((q) => { if (active) setDbInq(q); }).catch(() => {});
+    setReviewsReady(false); setInqReady(false);
+    loadBrandReviews(sb, brand.name, user?.id).then((r) => { if (active) setDbReviews(r); }).catch(() => {}).finally(() => { if (active) setReviewsReady(true); });
+    loadBrandInquiries(sb, brand.name, user?.id).then((q) => { if (active) setDbInq(q); }).catch(() => {}).finally(() => { if (active) setInqReady(true); });
     resolveBrandId(sb, brand.name).then(async (id) => {
       if (!active || !id) return;
       setBrandId(id);
@@ -407,6 +410,10 @@ export function BrandScreen({ onRoute, authed = false }: any) {
       {/* Feed */}
       {(() => {
         const activeFeed = (tab === 'reviews' ? reviewFeed : inqFeed).filter(r => (r.product || '').toLowerCase().includes(bQuery.trim().toLowerCase()));
+        const activeReady = tab === 'reviews' ? reviewsReady : inqReady;
+        if (activeFeed.length === 0 && !activeReady) {
+          return <LoadingMono minHeight="38vh" />;
+        }
         if (activeFeed.length === 0) {
           return (
             <div style={{ textAlign: 'center', padding: '54px 0 28px' }}>

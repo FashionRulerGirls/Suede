@@ -1,7 +1,7 @@
 'use client';
 /* Suede — The Lookbook (review feed) screen. */
 import React from 'react';
-import { ReviewCard, SectionHeading, Tabs, Button, Avatar, MeasurementSpec, Badge, Icon, SuedeMatchTag } from '@/components/ds';
+import { ReviewCard, SectionHeading, Tabs, Button, Avatar, MeasurementSpec, Badge, Icon, SuedeMatchTag, LoadingMono } from '@/components/ds';
 import { SUEDE_BRANDS } from '@/lib/data';
 import { appState } from '@/lib/appState';
 import { SuedeControls } from '@/lib/listControls';
@@ -69,12 +69,14 @@ export function LookbookScreen({ onRoute, authed = false }: any) {
   const [dbReviews, setDbReviews] = React.useState<any[]>([]);
   const [dbInquiries, setDbInquiries] = React.useState<any[]>([]);
   const [dbCapsule, setDbCapsule] = React.useState<any[]>([]); // real Capsule brands (e.g. bbx)
+  const [revReady, setRevReady] = React.useState(false);
+  const [inqReady, setInqReady] = React.useState(false);
   React.useEffect(() => {
     const sb = createClient();
-    if (!sb) { setDbReviews([]); setDbInquiries([]); return; }
+    if (!sb) { setDbReviews([]); setDbInquiries([]); setRevReady(true); setInqReady(true); return; }
     let active = true;
-    loadPublishedReviews(sb, user?.id).then((r) => { if (active) setDbReviews(r); }).catch(() => {});
-    loadPublishedInquiries(sb, user?.id).then((q) => { if (active) setDbInquiries(q); }).catch(() => {});
+    loadPublishedReviews(sb, user?.id).then((r) => { if (active) setDbReviews(r); }).catch(() => {}).finally(() => { if (active) setRevReady(true); });
+    loadPublishedInquiries(sb, user?.id).then((q) => { if (active) setDbInquiries(q); }).catch(() => {}).finally(() => { if (active) setInqReady(true); });
     return () => { active = false; };
   }, [user?.id]);
   React.useEffect(() => {
@@ -181,7 +183,9 @@ export function LookbookScreen({ onRoute, authed = false }: any) {
       </CollapsibleToolbar>
 
       <div style={{ position: 'relative', marginTop: 28 }}>
-        {empty ? (
+        {empty && !(isReviews ? revReady : inqReady) ? (
+          <LoadingMono minHeight="46vh" />
+        ) : empty ? (
           <div style={{ textAlign: 'center', padding: '54px 0' }}>
             <p style={{ fontFamily: 'var(--font-serif)', fontSize: 24, color: 'var(--text-heading)', margin: 0 }}>No {isReviews ? 'reviews' : 'inquiries'} found</p>
             <div style={{ marginTop: 20 }}>

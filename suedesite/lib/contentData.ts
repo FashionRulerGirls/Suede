@@ -802,7 +802,9 @@ export async function loadBrandReviews(sb: SupabaseClient, brandName: string, vi
   const id = brandId ?? (await resolveBrandId(sb, brandName));
   let q = sb.from('reviews').select(REVIEW_SELECT).eq('status', 'published');
   q = id ? q.or(`brand_id.eq.${id},brand_name.ilike.${pgrstQuote(brandName)}`) : q.ilike('brand_name', brandName);
-  const { data } = await q.order('created_at', { ascending: false });
+  // Bound the feed so a brand with many reviews (e.g. a popular one) doesn't load
+  // and enrich its entire history on every page open.
+  const { data } = await q.order('created_at', { ascending: false }).limit(48);
   return enrichReviewCards(sb, (data || []).map(reviewRowToCard), viewerId);
 }
 
@@ -810,7 +812,7 @@ export async function loadBrandInquiries(sb: SupabaseClient, brandName: string, 
   const id = brandId ?? (await resolveBrandId(sb, brandName));
   let q = sb.from('inquiries').select(INQUIRY_SELECT).neq('status', 'removed');
   q = id ? q.or(`brand_id.eq.${id},brand_name.ilike.${pgrstQuote(brandName)}`) : q.ilike('brand_name', brandName);
-  const { data } = await q.order('created_at', { ascending: false });
+  const { data } = await q.order('created_at', { ascending: false }).limit(48);
   return attachInquiryStats(sb, await attachMatches(sb, viewerId, (data || []).map(inquiryRowToCard)));
 }
 

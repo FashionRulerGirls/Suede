@@ -1,7 +1,7 @@
 'use client';
 import React from 'react';
 /* Suede — The Collective member profile page. */
-import { Avatar, StarRating, Button, Tabs, Icon, ReviewCard, MeasurementSpec } from '@/components/ds';
+import { Avatar, StarRating, Button, Tabs, Icon, ReviewCard, MeasurementSpec, LoadingMono } from '@/components/ds';
 import { SUEDE_REVIEWS, SUEDE_INQUIRIES } from '@/lib/data';
 import { appState } from '@/lib/appState';
 import { SuedeControls } from '@/lib/listControls';
@@ -137,7 +137,9 @@ export function MemberProfileScreen({ onRoute }: any) {
           const q = mQuery.trim().toLowerCase();
           const list = (tab === 'reviews' ? feed : inqFeed).filter((r: any) => (r.brand || '').toLowerCase().includes(q));
           if (list.length === 0) {
-            return <div style={{ textAlign: 'center', padding: '48px 0', fontFamily: 'var(--font-serif)', fontSize: 20, color: 'var(--text-heading)' }}>{tab === 'reviews' ? 'No reviews yet.' : 'No inquiries yet.'}</div>;
+            return feedLoading
+              ? <LoadingMono minHeight="38vh" />
+              : <div style={{ textAlign: 'center', padding: '48px 0', fontFamily: 'var(--font-serif)', fontSize: 20, color: 'var(--text-heading)' }}>{tab === 'reviews' ? 'No reviews yet.' : 'No inquiries yet.'}</div>;
           }
           return (
             <div className="sd-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 28, marginTop: 28, paddingBottom: 20 }}>

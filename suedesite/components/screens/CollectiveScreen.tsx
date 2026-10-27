@@ -1,7 +1,7 @@
 'use client';
 import React from 'react';
 /* Suede — The Collective (member discovery) screen. */
-import { SectionHeading, Button, Avatar, MeasurementSpec, SuedeMatchTag } from '@/components/ds';
+import { SectionHeading, Button, Avatar, MeasurementSpec, SuedeMatchTag, LoadingMono } from '@/components/ds';
 import { appState } from '@/lib/appState';
 import { SuedeControls } from '@/lib/listControls';
 import { useAuth } from '@/lib/auth';
@@ -110,7 +110,7 @@ export function CollectiveScreen({ onRoute, authed = false }: any) {
       </CollapsibleToolbar>
       <div style={{ position: 'relative', marginTop: 28 }}>
         {realMembers === null ? (
-          <div style={{ textAlign: 'center', padding: '54px 0', fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-muted)' }}>Loading members…</div>
+          <LoadingMono minHeight="46vh" />
         ) : shown.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '54px 0', fontFamily: 'var(--font-serif)', fontSize: 22, color: 'var(--text-heading)' }}>
             {query ? 'No members found matching that name.' : 'The Collective is just getting started — check back as members join.'}
