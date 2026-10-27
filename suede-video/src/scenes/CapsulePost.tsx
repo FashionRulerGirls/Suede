@@ -12,13 +12,28 @@ const CREAM_HI = '#fbf9f4';
 const CREAM_LO = '#efe9df';
 const INK = '#141210';
 
-// One model per slot; each slot is a fixed height so the scroll reads evenly.
-const MODELS = [
-  { src: 'capsule/model1.png', h: 620 }, // red dress (full body)
-  { src: 'capsule/model2.png', h: 600 }, // brown bomber (full body)
-  { src: 'capsule/model3.png', h: 460 }, // yellow top (half body)
+// The 15 Capsule brand cutouts (trimmed copies of suedesite/public/assets/models).
+// Every cutout renders at the same height so the scroll reads evenly.
+const BRANDS = [
+  'kai-collective',
+  'nadi',
+  'meji-meji',
+  'kairos',
+  'bupbes',
+  'nysama',
+  'bubon',
+  'tofe',
+  'lanje',
+  'musebrnd',
+  'coucoo',
+  'localeuropean',
+  'akino',
+  'ekhator',
+  'constructedforwomen',
 ];
-const GAP = 120;
+const MODEL_H = 560;
+const MODELS = BRANDS.map((b) => ({ src: `capsule/brands/${b}.png`, h: MODEL_H }));
+const GAP = 80;
 const SLOT = (m: { h: number }) => m.h + GAP;
 const STRIP_H = MODELS.reduce((s, m) => s + SLOT(m), 0);
 
@@ -38,7 +53,7 @@ const Column: React.FC = () => {
   const frame = useCurrentFrame();
   // Continuous upward scroll: travel exactly one strip-height per full cycle so
   // the duplicated strip makes the loop seamless.
-  const CYCLE = 420; // frames for one full strip to pass
+  const CYCLE = CAPSULE_POST_TOTAL; // frames for one full strip to pass
   const y = -((frame % CYCLE) / CYCLE) * STRIP_H;
   const strip = (keyPrefix: string) => (
     <>
@@ -189,4 +204,4 @@ export const CapsulePost: React.FC = () => {
   );
 };
 
-export const CAPSULE_POST_TOTAL = 420; // one seamless scroll cycle @ 30fps = 14s
+export const CAPSULE_POST_TOTAL = 900; // one seamless scroll cycle @ 30fps = 30s (one model every 2s)
