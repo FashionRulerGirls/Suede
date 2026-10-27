@@ -1,13 +1,13 @@
 'use client';
 /* Suede — Full Review detail page. */
 import React from 'react';
-import { Avatar, MeasurementSpec, StarRating, Button, Icon, Lightbox, SocialVideo } from '@/components/ds';
+import { Avatar, MeasurementSpec, StarRating, Button, Icon, Lightbox, SocialVideo, SuedeMatchTag } from '@/components/ds';
 import { ShareButton } from '@/components/ShareButton';
 import { SUEDE_BRANDS } from '@/lib/data';
 import { appState } from '@/lib/appState';
 import { useAuth } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/client';
-import { loadReviewById, loadReviewComments, postReviewComment, loadReviewMedia, formatDate, canEditReview, deleteReview, loadReactions, setReaction } from '@/lib/contentData';
+import { loadReviewById, loadReviewComments, postReviewComment, loadReviewMedia, formatDate, canEditReview, deleteReview, loadReactions, setReaction, loadMatch } from '@/lib/contentData';
 import { shopOut } from '@/lib/tracking';
 
 function SubRating({ label, value }: any) {
@@ -50,6 +50,7 @@ export function ReviewDetailScreen({ onRoute, authed = false }: any) {
   const [media, setMedia] = React.useState<{ url: string; kind: string; poster?: string | null }[]>([]);
   const [lb, setLb] = React.useState<number | null>(null);
   const [gone, setGone] = React.useState(false); // real review that no longer resolves (deleted)
+  const [matchData, setMatchData] = React.useState<any>(null); // viewer↔author Suede Match
   const [reviewLikes, setReviewLikes] = React.useState(0);
   const [reviewLiked, setReviewLiked] = React.useState(false);
   const [comments, setComments] = React.useState<any[]>(real ? [] : [
@@ -77,6 +78,17 @@ export function ReviewDetailScreen({ onRoute, authed = false }: any) {
     }).catch(() => {});
     return () => { active = false; };
   }, [r._id, user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Suede Match between the viewer and the review's author (null = self / no
+  // viewer / author's measurements not public).
+  React.useEffect(() => {
+    const authorId = full?.author_id;
+    if (!real || !user || !authorId || user.id === authorId) { setMatchData(null); return; }
+    const sb = createClient(); if (!sb) return;
+    let active = true;
+    loadMatch(sb, user.id, authorId).then((mm) => { if (active) setMatchData(mm); }).catch(() => {});
+    return () => { active = false; };
+  }, [real, user?.id, full?.author_id]);
 
   const toggleReviewLike = async () => {
     if (!user) { onRoute('signin'); return; }
@@ -244,7 +256,10 @@ export function ReviewDetailScreen({ onRoute, authed = false }: any) {
           <h1 className="sd-rev-title" style={{ fontFamily: 'var(--font-serif)', fontWeight: 500, fontSize: 38, letterSpacing: '-0.01em', color: 'var(--text-heading)', margin: '0 0 28px' }}>{product}</h1>
           <div className="sd-rev-head" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
             <Avatar src={reviewer.avatar} name={reviewer.name} handle={reviewer.handle} size="lg" showName />
-            {!hideMeas && <MeasurementSpec {...m} size="md" tone="muted" style={{ flexWrap: 'nowrap', whiteSpace: 'nowrap' }} />}
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8 }}>
+              {!hideMeas && <MeasurementSpec {...m} size="md" tone="muted" style={{ flexWrap: 'nowrap', whiteSpace: 'nowrap' }} />}
+              {matchData && <SuedeMatchTag match={matchData} align="right" />}
+            </div>
           </div>
 
           <div style={{ marginTop: 26 }}>

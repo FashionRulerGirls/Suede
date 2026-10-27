@@ -29,9 +29,30 @@ const confLine = (c?: string) =>
 export function SuedeMatchTag({ match, align = 'right' }: { match?: Match; align?: 'left' | 'right' }) {
   const conf = match?.confidence;
   const score = match?.score;
+  // Position the popover so it always stays on screen — clamp horizontally to
+  // the viewport and flip above the tag when there isn't room below. This keeps
+  // it from being cut off on mobile regardless of where the tag sits.
   const show = (e: React.MouseEvent, on: boolean) => {
-    const t = e.currentTarget.querySelector('[data-tip]') as HTMLElement | null;
-    if (t) { t.style.opacity = on ? '1' : '0'; t.style.pointerEvents = on ? 'auto' : 'none'; }
+    const host = e.currentTarget as HTMLElement;
+    const tip = host.querySelector('[data-tip]') as HTMLElement | null;
+    if (!tip) return;
+    if (!on) { tip.style.opacity = '0'; tip.style.pointerEvents = 'none'; return; }
+    try {
+      const hostRect = host.getBoundingClientRect();
+      const pw = tip.offsetWidth || 240;
+      const ph = tip.offsetHeight || 150;
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      const margin = 10;
+      let leftVp = align === 'right' ? hostRect.right - pw : hostRect.left;
+      leftVp = Math.max(margin, Math.min(leftVp, vw - pw - margin));
+      tip.style.left = `${leftVp - hostRect.left}px`;
+      tip.style.right = 'auto';
+      if (hostRect.bottom + 8 + ph <= vh - margin) { tip.style.top = 'calc(100% + 8px)'; tip.style.bottom = 'auto'; }
+      else { tip.style.bottom = 'calc(100% + 8px)'; tip.style.top = 'auto'; }
+    } catch { /* positioning best-effort */ }
+    tip.style.opacity = '1';
+    tip.style.pointerEvents = 'auto';
   };
   return (
     <span

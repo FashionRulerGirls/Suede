@@ -1,14 +1,14 @@
 'use client';
 /* Suede — Full Inquiry detail page. */
 import React from 'react';
-import { Avatar, MeasurementSpec, Button, Icon, StarRating } from '@/components/ds';
+import { Avatar, MeasurementSpec, Button, Icon, StarRating, SuedeMatchTag } from '@/components/ds';
 import { ShareButton } from '@/components/ShareButton';
 import { SUEDE_BRANDS } from '@/lib/data';
 import { appState } from '@/lib/appState';
 import { InquiryCard } from '@/components/screens/LookbookScreen';
 import { useAuth } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/client';
-import { loadInquiryById, loadInquiryResponses, postInquiryResponse, loadReactions, setReaction, loadMemberReviews, deleteInquiry } from '@/lib/contentData';
+import { loadInquiryById, loadInquiryResponses, postInquiryResponse, loadReactions, setReaction, loadMemberReviews, deleteInquiry, loadMatch } from '@/lib/contentData';
 import { shopOut } from '@/lib/tracking';
 
 // Compact preview of a review cited in a response — click opens the full review.
@@ -68,6 +68,7 @@ export function InquiryDetailScreen({ onRoute, authed = false }: any) {
   const { user, profile } = useAuth();
   const [full, setFull] = React.useState<any>(null);
   const [gone, setGone] = React.useState(false); // real inquiry that no longer resolves (deleted)
+  const [matchData, setMatchData] = React.useState<any>(null); // viewer↔asker Suede Match
   const [responses, setResponses] = React.useState<any[]>(real ? [] : [
     { avatar: '/assets/avatars/avatar-rose.jpg', name: 'Sophie L.', specs: '5\'6"/33"/39"/40"', when: '2 days ago', likes: 3, body: 'Good coverage — fully lined through the bodice and skirt, only the leg slit is high.' },
     { avatar: '/assets/avatars/avatar-blue.jpg', name: 'Maria T.', specs: '5\'6"/33"/39"/40"', when: '1 day ago', likes: 1, body: 'Pretty good coverage. The neckline sits high and the sleeves are full length.' },
@@ -86,6 +87,16 @@ export function InquiryDetailScreen({ onRoute, authed = false }: any) {
     }).catch(() => {});
     return () => { active = false; };
   }, [q._id, user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Suede Match between the viewer and the inquiry's author.
+  React.useEffect(() => {
+    const authorId = full?.author_id;
+    if (!real || !user || !authorId || user.id === authorId) { setMatchData(null); return; }
+    const sb = createClient(); if (!sb) return;
+    let active = true;
+    loadMatch(sb, user.id, authorId).then((mm) => { if (active) setMatchData(mm); }).catch(() => {});
+    return () => { active = false; };
+  }, [real, user?.id, full?.author_id]);
 
   // The signed-in member's own published reviews — offered as citations.
   const [myReviews, setMyReviews] = React.useState<any[]>([]);
@@ -231,7 +242,10 @@ export function InquiryDetailScreen({ onRoute, authed = false }: any) {
 
           <div className="sd-iqd-asker" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, marginTop: 24 }}>
             <Avatar src={asker.avatar} name={asker.name} handle={asker.handle} size="lg" showName />
-            <MeasurementSpec {...m} size="md" tone="muted" style={{ flexWrap: 'nowrap', whiteSpace: 'nowrap' }} />
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8 }}>
+              <MeasurementSpec {...m} size="md" tone="muted" style={{ flexWrap: 'nowrap', whiteSpace: 'nowrap' }} />
+              {matchData && <SuedeMatchTag match={matchData} align="right" />}
+            </div>
           </div>
 
           <p style={{ fontFamily: 'var(--font-body)', fontSize: 17, color: 'var(--text-primary)', margin: '22px 0 28px' }}>{question}</p>
