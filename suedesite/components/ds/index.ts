@@ -25,3 +25,4 @@ export { StatCard } from './StatCard';
 export { Reveal } from './Reveal';
 export { Lightbox } from './Lightbox';
 export { SocialVideo } from './SocialVideo';
+export { SmartImg } from './SmartImg';

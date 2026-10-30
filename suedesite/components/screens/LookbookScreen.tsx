@@ -1,7 +1,7 @@
 'use client';
 /* Suede — The Lookbook (review feed) screen. */
 import React from 'react';
-import { ReviewCard, SectionHeading, Tabs, Button, Avatar, MeasurementSpec, Badge, Icon, SuedeMatchTag, LoadingMono } from '@/components/ds';
+import { ReviewCard, SectionHeading, Tabs, Button, Avatar, MeasurementSpec, Badge, Icon, SuedeMatchTag, LoadingMono, SmartImg } from '@/components/ds';
 import { SUEDE_BRANDS } from '@/lib/data';
 import { appState } from '@/lib/appState';
 import { SuedeControls } from '@/lib/listControls';
@@ -55,7 +55,7 @@ export function InquiryCard({ asker = {}, measurements = {}, product, productUrl
           </div>
         </div>
         <div style={{ minWidth: 0, borderRadius: 0, overflow: 'hidden', aspectRatio: '3/4', alignSelf: 'start', background: 'var(--linen)' }}>
-          {image && <img className="sd-iq-img" src={image} alt={product} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center' }} />}
+          {image && <SmartImg className="sd-iq-img" src={image} w={360} alt={product} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center' }} />}
         </div>
       </div>
     </article>

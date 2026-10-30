@@ -19,7 +19,7 @@ function CapsuleBrandCell({ b, onExplore, onRoute }: any) {
         <Icon name="user" size={20} color="var(--text-secondary)" />
       </div>
       <div onClick={go} style={{ height: 300, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', cursor: 'pointer' }}>
-        <img src={b.image} alt={b.name} style={{ height: '100%', objectFit: 'contain' }} />
+        <img src={b.image} alt={b.name} loading="lazy" decoding="async" style={{ height: '100%', objectFit: 'contain' }} />
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', textAlign: 'right', gap: 16 }}>
         <p style={{ fontFamily: 'var(--font-body)', fontSize: 14, lineHeight: 1.55, color: 'var(--text-secondary)', margin: 0, maxWidth: 200 }}>{b.tagline}</p>

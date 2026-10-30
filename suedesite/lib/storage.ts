@@ -17,7 +17,7 @@ export async function uploadAvatar(sb: SupabaseClient, userId: string, file: Fil
   const { error } = await sb.storage.from('avatars').upload(path, small, {
     upsert: true,
     contentType: small.type || undefined,
-    cacheControl: '3600',
+    cacheControl: '31536000',
   });
   if (error) throw error;
   const { data } = sb.storage.from('avatars').getPublicUrl(path);
@@ -45,7 +45,7 @@ export async function uploadReviewMedia(
     const upFile = kind === 'image' ? await downscaleImage(file, 1600, 0.82) : file;
     const path = `${userId}/${reviewId}/${stamp}-${i}.${extOf(upFile)}`;
     const { error } = await sb.storage.from('review-media').upload(path, upFile, {
-      upsert: true, contentType: upFile.type || undefined, cacheControl: '3600',
+      upsert: true, contentType: upFile.type || undefined, cacheControl: '31536000',
     });
     if (error) { failed++; continue; }
     const { data } = sb.storage.from('review-media').getPublicUrl(path);
@@ -56,7 +56,7 @@ export async function uploadReviewMedia(
       const upPoster = await downscaleImage(poster, 1280, 0.82);
       const pPath = `${userId}/${reviewId}/${stamp}-${i}-poster.${extOf(upPoster)}`;
       const { error: pErr } = await sb.storage.from('review-media').upload(pPath, upPoster, {
-        upsert: true, contentType: upPoster.type || undefined, cacheControl: '3600',
+        upsert: true, contentType: upPoster.type || undefined, cacheControl: '31536000',
       });
       if (!pErr) poster_url = sb.storage.from('review-media').getPublicUrl(pPath).data.publicUrl;
     }
@@ -84,7 +84,7 @@ export async function uploadBrandDocument(sb: SupabaseClient, userId: string, br
   const safe = (file.name || 'document').replace(/[^a-zA-Z0-9._-]/g, '-').slice(-60);
   const path = `${userId}/${brandId}/${Date.now()}-${safe}`;
   const { error } = await sb.storage.from('brand-assets').upload(path, file, {
-    upsert: true, contentType: file.type || undefined, cacheControl: '3600',
+    upsert: true, contentType: file.type || undefined, cacheControl: '31536000',
   });
   if (error) throw error;
   return sb.storage.from('brand-assets').getPublicUrl(path).data.publicUrl;

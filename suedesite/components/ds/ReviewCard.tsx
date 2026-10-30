@@ -5,6 +5,7 @@ import { StarRating } from './StarRating';
 import { MeasurementSpec } from './MeasurementSpec';
 import { Icon } from './Icon';
 import { SuedeMatchTag } from './SuedeMatchTag';
+import { SmartImg } from './SmartImg';
 import { createClient } from '@/lib/supabase/client';
 import { shopOut } from '@/lib/tracking';
 import { truncate } from '@/lib/text';
@@ -83,7 +84,7 @@ export function ReviewCard({
           </div>
         </div>
         <div className="sd-rc-imgbox" style={{ position: 'relative', minWidth: 0, borderRadius: 0, overflow: 'hidden', aspectRatio: '3/4', alignSelf: 'start', background: 'var(--linen)' }}>
-          {image && <img src={image} alt={product} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center' }} />}
+          {image && <SmartImg src={image} w={360} alt={product} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center' }} />}
           {extraCount != null && (
             <span style={{ position: 'absolute', right: 8, bottom: 8, display: 'inline-flex', alignItems: 'center', gap: 4, background: 'rgba(0,0,0,0.6)', color: '#fff', borderRadius: 'var(--radius-xs)', padding: '3px 7px', fontSize: 11, fontFamily: 'var(--font-body)' }}>
               <Icon name="plus" size={11} color="#fff" />{extraCount}

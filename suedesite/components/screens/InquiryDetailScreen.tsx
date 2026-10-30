@@ -1,7 +1,7 @@
 'use client';
 /* Suede — Full Inquiry detail page. */
 import React from 'react';
-import { Avatar, MeasurementSpec, Button, Icon, StarRating, SuedeMatchTag } from '@/components/ds';
+import { Avatar, MeasurementSpec, Button, Icon, StarRating, SuedeMatchTag, SmartImg } from '@/components/ds';
 import { ShareButton } from '@/components/ShareButton';
 import { SUEDE_BRANDS } from '@/lib/data';
 import { appState } from '@/lib/appState';
@@ -204,7 +204,7 @@ export function InquiryDetailScreen({ onRoute, authed = false }: any) {
         {/* Left — product image + CTA */}
         <div>
           <div style={{ aspectRatio: '3/4', overflow: 'hidden', background: 'var(--linen)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            {image ? <img src={image} alt={product} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <Icon name="image" size={40} color="var(--text-muted)" />}
+            {image ? <SmartImg src={image} w={520} eager alt={product} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <Icon name="image" size={40} color="var(--text-muted)" />}
           </div>
           <Button variant="primary" fullWidth style={{ marginTop: 14 }} onClick={() => { if (productUrl && shopOut(createClient(), { rawUrl: productUrl, brandName: brand, productName: product, memberId: user?.id, sourcePage: 'inquiry', content: 'inquiry-product' })) return; const bd = (SUEDE_BRANDS || []).find(b => b.name === brand); if (bd) { appState.brand = bd; onRoute('brand'); } }}>View Product</Button>
         </div>

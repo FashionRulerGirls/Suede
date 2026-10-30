@@ -244,7 +244,7 @@ export function YourProfileScreen({ onRoute }: any) {
               <button key={b.name} onClick={() => openBrand(b)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, background: 'var(--surface-card)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-sm)', padding: '24px 20px', cursor: 'pointer', textAlign: 'center', transition: 'border-color var(--dur-fast) var(--ease-out)' }}
                 onMouseEnter={(e) => e.currentTarget.style.borderColor = 'var(--ink-900)'} onMouseLeave={(e) => e.currentTarget.style.borderColor = 'var(--border-subtle)'}>
                 <span style={{ width: 96, height: 120, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
-                  <img src={b.image} alt={b.name} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+                  <img src={b.image} alt={b.name} loading="lazy" decoding="async" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
                 </span>
                 <span style={{ fontFamily: 'var(--font-serif)', fontSize: 19, letterSpacing: '0.02em', color: 'var(--text-heading)' }}>{b.name}</span>
                 <StarRating value={b.rating} size={14} />

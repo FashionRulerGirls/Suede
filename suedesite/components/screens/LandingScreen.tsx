@@ -82,7 +82,7 @@ function CapsuleCarousel({ brands, onRoute }: any) {
                 display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 26, padding: 0,
               }}>
                 <span style={{ height: imgH + 10, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
-                  <img src={b.image} alt={b.name} decoding="async" style={{ height: imgH, width: 'auto', objectFit: 'contain' }} />
+                  <img src={b.image} alt={b.name} loading="lazy" decoding="async" style={{ height: imgH, width: 'auto', objectFit: 'contain' }} />
                 </span>
                 <span style={{ fontFamily: 'var(--font-serif)', fontSize: 15, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>{b.name}</span>
               </button>

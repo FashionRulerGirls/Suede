@@ -1,7 +1,7 @@
 'use client';
 import React from 'react';
 /* Suede — The Collective (member discovery) screen. */
-import { SectionHeading, Button, Avatar, MeasurementSpec, SuedeMatchTag, LoadingMono } from '@/components/ds';
+import { SectionHeading, Button, Avatar, MeasurementSpec, SuedeMatchTag, LoadingMono, SmartImg } from '@/components/ds';
 import { appState } from '@/lib/appState';
 import { SuedeControls } from '@/lib/listControls';
 import { useAuth } from '@/lib/auth';
@@ -40,7 +40,7 @@ function RealMemberCard({ mem, viewerId, onView }: any) {
         <span aria-hidden="true" />
         <button onClick={onView} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', justifySelf: 'center', lineHeight: 0 }}>
           {mem.avatar
-            ? <img src={mem.avatar} alt={mem.name} style={{ width: 184, height: 244, objectFit: 'cover', objectPosition: 'center 30%', borderRadius: 0, display: 'block' }} />
+            ? <SmartImg src={mem.avatar} w={184} alt={mem.name} style={{ width: 184, height: 244, objectFit: 'cover', objectPosition: 'center 30%', borderRadius: 0, display: 'block' }} />
             : <Avatar name={mem.name} size={184} />}
         </button>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14, justifySelf: 'end', alignItems: 'flex-end' }}>

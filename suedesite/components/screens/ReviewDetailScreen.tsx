@@ -1,7 +1,7 @@
 'use client';
 /* Suede — Full Review detail page. */
 import React from 'react';
-import { Avatar, MeasurementSpec, StarRating, Button, Icon, Lightbox, SocialVideo, SuedeMatchTag } from '@/components/ds';
+import { Avatar, MeasurementSpec, StarRating, Button, Icon, Lightbox, SocialVideo, SuedeMatchTag, SmartImg } from '@/components/ds';
 import { ShareButton } from '@/components/ShareButton';
 import { SUEDE_BRANDS } from '@/lib/data';
 import { appState } from '@/lib/appState';
@@ -217,11 +217,11 @@ export function ReviewDetailScreen({ onRoute, authed = false }: any) {
               : primary.kind === 'video'
                 ? <React.Fragment>
                     {primary.poster
-                      ? <img src={primary.poster} alt={product} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      ? <SmartImg src={primary.poster} w={640} alt={product} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                       : <video src={primary.url} muted playsInline preload="metadata" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.8 }} />}
                     <span style={{ position: 'absolute', width: 66, height: 66, borderRadius: '50%', background: 'rgba(20,18,15,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Icon name="play" size={28} color="#fff" /></span>
                   </React.Fragment>
-                : <img src={primary.url} alt={product} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
+                : <SmartImg src={primary.url} w={640} eager alt={product} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
           </div>
           {thumbs.length > 0 && (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14, marginTop: 14 }}>
@@ -232,8 +232,8 @@ export function ReviewDetailScreen({ onRoute, authed = false }: any) {
               return (
                 <div key={i} onClick={() => openLightbox(real ? i : 0)} style={{ position: 'relative', aspectRatio: '1/1', overflow: 'hidden', background: isVideo ? 'var(--ink-900)' : 'var(--linen)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   {isVideo
-                    ? <>{poster ? <img src={poster} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} /> : <video src={url} muted playsInline preload="metadata" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.75 }} />}<span style={{ position: 'absolute', display: 'inline-flex' }}><Icon name="play" size={22} color="#fff" /></span></>
-                    : <img src={url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
+                    ? <>{poster ? <SmartImg src={poster} w={160} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} /> : <video src={url} muted playsInline preload="metadata" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.75 }} />}<span style={{ position: 'absolute', display: 'inline-flex' }}><Icon name="play" size={22} color="#fff" /></span></>
+                    : <SmartImg src={url} w={160} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
                 </div>
               );
             })}

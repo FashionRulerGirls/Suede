@@ -1,5 +1,6 @@
 'use client';
 import React from 'react';
+import { SmartImg } from './SmartImg';
 
 /* Circular avatar with optional name + @handle, as used on review cards
    and the Brand Portal. Falls back to an initial on the linen fill. */
@@ -33,7 +34,7 @@ export function Avatar({
         boxShadow: ring ? '0 0 0 1px var(--border-subtle)' : 'none',
       }}
     >
-      {src ? <img src={src} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initial}
+      {src ? <SmartImg src={src} w={d} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initial}
     </span>
   );
   if (!showName) return React.cloneElement(img, { ...rest, style: { ...img.props.style, ...style } });

@@ -3,7 +3,7 @@ import React from 'react';
 /* Suede marketing-site top navigation.
    Section links live in the hamburger menu only; the bar keeps the
    wordmark, search, business menu and auth. */
-import { Logo, IconButton, AuthToggle, Select, Icon, Avatar } from '@/components/ds';
+import { Logo, IconButton, AuthToggle, Select, Icon, Avatar, SmartImg } from '@/components/ds';
 import { appState } from '@/lib/appState';
 import { useAuth } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/client';
@@ -409,7 +409,7 @@ export function Nav({ route, onRoute, authed = false }: any) {
                 {mBrands.map((b: any) => (
                   <button key={b.id || b.name} onClick={() => openResult('brand', () => { appState.brand = b; })} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 14, padding: '10px 24px', border: 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left' }}
                     onMouseEnter={(e) => e.currentTarget.style.background = 'var(--linen)'} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
-                    <img src={b.image} alt="" style={{ width: 40, height: 50, objectFit: 'contain', flex: 'none' }} />
+                    <SmartImg src={b.image} w={40} alt="" style={{ width: 40, height: 50, objectFit: 'contain', flex: 'none' }} />
                     <span style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
                       <span style={{ fontFamily: 'var(--font-serif)', fontWeight: 700, fontSize: 16, color: 'var(--text-primary)' }}>{b.name}</span>
                       <span style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 520 }}>{b.tagline}</span>
@@ -424,7 +424,7 @@ export function Nav({ route, onRoute, authed = false }: any) {
                 {mMembers.map((m: any) => (
                   <button key={m.id || m.handle} onClick={() => openResult('member', () => { appState.member = { id: m.id, name: m.name, handle: m.handle, avatar: m.avatar, social: m.social || m.handle, bio: m.bio || '' }; })} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 14, padding: '10px 24px', border: 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left' }}
                     onMouseEnter={(e) => e.currentTarget.style.background = 'var(--linen)'} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
-                    {m.avatar ? <img src={m.avatar} alt="" style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover', flex: 'none' }} />
+                    {m.avatar ? <SmartImg src={m.avatar} w={40} alt="" style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover', flex: 'none' }} />
                       : <span style={{ width: 40, height: 40, borderRadius: '50%', background: 'var(--linen)', flex: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-serif)', fontSize: 16, color: 'var(--text-secondary)' }}>{(m.name || '?').charAt(0)}</span>}
                     <span style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                       <span style={{ fontFamily: 'var(--font-serif)', fontWeight: 700, fontSize: 16, color: 'var(--text-primary)' }}>{m.name}</span>
@@ -440,7 +440,7 @@ export function Nav({ route, onRoute, authed = false }: any) {
                 {mReviews.map((r: any, i: number) => (
                   <button key={r._id || i} onClick={() => openResult('review', () => { appState.review = r; })} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 14, padding: '10px 24px', border: 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left' }}
                     onMouseEnter={(e) => e.currentTarget.style.background = 'var(--linen)'} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
-                    {r.image ? <img src={r.image} alt="" style={{ width: 40, height: 50, objectFit: 'cover', flex: 'none' }} />
+                    {r.image ? <SmartImg src={r.image} w={40} alt="" style={{ width: 40, height: 50, objectFit: 'cover', flex: 'none' }} />
                       : <span style={{ width: 40, height: 50, background: 'var(--linen)', flex: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}><Icon name="reviews" size={16} color="var(--text-muted)" /></span>}
                     <span style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
                       <span style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-primary)' }}><b>{r.brand}</b> · {r.product}</span>
@@ -456,7 +456,7 @@ export function Nav({ route, onRoute, authed = false }: any) {
                 {mInquiries.map((it: any, i: number) => (
                   <button key={it._id || i} onClick={() => openResult('inquiry', () => { appState.inquiry = it; })} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 14, padding: '10px 24px', border: 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left' }}
                     onMouseEnter={(e) => e.currentTarget.style.background = 'var(--linen)'} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
-                    {it.image ? <img src={it.image} alt="" style={{ width: 40, height: 50, objectFit: 'cover', flex: 'none' }} />
+                    {it.image ? <SmartImg src={it.image} w={40} alt="" style={{ width: 40, height: 50, objectFit: 'cover', flex: 'none' }} />
                       : <span style={{ width: 40, height: 50, background: 'var(--linen)', flex: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}><Icon name="message" size={16} color="var(--text-muted)" /></span>}
                     <span style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
                       <span style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-primary)' }}><b>{it.brand}</b> · {it.product}</span>
